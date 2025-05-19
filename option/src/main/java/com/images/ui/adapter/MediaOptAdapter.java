@@ -22,6 +22,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     private int optSize = 0;
     private OnMediaImgIbl imgLoading;
     private int itemImgWidth = 0;
+    //选中的数据
+    private ArrayList<MediaEntity> optData = new ArrayList<>();
 
     public void setItemImgWidth(int itemImgWidth) {
         this.itemImgWidth = itemImgWidth;
@@ -39,6 +41,10 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     public void setDatas(ArrayList<MediaEntity> datas) {
         this.datas = datas;
         notifyDataSetChanged();
+    }
+
+    public ArrayList<MediaEntity> getOptData() {
+        return optData;
     }
 
     @Override
@@ -116,10 +122,13 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                     optSize += 1;
                     image.isOption = true;
                     image.optNumber = optSize;
+                    optData.add(image);
+
                 } else {
                     optSize -= 1;
                     image.isOption = false;
                     image.optNumber = 0;
+                    optData.remove(image);
                 }
                 if (imgLoading != null) {
                     imgLoading.onImageSelect(image, 0);

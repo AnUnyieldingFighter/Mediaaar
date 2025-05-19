@@ -20,25 +20,25 @@ import com.images.ui.bean.ImageFile;
 import java.util.ArrayList;
 
 //选择照片或者视频，或者拍照
-public class MediaLayout extends RelativeLayout {
+public class MediaOPTLayout extends RelativeLayout {
 
 
-    public MediaLayout(Context context) {
+    public MediaOPTLayout(Context context) {
         super(context);
         initView();
     }
 
-    public MediaLayout(Context context, AttributeSet attrs) {
+    public MediaOPTLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView();
     }
 
-    public MediaLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public MediaOPTLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView();
     }
 
-    public MediaLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public MediaOPTLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView();
     }
@@ -64,9 +64,9 @@ public class MediaLayout extends RelativeLayout {
 
     protected boolean isShowCamera;//true  允许拍照
 
-    public void doRequest(Activity act, boolean isShowCamera) {
+    public void doRequest(int resType, boolean isShowCamera) {
         this.isShowCamera = isShowCamera;
-        MediaManager.getInstance().doReq(3);
+        MediaManager.getInstance().doReq(resType);
     }
 
     protected void initRecyclerView() {
@@ -77,6 +77,11 @@ public class MediaLayout extends RelativeLayout {
         adapter.setItemImgWidth(itemImageWidth);
         rvData.setAdapter(adapter);
         rvData.setLayoutManager(new GridLayoutManager(getContext(), 3));
+    }
+
+    //获取选中的数据
+    public ArrayList<MediaEntity> getOptData() {
+        return adapter.getOptData();
     }
 
     //读取数据库照片监听

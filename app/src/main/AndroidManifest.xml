@@ -38,6 +38,11 @@
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity
+            android:name="com.images.ui.activity.choose.MediaPreviewActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name="com.images.ui.activity.camera.ImageActivity"
             android:screenOrientation="portrait" />
         <activity
