@@ -36,7 +36,7 @@ public class PhotoManager {
 
     //更多选择
     public void getMoreConfig(int max, ArrayList<String> path) {
-        ConfigBuild.getNewBuild()
+       /* ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -59,11 +59,11 @@ public class PhotoManager {
                 .setImageSelectMaximum(max)
                 .complete()
                 .setShowCamera(true)
-                .build(activity);
+                .build(activity);*/
     }
 
     public void getMoreConfig2(int max, ArrayList<ImageEntity> images) {
-        ConfigBuild.getNewBuild()
+      /*  ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -86,7 +86,7 @@ public class PhotoManager {
                 .setImageSelectMaximum(max)
                 .complete()
                 .setShowCamera(true)
-                .build(activity);
+                .build(activity);*/
     }
 
     //只拍照
@@ -101,7 +101,7 @@ public class PhotoManager {
 
     //拍照+裁剪
     public void getCrop(boolean isOnlyPhotograph) {
-        ConfigBuild.getNewBuild()
+    /*    ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -125,12 +125,12 @@ public class PhotoManager {
                 .setLoading(new ImageShowType())
                 .setDebug(true)
                 .setOnlyPhotograph(isOnlyPhotograph)
-                .build(activity);
+                .build(activity);*/
     }
 
     //只预览
     public void previewImage(ArrayList<String> listImagePath) {
-        ConfigBuild.getNewBuild()
+       /* ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -143,12 +143,12 @@ public class PhotoManager {
                 .setImagePath(listImagePath)
                 .setLoading(new ImageShowType())
                 .setDebug(true)
-                .buildPreviewOnly(activity, 0);
+                .buildPreviewOnly(activity, 0);*/
     }
 
     //只预览可以删除
     public void previewImageDelect(ArrayList<String> listImagePath) {
-        ConfigBuild.getNewBuild()
+      /*  ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -162,12 +162,12 @@ public class PhotoManager {
                 .setImagePath(listImagePath)
                 .setLoading(new ImageShowType())
                 .setDebug(true)
-                .buildPreviewDelete(activity, 0);
+                .buildPreviewDelete(activity, 0);*/
     }
 
     //只预览可以删除
     public void previewImageDelect2(ArrayList<ImageEntity> images) {
-        ConfigBuild.getNewBuild()
+        /*ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -181,11 +181,11 @@ public class PhotoManager {
                 .setImages(images)
                 .setLoading(new ImageShowType())
                 .setDebug(true)
-                .buildPreviewDelete(activity, 0);
+                .buildPreviewDelete(activity, 0);*/
     }
 
     public void crop(boolean isonlyPhotograph) {
-        ConfigBuild.getNewBuild()
+       /* ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
                 .setStatusBarColor(0xff7db2fd)
@@ -210,7 +210,7 @@ public class PhotoManager {
                 .setDebug(true)
                 .setShowCamera(true)
                 .setOnlyPhotograph(isonlyPhotograph)
-                .build(activity);
+                .build(activity);*/
     }
 
     class ImageShowType implements ImageLoader {

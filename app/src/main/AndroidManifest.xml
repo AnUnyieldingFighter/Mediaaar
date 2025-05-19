@@ -30,7 +30,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.images.ui.activity.choose.Image1Activity"
+            android:name="com.images.ui.activity.choose.MediaActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.images.ui.activity.choose.MediaOptActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity

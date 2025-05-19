@@ -6,16 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 
-import com.images.config.operation.ConfigBar;
-import com.images.config.operation.ConfigBarCommon;
-import com.images.config.operation.ConfigBarCrop;
-import com.images.config.operation.ConfigBarPreview;
 import com.images.config.operation.ConfigBuildMore;
-import com.images.config.operation.ConfigBuiledCrop;
 import com.images.photo.DataStore;
-import com.images.ui.activity.IncidentActivity;
-import com.images.ui.activity.PreviewDeleteActivity;
-import com.images.ui.activity.PreviewOnlyActivity;
 import com.images.config.entity.ImageEntity;
 
 import java.io.Serializable;
@@ -47,41 +39,13 @@ public class ConfigBuild implements Serializable {
     }
 
 
-    //设置导航条
-    public ConfigBar setBuildBar() {
-        configs.configBar = new ConfigBar();
-        return configs.configBar;
-    }
-
-    //设置普通导航条
-    public ConfigBarCommon setBuildBarCommon() {
-        configs.configBarCommon = new ConfigBarCommon();
-        return configs.configBarCommon;
-    }
-
-    //设置裁剪导航条
-    public ConfigBarCrop setBuildBarCrop() {
-        configs.configBarCrop = new ConfigBarCrop();
-        return configs.configBarCrop;
-    }
-
-    //设置预览导航条
-    public ConfigBarPreview setBuildBarPreview() {
-        configs.configPreview = new ConfigBarPreview();
-        return configs.configPreview;
-    }
-
     //设置多选
     public ConfigBuildMore setBuildMore() {
         configs.configBuildMore = new ConfigBuildMore();
         return configs.configBuildMore;
     }
 
-    //设置裁剪
-    public ConfigBuiledCrop setBuildCrop() {
-        configs.configBuildSingle = new ConfigBuiledCrop();
-        return configs.configBuildSingle;
-    }
+
 
     //设置文件路径
     public ConfigBuild setFilePath(String filePath) {
@@ -139,7 +103,7 @@ public class ConfigBuild implements Serializable {
         imageLoader.interdictMsg(context,imageEntity);
     }
     public void build(Activity activity) {
-        if (configs.configBuildSingle != null) {
+        /*if (configs.configBuildSingle != null) {
             configs.configBuildMore = null;
             configs.isMore = false;
             configs.isCrop = true;
@@ -147,37 +111,32 @@ public class ConfigBuild implements Serializable {
         if (configs.configBuildMore != null) {
             configs.isMore = true;
         }
-        if (configs.configBarCrop != null) {
-            configs.configBarCrop.setCommon(configs.configBarCommon);
-        }
-        if (configs.configPreview != null) {
-            configs.configPreview.setCommon(configs.configBarCommon);
-        }
+
         DataStore.restData(activity);
         Intent it = new Intent(activity, IncidentActivity.class);
         Bundle bundle = new Bundle();
         bundle.putSerializable("config", configs);
         it.putExtras(bundle);
-        activity.startActivityForResult(it, Configs.TASK_START);
+        activity.startActivityForResult(it, Configs.TASK_START);*/
     }
 
     public void buildPreviewOnly(Activity activity, int index) {
-        configs.previewIndex = index;
+       /* configs.previewIndex = index;
         DataStore.restData(activity);
         Intent it = new Intent(activity, PreviewOnlyActivity.class);
         Bundle bundle = new Bundle();
         bundle.putSerializable("config", configs);
         it.putExtras(bundle);
-        activity.startActivityForResult(it, Configs.TASK_START);
+        activity.startActivityForResult(it, Configs.TASK_START);*/
     }
 
     public void buildPreviewDelete(Activity activity, int index) {
-        configs.previewIndex = index;
+      /*  configs.previewIndex = index;
         DataStore.restData(activity);
         Intent it = new Intent(activity, PreviewDeleteActivity.class);
         Bundle bundle = new Bundle();
         bundle.putSerializable("config", configs);
         it.putExtras(bundle);
-        activity.startActivityForResult(it, Configs.TASK_START);
+        activity.startActivityForResult(it, Configs.TASK_START);*/
     }
 }

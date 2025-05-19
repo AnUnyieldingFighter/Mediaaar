@@ -12,7 +12,7 @@ import android.widget.Toast;
 import androidx.core.content.FileProvider;
 
 import com.images.config.Configs;
-import com.images.config.operation.ConfigBuiledCrop;
+import com.images.config.operation.ConfigBuildCrop;
 import com.images.unmix.ImageLog;
 
 import java.io.File;
@@ -60,7 +60,7 @@ public class PhotoUtile {
 
     //裁剪
     public static File crop(Activity activity, Configs config, String imagePath) {
-        ConfigBuiledCrop crop = config.configBuildSingle;
+        ConfigBuildCrop crop = config.configBuildSingle;
         File file = FileUtile.createCropFile(activity, config.filePath);
         DataStore.stringSave(activity, DataStore.PATH_CROP, file.getAbsolutePath());
         Intent intent = new Intent("com.android.camera.action.CROP");

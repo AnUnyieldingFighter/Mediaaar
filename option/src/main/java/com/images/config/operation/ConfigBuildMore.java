@@ -25,7 +25,4 @@ public class ConfigBuildMore implements Serializable {
     }
     //
 
-    public int getImageSelectMaximum() {
-        return imageSelectMaximum;
-    }
 }

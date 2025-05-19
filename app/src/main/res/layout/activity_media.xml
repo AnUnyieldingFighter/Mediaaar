@@ -5,6 +5,14 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
+    <Button
+        android:id="@+id/image_btn5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="多选"
+        />
+
+
 
     <Button
         android:id="@+id/image_btn2"
@@ -41,12 +49,7 @@
         android:layout_height="wrap_content"
         android:text="系统拍照"
         />
-    <Button
-        android:id="@+id/image_btn5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="多选"
-        />
+
     <Button
         android:id="@+id/image_btn6"
         android:layout_width="match_parent"

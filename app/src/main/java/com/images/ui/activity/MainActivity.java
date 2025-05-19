@@ -7,7 +7,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.guomin.app.seletcimage.R;
-import com.images.ui.activity.choose.Image1Activity;
+import com.images.ui.activity.choose.MediaActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -30,17 +30,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
         if (id == R.id.image_test1_btn) {
+            //图片选择
             Intent it = new Intent();
-            it.setClass(this, Image1Activity.class);
+            it.setClass(this, MediaActivity.class);
             startActivity(it);
             return;
         }
-        if (id == R.id.image_test2_btn) {
-            Intent it = new Intent();
-            it.setClass(this, BillActivity.class);
-            startActivity(it);
-            return;
-        }
+
 
 
     }

@@ -8,7 +8,7 @@ import java.io.Serializable;
  * Created by Administrator on 2016/10/19.
  */
 //裁剪配置
-public class ConfigBuiledCrop implements Serializable {
+public class ConfigBuildCrop implements Serializable {
     private boolean isNotSystemCrop;
     private int aspectX = 60;
     private int aspectY = 60;
@@ -16,43 +16,43 @@ public class ConfigBuiledCrop implements Serializable {
     private int outputY = 60;
 
 
-    public ConfigBuiledCrop() {
+    public ConfigBuildCrop() {
     }
 
 
-    public ConfigBuiledCrop setNotSystemCrop(boolean notSystemCrop) {
+    public ConfigBuildCrop setNotSystemCrop(boolean notSystemCrop) {
         isNotSystemCrop = notSystemCrop;
         return this;
     }
 
-    public ConfigBuiledCrop setAspect(int aspectX, int aspectY) {
+    public ConfigBuildCrop setAspect(int aspectX, int aspectY) {
         this.aspectX = aspectX;
         this.aspectY = aspectY;
         return this;
     }
 
-    public ConfigBuiledCrop setOutput(int outputX, int outputY) {
+    public ConfigBuildCrop setOutput(int outputX, int outputY) {
         this.outputX = outputX;
         this.outputY = outputY;
         return this;
     }
 
-    public ConfigBuiledCrop setAspectX(int aspectX) {
+    public ConfigBuildCrop setAspectX(int aspectX) {
         this.aspectX = aspectX;
         return this;
     }
 
-    public ConfigBuiledCrop setAspectY(int aspectY) {
+    public ConfigBuildCrop setAspectY(int aspectY) {
         this.aspectY = aspectY;
         return this;
     }
 
-    public ConfigBuiledCrop setOutputX(int outputX) {
+    public ConfigBuildCrop setOutputX(int outputX) {
         this.outputX = outputX;
         return this;
     }
 
-    public ConfigBuiledCrop setOutputY(int outputY) {
+    public ConfigBuildCrop setOutputY(int outputY) {
         this.outputY = outputY;
         return this;
     }

@@ -11,7 +11,7 @@ import java.util.Locale;
  * TimeUtils
  * Created by Yancy on 2015/12/2.
  */
-public class DateUtile {
+public class DateUtil {
     private final static String PATTERN = "yyyy-MM-dd";
 
     public static String timeFormat(long timeMillis, String pattern) {

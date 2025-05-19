@@ -2,12 +2,8 @@ package com.images.config;
 
 import android.text.TextUtils;
 
-import com.images.config.operation.ConfigBar;
-import com.images.config.operation.ConfigBarCommon;
-import com.images.config.operation.ConfigBarCrop;
-import com.images.config.operation.ConfigBarPreview;
 import com.images.config.operation.ConfigBuildMore;
-import com.images.config.operation.ConfigBuiledCrop;
+import com.images.config.operation.ConfigBuildCrop;
 import com.images.config.entity.ImageEntity;
 
 import java.io.Serializable;
@@ -40,35 +36,12 @@ public class Configs implements Serializable {
     public boolean showCamera;
     //
     public boolean isDebug;
-    //bar
-    public ConfigBar configBar;
-    public ConfigBarCommon configBarCommon;
-    public ConfigBarCrop configBarCrop;
-    public ConfigBarPreview configPreview;
-    //
+    //多选
     public ConfigBuildMore configBuildMore;
-    //
-    public ConfigBuiledCrop configBuildSingle;
+    //裁剪
+    public ConfigBuildCrop configBuildSingle;
     //
     public static Configs build;
-
-   /* public ArrayList<String> getPaths() {
-        if (listImagePath == null) {
-            listImagePath = new ArrayList<>();
-        }
-        if (listImage == null) {
-            return listImagePath;
-        }
-        for (int i = 0; i < listImage.size(); i++) {
-            ImageEntity imageEntity = listImage.get(i);
-            String path = imageEntity.imagePathSource;
-            if (TextUtils.isEmpty(path)) {
-                continue;
-            }
-            listImagePath.add(path);
-        }
-        return listImagePath;
-    }*/
 
     public ArrayList<ImageEntity> getImages() {
         if (listImage == null) {

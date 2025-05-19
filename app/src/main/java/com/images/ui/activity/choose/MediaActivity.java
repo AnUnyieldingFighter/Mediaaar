@@ -1,31 +1,26 @@
 package com.images.ui.activity.choose;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.images.config.Configs;
 import com.images.config.entity.ImageEntity;
-import com.images.ui.Manger.ImageUtile;
 import com.images.ui.Manger.PhotoManager;
-import com.bumptech.glide.Glide;
 import com.guomin.app.seletcimage.R;
 
 import java.util.ArrayList;
 //老板
-public class Image1Activity extends AppCompatActivity implements View.OnClickListener {
+public class MediaActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView iv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image1);
+        setContentView(R.layout.activity_media);
         findViewById(R.id.image_btn2).setOnClickListener(this);
         findViewById(R.id.image_btn21).setOnClickListener(this);
         findViewById(R.id.image_btn3).setOnClickListener(this);
@@ -72,6 +67,12 @@ public class Image1Activity extends AppCompatActivity implements View.OnClickLis
             photoManager = new PhotoManager(this);
         }
         switch (view.getId()) {
+            case R.id.image_btn5:
+                //多选
+                Intent it = new Intent();
+                it.setClass(this, MediaOptActivity.class);
+                startActivity(it);
+                break;
             case R.id.image_btn2:
                 //只预览
                 photoManager.previewImage(getPaths());
@@ -94,52 +95,12 @@ public class Image1Activity extends AppCompatActivity implements View.OnClickLis
                 //只拍照
                 photoManager.getSinglePhotoConfig();
                 break;
-            case R.id.image_btn5:
-                //多选
-                photoManager.getMoreConfig(9, null);
-                //photoManager.getMoreConfig2(3, getImage());
-                break;
+
 
         }
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != Configs.TASK_START) {
-            return;
-        }
-        switch (resultCode) {
-            case Configs.TASK_CANCEL:
-                break;
-            case Configs.TASK_CROP_COMPLETE:
-                Bundle bundle = data.getExtras();
-                ArrayList<ImageEntity> image = (ArrayList<ImageEntity>) bundle.get(Configs.TASK_COMPLETE_RESULT);
-                Glide.with(this)
-                        .load(image.get(0).imagePathSource)
-                        .placeholder(R.mipmap.image_select_default)
-                        .centerCrop()
-                        .into(iv);
-                break;
-            case Configs.TASK_PICTURE_COMPLETE:
-                bundle = data.getExtras();
-                image = (ArrayList<ImageEntity>) bundle.get(Configs.TASK_COMPLETE_RESULT);
-                for (int i = 0; i < image.size(); i++) {
-                    Log.e("====", image.get(i).imagePathSource);
-                }
-                String path = image.get(0).imagePathSource;
-                Bitmap bit = ImageUtile.getSmallBitmap(path);
-                iv.setImageBitmap(bit);
-                break;
-            case Configs.TASK_PRIVATE_DELECTE:
-                bundle = data.getExtras();
-                image = (ArrayList<ImageEntity>) bundle.get(Configs.TASK_COMPLETE_RESULT);
-                for (int i = 0; i < image.size(); i++) {
-                    Log.e("====", image.get(i).imagePathSource);
-                }
-                break;
-        }
-    }
+
 
 }
