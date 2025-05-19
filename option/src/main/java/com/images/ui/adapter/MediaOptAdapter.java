@@ -9,15 +9,14 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.images.config.ConfigBuild;
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 import com.images.imageselect.R;
 import com.images.unmix.ImageLog;
 
 import java.util.ArrayList;
 
 public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHolder> {
-    private ArrayList<ImageEntity> datas = new ArrayList();
+    private ArrayList<MediaEntity> datas = new ArrayList();
     private Context context;
     private int max;
     private int optSize = 0;
@@ -37,7 +36,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
         this.imgLoading = imgLoading;
     }
 
-    public void setDatas(ArrayList<ImageEntity> datas) {
+    public void setDatas(ArrayList<MediaEntity> datas) {
         this.datas = datas;
         notifyDataSetChanged();
     }
@@ -50,8 +49,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        ImageEntity bean = datas.get(position);
-        if ("-1".equals(bean.imageType)) {
+        MediaEntity bean = datas.get(position);
+        if ("-1".equals(bean.mediaType)) {
             holder.ivMedia.setImageResource(R.mipmap.images_select_camera);
             holder.tvOpt.setVisibility(View.GONE);
         } else {
@@ -64,7 +63,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.tvOpt.setText("");
             }
             holder.tvOpt.setVisibility(View.VISIBLE);
-            imgLoading.onImageLoading(context, bean.imagePathSource, holder.ivMedia);
+            imgLoading.onImageLoading(context, bean.mediaPathSource, holder.ivMedia);
             holder.tvOpt.setOnClickListener(new Click(position));
         }
         holder.ivMedia.setOnClickListener(new Click(position));
@@ -103,7 +102,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
         @Override
         public void onClick(View v) {
             int id = v.getId();
-            ImageEntity image = datas.get(index);
+            MediaEntity image = datas.get(index);
             if (id == R.id.tv_opt) {
                 //选择了图片
                 if (!image.isOption && optSize == max) {
@@ -128,7 +127,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 notifyItemChanged(index);
             }
             if (id == R.id.iv_media) {
-                if ("1".equals(image.imageType)) {
+                if ("1".equals(image.mediaType)) {
                     //拍照
                     return;
                 }

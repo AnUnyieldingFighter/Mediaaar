@@ -2,19 +2,14 @@ package com.images.ui.activity.choose;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.guomin.app.seletcimage.R;
-import com.images.config.entity.ImageEntity;
-import com.images.ui.Manger.PhotoManager;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.views.MediaLayout;
-
-import java.util.ArrayList;
 
 //老板
 public class MediaOptActivity extends AppCompatActivity {

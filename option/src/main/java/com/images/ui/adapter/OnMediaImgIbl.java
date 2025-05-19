@@ -3,7 +3,7 @@ package com.images.ui.adapter;
 import android.content.Context;
 import android.widget.ImageView;
 
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 
 public interface OnMediaImgIbl {
     //加载图片
@@ -15,7 +15,7 @@ public interface OnMediaImgIbl {
      * @param imageEntity
      * @param type -1 到达上限
      */
-    default void onImageSelect(ImageEntity imageEntity,int type) {
+    default void onImageSelect(MediaEntity imageEntity, int type) {
     }
     default void onImageClick(ImageView imageView) {
     }

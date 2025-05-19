@@ -2,13 +2,10 @@ package com.images.config;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.widget.ImageView;
 
 import com.images.config.operation.ConfigBuildMore;
-import com.images.photo.DataStore;
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -72,7 +69,7 @@ public class ConfigBuild implements Serializable {
     }
 
     //设置已选择或者要预览的图片
-    public ConfigBuild setImages(ArrayList<ImageEntity> listImage) {
+    public ConfigBuild setImages(ArrayList<MediaEntity> listImage) {
         configs.listImage = listImage;
         return this;
     }
@@ -96,7 +93,7 @@ public class ConfigBuild implements Serializable {
         }
         imageLoader.imageLoading(context, path, imageView);
     }
-    public void interdictMsg(Context context,ImageEntity imageEntity) {
+    public void interdictMsg(Context context, MediaEntity imageEntity) {
         if (imageLoader == null) {
             return;
         }

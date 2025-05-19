@@ -2,7 +2,7 @@ package com.images.ui.bean;
 
 
 import com.images.config.Configs;
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class PreviewImageBean implements Serializable {
     public int type;
 
     //选中的图片
-    public ArrayList<ImageEntity> optionImage;
+    public ArrayList<MediaEntity> optionImage;
     public int index;
     public Configs config;
 }

@@ -4,7 +4,7 @@ import android.text.TextUtils;
 
 import com.images.config.operation.ConfigBuildMore;
 import com.images.config.operation.ConfigBuildCrop;
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class Configs implements Serializable {
     public String filePath = "/temp/pictures";
     //选中的图片 或者 要预览的图片
     public ArrayList<String> listImagePath;
-    public ArrayList<ImageEntity> listImage;
+    public ArrayList<MediaEntity> listImage;
     //多选
     public boolean isMore;
     //裁剪
@@ -43,7 +43,7 @@ public class Configs implements Serializable {
     //
     public static Configs build;
 
-    public ArrayList<ImageEntity> getImages() {
+    public ArrayList<MediaEntity> getImages() {
         if (listImage == null) {
             listImage = new ArrayList<>();
         }
@@ -52,8 +52,8 @@ public class Configs implements Serializable {
         }
         for (int i = 0; i < listImagePath.size(); i++) {
             String path = listImagePath.get(i);
-            ImageEntity entity = new ImageEntity();
-            entity.imagePathSource = path;
+            MediaEntity entity = new MediaEntity();
+            entity.mediaPathSource = path;
             if (TextUtils.isEmpty(path)) {
                 continue;
             }

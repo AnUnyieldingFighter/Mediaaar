@@ -1,6 +1,6 @@
 package com.images.ui.bean;
 
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 
 import java.util.List;
 
@@ -8,7 +8,7 @@ import java.util.List;
  * Created by Administrator on 2016/10/17.
  */
 public class ImageFile {
-    public List<ImageEntity> imags;
+    public List<MediaEntity> imags;
     public String filePath;
     //文件名
     public String fileName;

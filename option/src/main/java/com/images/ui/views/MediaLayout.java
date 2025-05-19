@@ -10,9 +10,9 @@ import android.widget.RelativeLayout;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 import com.images.imageselect.R;
-import com.images.photo.PhotosMnager;
+import com.images.photo.MediaManager;
 import com.images.ui.adapter.MediaOptAdapter;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.bean.ImageFile;
@@ -47,6 +47,8 @@ public class MediaLayout extends RelativeLayout {
         LayoutInflater.from(getContext()).inflate(R.layout.media_layout_opt, this);
         initRecyclerView();
         getViewTreeObserver().addOnGlobalLayoutListener(globalLayoutListener);
+        MediaManager.getInstance().setOnLoadingListener(new LoadingListener());
+        MediaManager.getInstance().initMediaDB(getContext());
     }
 
     private RecyclerView rvData;
@@ -64,8 +66,7 @@ public class MediaLayout extends RelativeLayout {
 
     public void doRequest(Activity act, boolean isShowCamera) {
         this.isShowCamera = isShowCamera;
-        PhotosMnager.getInstance().setOnLoadingListener(new LoadingListener());
-        PhotosMnager.getInstance().doRequest(act, 2);
+        MediaManager.getInstance().doReq(3);
     }
 
     protected void initRecyclerView() {
@@ -79,7 +80,7 @@ public class MediaLayout extends RelativeLayout {
     }
 
     //读取数据库照片监听
-    class LoadingListener implements PhotosMnager.OnLoadingListener {
+    class LoadingListener implements MediaManager.OnLoadingListener {
 
         @Override
         public void onLoadingFile(ArrayList<ImageFile> fils) {
@@ -87,10 +88,10 @@ public class MediaLayout extends RelativeLayout {
         }
 
         @Override
-        public void onLoadingMedia(ArrayList<ImageEntity> files) {
+        public void onLoadingMedia(ArrayList<MediaEntity> files) {
             if (isShowCamera) {
-                ImageEntity img = new ImageEntity();
-                img.imageType = "-1";
+                MediaEntity img = new MediaEntity();
+                img.mediaType = "-1";
                 files.add(0, img);
             }
             adapter.setDatas(files);

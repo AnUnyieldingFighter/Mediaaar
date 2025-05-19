@@ -10,7 +10,7 @@ import android.widget.ImageView;
 import com.images.config.ConfigBuild;
 import com.images.config.Configs;
 import com.images.config.ImageLoader;
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 import com.images.unmix.ImageLog;
 import com.bumptech.glide.Glide;
 import com.guomin.app.seletcimage.R;
@@ -62,7 +62,7 @@ public class PhotoManager {
                 .build(activity);*/
     }
 
-    public void getMoreConfig2(int max, ArrayList<ImageEntity> images) {
+    public void getMoreConfig2(int max, ArrayList<MediaEntity> images) {
       /*  ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
@@ -166,7 +166,7 @@ public class PhotoManager {
     }
 
     //只预览可以删除
-    public void previewImageDelect2(ArrayList<ImageEntity> images) {
+    public void previewImageDelect2(ArrayList<MediaEntity> images) {
         /*ConfigBuild.getNewBuild()
                 .setBuildBar()
                 .setActionBarColor(0xffffffff)
@@ -225,7 +225,7 @@ public class PhotoManager {
         }
 
         @Override
-        public void interdictMsg(Context context, ImageEntity imageEntity) {
+        public void interdictMsg(Context context, MediaEntity imageEntity) {
             ImageLog.e("-------", "不能删除图片............");
         }
     }

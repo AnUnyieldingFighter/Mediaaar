@@ -7,7 +7,7 @@ import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.images.config.entity.ImageEntity;
+import com.images.config.entity.MediaEntity;
 import com.images.ui.Manger.PhotoManager;
 import com.guomin.app.seletcimage.R;
 
@@ -43,17 +43,17 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         return paths;
     }
 
-    private ArrayList<ImageEntity> getImage() {
-        ArrayList<ImageEntity> iamges = new ArrayList<>();
-        ImageEntity image = new ImageEntity();
-        image.imagePathSource = "http://m.bookfan.cn/images/blog/userid_101_20161223135300585cbbbce9f0a.jpg";
+    private ArrayList<MediaEntity> getImage() {
+        ArrayList<MediaEntity> iamges = new ArrayList<>();
+        MediaEntity image = new MediaEntity();
+        image.mediaPathSource = "http://m.bookfan.cn/images/blog/userid_101_20161223135300585cbbbce9f0a.jpg";
         image.isDelete = false;
         iamges.add(image);
-        ImageEntity image1 = new ImageEntity();
-        image1.imagePathSource = "/storage/emulated/0/wandoujia/downloader/icon/main_tab_-1996466411.png";
+        MediaEntity image1 = new MediaEntity();
+        image1.mediaPathSource = "/storage/emulated/0/wandoujia/downloader/icon/main_tab_-1996466411.png";
         iamges.add(image1);
-        ImageEntity image2 = new ImageEntity();
-        image2.imagePathSource = "/storage/emulated/0/haoyisheng/1522639040658.jpg";
+        MediaEntity image2 = new MediaEntity();
+        image2.mediaPathSource = "/storage/emulated/0/haoyisheng/1522639040658.jpg";
         image2.isDelete = false;
         iamges.add(image2);
         return iamges;

@@ -1,0 +1,45 @@
+package com.images.config.entity;
+
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+import java.io.Serializable;
+
+@Entity(tableName = "tab_media")
+public class MediaEntity implements Serializable {
+    public int index;
+    //原图片路径
+    public String mediaPathSource;
+    //裁剪或者压缩的图片路径
+    public String mediaPath;
+    //图片名称
+    public String mediaName;
+    //创建时间
+    public long mediaTime;
+    @PrimaryKey()
+    @NonNull
+    //图片id
+    public String mediaId;
+    //相册名字
+    public String mediaFileName;
+    //图片类型
+    public String mediaType;
+    //图片大小
+    public String mediaSize;
+    //相册id
+    public String mediaFileId;
+    // 经度
+    public int mediaAngle;
+    //true 被选中
+    public boolean isOption;
+    public int optNumber;
+    //true 是外部预选
+    public boolean isOptionFixation = true;
+    //false 不可以删除
+    public boolean isDelete = true;
+    //true 发送的是压缩图
+    public boolean optionTailor = true;
+    //1 图片 2 视频
+    public int type;
+}
