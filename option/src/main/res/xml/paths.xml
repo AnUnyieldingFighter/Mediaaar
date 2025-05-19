@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- <root-path
+         name="root_path"
+         path="." />
+     <external-path
+         name="ty"
+         path="cs/video" />-->
+    <!--/storage/emulated/0/path/-->
+    <external-path
+        name="options"
+        path="/"/>
+</paths>

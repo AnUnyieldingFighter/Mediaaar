@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <Button
+        android:id="@+id/image_test1_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="老版"
+        />
+
+    <Button
+        android:id="@+id/image_test2_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="新版"
+        />
+
+    <Button
+        android:id="@+id/image_camera_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="相机测试"
+        />
+
+    <Button
+        android:id="@+id/video_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="视频编辑"
+        />
+</LinearLayout>

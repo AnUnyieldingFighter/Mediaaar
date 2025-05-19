@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#999999"
+    android:orientation="vertical">
+
+    <com.images.ui.view.ActionBar
+        android:id="@+id/actionbar"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        />
+    <!--
+        <com.app.crop.EnjoyCropLayout
+            android:id="@+id/cl"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/actionbar"
+            android:background="#0000"/>-->
+
+    <LinearLayout
+        android:id="@+id/content_ll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/actionbar"
+        android:background="#0000"
+        android:orientation="vertical"
+        />
+
+    <include
+        android:id="@+id/progress_il"
+        layout="@layout/view_progress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/actionbar"
+        />
+
+
+</RelativeLayout>

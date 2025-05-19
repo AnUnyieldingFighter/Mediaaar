@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <Button
+        android:id="@+id/image_btn2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只预览"
+        />
+    <Button
+        android:id="@+id/image_btn9"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="预览和删除"
+        />
+    <Button
+        android:id="@+id/image_btn3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只拍照+裁剪"
+        />
+
+    <Button
+        android:id="@+id/image_btn4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="只拍照"
+        />
+    <Button
+        android:id="@+id/image_btn6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选图+系统裁剪"
+        />
+
+    <Button
+        android:id="@+id/image_btn5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="多选"
+        />
+
+    <ImageView
+        android:id="@+id/image_iv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        />
+</LinearLayout>
