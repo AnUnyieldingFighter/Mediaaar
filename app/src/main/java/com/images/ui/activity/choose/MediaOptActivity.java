@@ -47,7 +47,15 @@ public class MediaOptActivity extends AppCompatActivity {
                 startActivity(it);
             }
         });
-
+        findViewById(R.id.tv_crop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                temp = mediaLayout.getOptData();
+                Intent it = new Intent();
+                it.setClass(MediaOptActivity.this, ImgCropActivity.class);
+                startActivity(it);
+            }
+        });
     }
 
 }
