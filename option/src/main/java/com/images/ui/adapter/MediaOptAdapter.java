@@ -19,7 +19,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     private ArrayList<MediaEntity> datas = new ArrayList();
     private Context context;
     private int max;
-    private int optSize = 0;
+
     private OnMediaImgIbl imgLoading;
     private int itemImgWidth = 0;
     //选中的数据
@@ -63,7 +63,13 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             boolean isOption = bean.isOption;
             if (isOption) {
                 holder.tvOpt.setBackgroundResource(R.drawable.media_select_true);
-                holder.tvOpt.setText("" + bean.optNumber);
+                var index = optData.indexOf(bean);
+                if (index >= 0) {
+                    holder.tvOpt.setText("" + (index + 1));
+                } else {
+                    holder.tvOpt.setText("");
+                }
+
             } else {
                 holder.tvOpt.setBackgroundResource(R.drawable.media_select_false);
                 holder.tvOpt.setText("");
@@ -111,7 +117,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             MediaEntity image = datas.get(index);
             if (id == R.id.tv_opt) {
                 //选择了图片
-                if (!image.isOption && optSize == max) {
+                if (!image.isOption && optData.size() == max) {
                     ImageLog.e("已达上限");
                     if (imgLoading != null) {
                         imgLoading.onImageSelect(null, -1);
@@ -119,21 +125,20 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                     return;
                 }
                 if (!image.isOption) {
-                    optSize += 1;
+                    //添加一个
                     image.isOption = true;
-                    image.optNumber = optSize;
                     optData.add(image);
-
+                    notifyItemChanged(index);
                 } else {
-                    optSize -= 1;
+                    //删除一个
                     image.isOption = false;
-                    image.optNumber = 0;
                     optData.remove(image);
+                    notifyDataSetChanged();
                 }
                 if (imgLoading != null) {
                     imgLoading.onImageSelect(image, 0);
                 }
-                notifyItemChanged(index);
+
             }
             if (id == R.id.iv_media) {
                 if ("1".equals(image.mediaType)) {

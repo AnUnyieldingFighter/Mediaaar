@@ -33,7 +33,7 @@ public class MediaEntity implements Serializable {
     public int mediaAngle;
     //true 被选中
     public boolean isOption;
-    public int optNumber;
+
     //true 是外部预选
     public boolean isOptionFixation = true;
     //false 不可以删除
