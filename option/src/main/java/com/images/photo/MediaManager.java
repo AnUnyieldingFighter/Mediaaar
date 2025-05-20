@@ -9,20 +9,16 @@ import android.provider.MediaStore;
 
 import com.images.config.entity.MediaEntity;
 import com.images.db.MediaRoom;
-import com.images.ui.bean.ImageFile;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
 import java.util.List;
 
 /**
- * Created by Administrator on 2016/10/17.
+ *
  */
 public class MediaManager {
-    private HashMap<String, List<MediaEntity>> map;
-    private static MediaManager manager;
-    //全部照片
-    private List<ImageFile> images;
+     private static MediaManager manager;
 
     public static MediaManager getInstance() {
         if (manager == null) {
@@ -61,7 +57,6 @@ public class MediaManager {
     }
 
     public interface OnLoadingListener {
-        void onLoadingFile(ArrayList<ImageFile> files);
 
         void onLoadingMedia(ArrayList<MediaEntity> files);
 

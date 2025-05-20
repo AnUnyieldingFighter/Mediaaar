@@ -6,19 +6,19 @@ import android.view.ViewGroup;
 
 import androidx.viewpager.widget.PagerAdapter;
 
-import com.images.config.ConfigBuild;
 import com.images.config.entity.MediaEntity;
 import com.images.ui.thing.photoview.PhotoView;
 import com.images.ui.thing.photoview.PhotoViewAttacher;
 
 import java.util.ArrayList;
 
-
+/**
+ * 预览 图片
+ */
 public class MediaPreviewAdapter extends PagerAdapter {
-    //预览的图片
     private ArrayList<MediaEntity> images = new ArrayList<>();
     private Context context;
-    public AdapterPreviewClickList listener;
+    public OnImgClickListener listener;
     private OnMediaImgIbl imgLoading;
 
     public MediaPreviewAdapter(Context context, ArrayList<MediaEntity> paths) {
@@ -26,7 +26,7 @@ public class MediaPreviewAdapter extends PagerAdapter {
         this.images = paths;
     }
 
-    public void setPhotoViewClickListener(AdapterPreviewClickList listener) {
+    public void setPhotoViewClickListener(OnImgClickListener listener) {
         this.listener = listener;
     }
 
@@ -39,16 +39,6 @@ public class MediaPreviewAdapter extends PagerAdapter {
         return images.size();
     }
 
-    //true 可以删除图片
-    public boolean isDeleteImage(int index) {
-        MediaEntity image = images.get(index);
-        if (!image.isDelete) {
-            //图片不能删除
-            ConfigBuild.getBuild().interdictMsg(context, image);
-            return false;
-        }
-        return true;
-    }
 
     public void deleteImage(int index) {
         images.remove(index);
@@ -94,7 +84,7 @@ public class MediaPreviewAdapter extends PagerAdapter {
             if (listener == null) {
                 return;
             }
-            listener.OnPhotoTapListener(view, x, y);
+            listener.OnImgTapClick(view, x, y);
         }
     }
 }

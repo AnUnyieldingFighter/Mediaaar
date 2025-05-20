@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.viewpager.widget.ViewPager;
 
 import com.images.config.entity.MediaEntity;
-import com.images.ui.adapter.AdapterPreviewClickList;
+import com.images.ui.adapter.OnImgClickListener;
 import com.images.ui.adapter.MediaPreviewAdapter;
 import com.images.ui.adapter.OnMediaImgIbl;
 
@@ -68,10 +68,10 @@ public class MediaPreviewLayout extends ViewPager {
     protected void OnPhotoTapListener(View view, float v, float v1) {
     }
 
-    class PreviewClickList implements AdapterPreviewClickList {
+    class PreviewClickList implements OnImgClickListener {
 
         @Override
-        public void OnPhotoTapListener(View view, float v, float v1) {
+        public void OnImgTapClick(View view, float v, float v1) {
             MediaPreviewLayout.this.OnPhotoTapListener(view, v, v1);
         }
     }

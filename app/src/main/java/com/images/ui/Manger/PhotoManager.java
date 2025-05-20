@@ -1,19 +1,11 @@
 package com.images.ui.Manger;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.util.TypedValue;
-import android.widget.ImageView;
 
-import com.images.config.ConfigBuild;
-import com.images.config.Configs;
-import com.images.config.ImageLoader;
 import com.images.config.entity.MediaEntity;
-import com.images.unmix.ImageLog;
-import com.bumptech.glide.Glide;
-import com.guomin.app.seletcimage.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,11 +83,11 @@ public class PhotoManager {
 
     //只拍照
     public void getSinglePhotoConfig() {
-        ConfigBuild.getNewBuild()
+      /*  ConfigBuild.getNewBuild()
                 .setLoading(new ImageShowType())
                 .setDebug(true)
                 .setOnlyPhotograph(true)
-                .build(activity);
+                .build(activity);*/
 
     }
 
@@ -213,35 +205,5 @@ public class PhotoManager {
                 .build(activity);*/
     }
 
-    class ImageShowType implements ImageLoader {
-
-        @Override
-        public void imageLoading(Context context, String path, ImageView imageView) {
-            Glide.with(context)
-                    .load(path)
-                    .placeholder(R.mipmap.image_select_default)
-                    //.centerCrop()
-                    .into(imageView);
-        }
-
-        @Override
-        public void interdictMsg(Context context, MediaEntity imageEntity) {
-            ImageLog.d("-------", "不能删除图片............");
-        }
-    }
-
-    public List<String> onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != Configs.TASK_START) {
-            return null;
-        }
-        ArrayList<String> pathList = data.getStringArrayListExtra(Configs.TASK_COMPLETE_RESULT);
-        if (pathList == null || pathList.size() == 0) {
-            return null;
-        }
-        for (String path : pathList) {
-            Log.e("ImagePathList", path);
-        }
-        return pathList;
-    }
-
+   
 }

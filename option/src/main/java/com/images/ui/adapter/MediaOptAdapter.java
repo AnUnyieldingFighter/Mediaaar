@@ -15,6 +15,9 @@ import com.images.unmix.ImageLog;
 
 import java.util.ArrayList;
 
+/**
+ * 图片视频选择
+ */
 public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHolder> {
     private ArrayList<MediaEntity> datas = new ArrayList();
     private Context context;

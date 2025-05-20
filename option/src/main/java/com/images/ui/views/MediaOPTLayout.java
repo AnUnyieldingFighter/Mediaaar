@@ -15,7 +15,7 @@ import com.images.imageselect.R;
 import com.images.photo.MediaManager;
 import com.images.ui.adapter.MediaOptAdapter;
 import com.images.ui.adapter.OnMediaImgIbl;
-import com.images.ui.bean.ImageFile;
+
 
 import java.util.ArrayList;
 
@@ -86,11 +86,6 @@ public class MediaOPTLayout extends RelativeLayout {
 
     //读取数据库照片监听
     class LoadingListener implements MediaManager.OnLoadingListener {
-
-        @Override
-        public void onLoadingFile(ArrayList<ImageFile> fils) {
-
-        }
 
         @Override
         public void onLoadingMedia(ArrayList<MediaEntity> files) {
