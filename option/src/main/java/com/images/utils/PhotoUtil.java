@@ -1,4 +1,4 @@
-package com.images.photo;
+package com.images.utils;
 
 import android.Manifest;
 import android.app.Activity;

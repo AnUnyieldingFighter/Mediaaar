@@ -7,7 +7,6 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.guomin.app.seletcimage.R;
-import com.images.photo.FileUtil;
 import com.images.ui.activity.choose.MediaActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {

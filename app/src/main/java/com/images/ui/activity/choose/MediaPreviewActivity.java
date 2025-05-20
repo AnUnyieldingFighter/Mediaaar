@@ -22,7 +22,7 @@ public class MediaPreviewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_preview);
         mediaLayout = findViewById(R.id.media_layout);
-        mediaLayout.setMedias(this, MediaOptActivity.temp);
+
         mediaLayout.setImageLoading(new OnMediaImgIbl() {
             @Override
             public void onImageLoading(Context context, String path, ImageView imageView) {
@@ -33,6 +33,7 @@ public class MediaPreviewActivity extends AppCompatActivity {
                         .into(imageView);
             }
         });
+        mediaLayout.setMedias(this, MediaOptActivity.temp);
     }
 
 }

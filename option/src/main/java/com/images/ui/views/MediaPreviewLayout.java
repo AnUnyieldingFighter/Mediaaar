@@ -2,96 +2,110 @@ package com.images.ui.views;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.RelativeLayout;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.viewpager.widget.ViewPager;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.images.config.entity.MediaEntity;
+import com.images.imageselect.R;
+import com.images.ui.adapter.MediaPagerAdapter2;
 import com.images.ui.adapter.OnImgClickListener;
-import com.images.ui.adapter.MediaPreviewAdapter;
 import com.images.ui.adapter.OnMediaImgIbl;
+import com.images.ui.frag.ImgFragment;
+import com.images.ui.frag.MediaFragment;
 
 import java.util.ArrayList;
 
 //图片预览
-public class MediaPreviewLayout extends ViewPager {
+public class MediaPreviewLayout extends RelativeLayout {
 
-    public MediaPreviewLayout(@NonNull Context context) {
+    public MediaPreviewLayout(Context context) {
         super(context);
+        initView();
     }
 
-    public MediaPreviewLayout(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public MediaPreviewLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
+        initView();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        try {
-            return super.onTouchEvent(ev);
-        } catch (IllegalArgumentException ex) {
-            ex.printStackTrace();
-        }
-        return false;
+    public MediaPreviewLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        initView();
     }
 
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        try {
-            return super.onInterceptTouchEvent(ev);
-        } catch (IllegalArgumentException ex) {
-            ex.printStackTrace();
-        }
-        return false;
+    public MediaPreviewLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        initView();
     }
 
-    private MediaPreviewAdapter adapter;
+    protected ViewPager2 viewPager;
 
-    public void setMedias(Context context, ArrayList<MediaEntity> medias) {
+    protected void initView() {
+        LayoutInflater.from(getContext()).inflate(R.layout.media_layout_preview, this);
+        viewPager = findViewById(R.id.view_pager);
+    }
+
+
+    private MediaPagerAdapter2 adapter;
+
+    public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias) {
         if (adapter == null) {
-            adapter = new MediaPreviewAdapter(context, medias);
-            adapter.setPhotoViewClickListener(new PreviewClickList());
+            adapter = new MediaPagerAdapter2(act);
         }
-        setAdapter(adapter);
-        addOnPageChangeListener(new OnPagerChange());
+        viewPager.setAdapter(adapter);
+        viewPager.setOffscreenPageLimit(medias.size());
+        viewPager.registerOnPageChangeCallback(new OnPagerChange());
+        ArrayList<MediaFragment> pages = getFrag(medias);
+        adapter.setData(pages);
     }
 
-    public void setImageLoading(OnMediaImgIbl imgLoading) {
-        adapter.setImageLoading(imgLoading);
+    protected ArrayList<MediaFragment> getFrag(ArrayList<MediaEntity> medias) {
+        ArrayList<MediaFragment> pages = new ArrayList<>();
+        for (int i = 0; i < medias.size(); i++) {
+            MediaEntity bean = medias.get(i);
+            if (bean.type == 1) {
+                ImgFragment frg = ImgFragment.newInstance(bean);
+                frg.setOnImgClickListener(previewClickList, imgLoading);
+                pages.add(frg);
+            }
+        }
+        return pages;
     }
+
 
     protected void onPageOpt(int position) {
     }
 
-    protected void OnPhotoTapListener(View view, float v, float v1) {
+    protected void OnPhotoTapListener(View view, MediaEntity mediaEntity, float v, float v1) {
     }
+
+    private OnMediaImgIbl imgLoading;
+
+    public void setImageLoading(OnMediaImgIbl imgLoading) {
+        this.imgLoading = imgLoading;
+    }
+
+    private PreviewClickList previewClickList = new PreviewClickList();
 
     class PreviewClickList implements OnImgClickListener {
 
+
         @Override
-        public void OnImgTapClick(View view, float v, float v1) {
-            MediaPreviewLayout.this.OnPhotoTapListener(view, v, v1);
+        public void OnImgTapClick(View view, MediaEntity mediaEntity, float v, float v1) {
+            MediaPreviewLayout.this.OnPhotoTapListener(view, mediaEntity, v, v1);
         }
     }
 
-    class OnPagerChange implements ViewPager.OnPageChangeListener {
-
-        @Override
-        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-        }
-
+    class OnPagerChange extends ViewPager2.OnPageChangeCallback {
         @Override
         public void onPageSelected(int position) {
             onPageOpt(position);
         }
 
-        @Override
-        public void onPageScrollStateChanged(int state) {
-
-        }
 
     }
 }

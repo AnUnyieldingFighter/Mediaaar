@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.images.config.entity.MediaEntity;
-import com.images.photo.FileUtil;
+import com.images.utils.FileUtil;
 import com.images.ui.thing.crop.EnjoyCropLayout;
 import com.images.ui.thing.crop.core.BaseLayerView;
 import com.images.ui.thing.crop.core.clippath.ClipPathLayerView;

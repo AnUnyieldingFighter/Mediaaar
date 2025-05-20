@@ -1,4 +1,4 @@
-package com.images.photo;
+package com.images.utils;
 
 import android.content.Context;
 import android.os.Environment;

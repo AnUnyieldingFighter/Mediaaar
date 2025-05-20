@@ -1,6 +1,5 @@
 package com.images.ui.activity.choose;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,8 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.images.config.entity.MediaEntity;
-import com.images.photo.PhotoUtil;
-import com.images.ui.Manger.ImageUtile;
+import com.images.utils.PhotoUtil;
 import com.images.ui.Manger.PhotoManager;
 import com.guomin.app.seletcimage.R;
 import com.images.unmix.ImageLog;

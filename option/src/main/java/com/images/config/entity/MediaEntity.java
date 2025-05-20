@@ -42,6 +42,6 @@ public class MediaEntity implements Serializable {
     public boolean isDelete = true;
     //true 发送的是压缩图
     public boolean optionTailor = true;
-    //1 图片 2 视频
+    //1 图片/gif 2 视频
     public int type;
 }
