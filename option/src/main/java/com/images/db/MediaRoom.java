@@ -54,6 +54,8 @@ public class MediaRoom {
             String sq21 = "CREATE TABLE IF NOT EXISTS tab_media (" + "mediaId TEXT PRIMARY KEY NOT NULL," + "mediaPathSource TEXT ," + "mediaPath TEXT ," + "mediaName TEXT," + "mediaTime Long," + "mediaFileName TEXT," + "mediaType TEXT," + "mediaSize TEXT,"
                     + "mediaFileId TEXT,"
                     + "type Int,"
+                    + "width Int,"
+                    + "height Int,"
                     + "mediaAngle TEXT" + ")";
             database.execSQL(sq21);
         }

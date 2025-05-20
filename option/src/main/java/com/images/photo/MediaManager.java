@@ -36,6 +36,9 @@ public class MediaManager {
             MediaStore.Images.Media.SIZE,                  //图片大小
             MediaStore.Images.Media.BUCKET_ID,             //相册id
             MediaStore.Images.Media.LONGITUDE,             // 经度
+            MediaStore.Images.Media.WIDTH,             // 宽度
+            MediaStore.Images.Media.HEIGHT,             // 高度
+
     };
     private final String[] VIDEO_PROJECTION = {MediaStore.Video.Media.DATA, //视频路径
             MediaStore.Video.Media.DISPLAY_NAME,          //视频名称
@@ -46,6 +49,8 @@ public class MediaManager {
             MediaStore.Video.Media.SIZE,                  //视频大小
             MediaStore.Video.Media.BUCKET_ID,             //相册id
             MediaStore.Video.Media.LONGITUDE,             // 经度
+            MediaStore.Video.Media.WIDTH,             // 宽度
+            MediaStore.Video.Media.HEIGHT,             // 高度
     };
 
 
@@ -75,6 +80,8 @@ public class MediaManager {
         image.mediaSize = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[6]));
         image.mediaFileId = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[7]));
         image.mediaAngle = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[8]));
+        image.width = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[9]));
+        image.height = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[10]));
         return image;
     }
 
@@ -89,6 +96,8 @@ public class MediaManager {
         image.mediaSize = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[6]));
         image.mediaFileId = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[7]));
         image.mediaAngle = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[8]));
+        image.width = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[9]));
+        image.height = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[10]));
         return image;
     }
     //================获取照片=====================================

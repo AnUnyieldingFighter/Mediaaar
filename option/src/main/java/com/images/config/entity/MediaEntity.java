@@ -31,6 +31,8 @@ public class MediaEntity implements Serializable {
     public String mediaFileId;
     // 经度
     public int mediaAngle;
+    public int width;
+    public int height;
     //true 被选中
     public boolean isOption;
 
