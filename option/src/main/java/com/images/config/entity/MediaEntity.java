@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Entity(tableName = "tab_media")
 public class MediaEntity implements Serializable {
     public int index;
-    //原图片路径
+    //原图片/视频路径
     public String mediaPathSource;
     //裁剪或者压缩的图片路径
     public String mediaPath;
@@ -34,14 +34,12 @@ public class MediaEntity implements Serializable {
     public int width;
     public int height;
     //true 被选中
+    //1 图片/gif 2 视频
+    public int type;
     public boolean isOption;
-
-    //true 是外部预选
-    public boolean isOptionFixation = true;
     //false 不可以删除
     public boolean isDelete = true;
     //true 发送的是压缩图
     public boolean optionTailor = true;
-    //1 图片/gif 2 视频
-    public int type;
+    public String url;
 }

@@ -1,7 +1,8 @@
-package com.images.photo;
+package com.images.manager;
 
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.view.Surface;
@@ -43,7 +44,6 @@ public class MediaPlayerManager {
     private void mediaPlayerInit() {
         if (mediaPlayer != null) {
             setMediaWork(3);
-            return;
         }
         playProgressHander = new PlayProgressHander();
         mediaPlayer = new MediaPlayer();
@@ -56,7 +56,9 @@ public class MediaPlayerManager {
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                setMediaWork(2);
+                d("准备完成");
+                setMediaStart();
+                //setMediaWork(2);
             }
         });
 
@@ -89,6 +91,8 @@ public class MediaPlayerManager {
                 setMediaWork(2);
             }
         });
+        // 设置循环播放
+        //mediaPlayer.setLooping(true);
     }
 
     /**
@@ -97,7 +101,7 @@ public class MediaPlayerManager {
      * @param url  网络
      * @param path 本地
      */
-    public void setDataSource(String url, String path) {
+    private void setDataSource(String url, String path) {
         if (!TextUtils.isEmpty(path)) {
             setPayPath(path);
             return;
@@ -107,6 +111,7 @@ public class MediaPlayerManager {
 
     public void setDataSourcePlay(String url, String path) {
         setDataSource(url, path);
+        //准备好之后会去播放，因此调用此方法后面  不要再调用 setMediaPlayerStart
         setMediaWork(0);
     }
 
@@ -116,8 +121,8 @@ public class MediaPlayerManager {
      * @param url 源地址
      */
     private void setPayUrl(String url) {
-        sourceType = 2;
         mediaPlayerInit();
+        sourceType = 2;
         try {
             source = url;
             mediaPlayer.setDataSource(url);
@@ -132,8 +137,8 @@ public class MediaPlayerManager {
      * @param path 源地址
      */
     private void setPayPath(String path) {
-        sourceType = 1;
         mediaPlayerInit();
+        sourceType = 1;
         File file = new File(path);
         if (!file.exists()) {
             sourceType = 3;
@@ -195,6 +200,22 @@ public class MediaPlayerManager {
         setMediaWork(5);
     }
 
+    //设置开始播放
+    private void setMediaStart() {
+        //
+        // MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
+        // mediaPlayer.start();
+        //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
+        mediaPlayer.start();
+        playProgressHander.start();
+        setListenerBack(2);
+    }
+
+    //true 没有在播放
+    public boolean isStopPlay() {
+        return (workType == 1 || workType == 3) && mediaPlayer != null;
+    }
+
     //保存播放状态
     private int workType;
 
@@ -226,10 +247,7 @@ public class MediaPlayerManager {
                 if (!isPay) {
                     break;
                 }
-                //播放
-                mediaPlayer.start();
-                playProgressHander.start();
-                setListenerBack(2);
+                setMediaStart();
                 break;
             case 3:
                 if (workType == 3) {

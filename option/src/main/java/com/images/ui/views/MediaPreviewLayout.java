@@ -16,6 +16,7 @@ import com.images.ui.adapter.OnImgClickListener;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.frag.ImgFragment;
 import com.images.ui.frag.MediaFragment;
+import com.images.ui.frag.VideoFragment;
 
 import java.util.ArrayList;
 
@@ -56,10 +57,10 @@ public class MediaPreviewLayout extends RelativeLayout {
         if (adapter == null) {
             adapter = new MediaPagerAdapter2(act);
         }
-        viewPager.setAdapter(adapter);
-        viewPager.setOffscreenPageLimit(medias.size());
-        viewPager.registerOnPageChangeCallback(new OnPagerChange());
         ArrayList<MediaFragment> pages = getFrag(medias);
+        viewPager.setAdapter(adapter);
+        viewPager.setOffscreenPageLimit(pages.size());
+        viewPager.registerOnPageChangeCallback(new OnPagerChange());
         adapter.setData(pages);
     }
 
@@ -70,6 +71,11 @@ public class MediaPreviewLayout extends RelativeLayout {
             if (bean.type == 1) {
                 ImgFragment frg = ImgFragment.newInstance(bean);
                 frg.setOnImgClickListener(previewClickList, imgLoading);
+                pages.add(frg);
+            }
+            if (bean.type == 2) {
+                VideoFragment frg = VideoFragment.newInstance(bean);
+                frg.setOnImgClickListener(imgLoading);
                 pages.add(frg);
             }
         }

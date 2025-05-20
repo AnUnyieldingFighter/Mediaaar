@@ -1,4 +1,4 @@
-package com.images.photo;
+package com.images.manager;
 
 import android.content.Context;
 import android.database.Cursor;

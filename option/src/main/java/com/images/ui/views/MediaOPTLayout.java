@@ -1,6 +1,5 @@
 package com.images.ui.views;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -12,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.images.config.entity.MediaEntity;
 import com.images.imageselect.R;
-import com.images.photo.MediaManager;
+import com.images.manager.MediaManager;
 import com.images.ui.adapter.MediaOptAdapter;
 import com.images.ui.adapter.OnMediaImgIbl;
 
