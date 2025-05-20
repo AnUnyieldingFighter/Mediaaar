@@ -62,8 +62,13 @@ public class MediaOPTLayout extends RelativeLayout {
         adapter.setMediaOptMax(getContext(), count, imgLoading);
     }
 
-    protected boolean isShowCamera;//true  允许拍照
+    protected boolean isShowCamera;//true  允许拍照 未实现
 
+    /**
+     *
+     * @param resType  1:全部 2:图片 3：视频
+     * @param isShowCamera
+     */
     public void doRequest(int resType, boolean isShowCamera) {
         this.isShowCamera = isShowCamera;
         MediaManager.getInstance().doReq(resType);

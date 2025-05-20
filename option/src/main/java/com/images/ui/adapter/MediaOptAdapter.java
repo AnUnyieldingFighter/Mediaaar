@@ -1,6 +1,7 @@
 package com.images.ui.adapter;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,6 +63,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
         if ("-1".equals(bean.mediaType)) {
             holder.ivMedia.setImageResource(R.mipmap.images_select_camera);
             holder.tvOpt.setVisibility(View.GONE);
+            holder.tvType.setVisibility(View.GONE);
         } else {
             boolean isOption = bean.isOption;
             if (isOption) {
@@ -80,6 +82,21 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             holder.tvOpt.setVisibility(View.VISIBLE);
             imgLoading.onImageLoading(context, bean.mediaPathSource, holder.ivMedia);
             holder.tvOpt.setOnClickListener(new Click(position));
+            String mediaType = bean.mediaType;
+            if (mediaType == null) {
+                mediaType = "";
+            }
+            mediaType = mediaType.replace("image/", "");
+            mediaType = mediaType.replace("video/", "");
+            mediaType = mediaType.replace("png", "");
+            mediaType = mediaType.replace("jpg", "");
+            mediaType = mediaType.replace("webp", "");
+            if (TextUtils.isEmpty(mediaType)) {
+                holder.tvType.setVisibility(View.GONE);
+            } else {
+                holder.tvType.setText(mediaType.toUpperCase());
+                holder.tvType.setVisibility(View.VISIBLE);
+            }
         }
         holder.ivMedia.setOnClickListener(new Click(position));
     }
@@ -91,12 +108,14 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
 
     class ViewHolder extends RecyclerView.ViewHolder {
         public ImageView ivMedia;
-        public TextView tvOpt;
+        public TextView tvOpt, tvType;
 
         public ViewHolder(View itemView) {
             super(itemView);
             ivMedia = itemView.findViewById(R.id.iv_media);
             tvOpt = itemView.findViewById(R.id.tv_opt);
+            tvType = itemView.findViewById(R.id.tv_type);
+
             if (itemImgWidth > 0 && itemImgWidth != itemView.getWidth()) {
                 ViewGroup.LayoutParams lp = ivMedia.getLayoutParams();
                 lp.width = itemImgWidth;
