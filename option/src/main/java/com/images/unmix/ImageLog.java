@@ -9,18 +9,18 @@ import android.util.Log;
 public class ImageLog {
     private static boolean isDebug = true;
 
-    public static void e(String tag, Object obj) {
+    public static void d(String tag, Object obj) {
         if (!isDebug) {
             return;
         }
-        Log.e(tag, String.valueOf(obj));
+        Log.d("ImageLog===>" + tag, String.valueOf(obj));
     }
 
-    public static void e(Object obj) {
+    public static void d(Object obj) {
         if (!isDebug) {
             return;
         }
-        Log.e("===", String.valueOf(obj));
+        Log.e("ImageLog===>", String.valueOf(obj));
     }
 
     public static void setIsDebug(boolean debug) {

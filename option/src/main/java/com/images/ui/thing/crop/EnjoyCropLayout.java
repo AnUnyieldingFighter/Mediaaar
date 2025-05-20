@@ -167,26 +167,26 @@ public class EnjoyCropLayout extends FrameLayout {
     public Bitmap crop() {
 
         if (mLayerView == null) {
-            ImageLog.e(" layerView is null");
+            ImageLog.d(" layerView is null");
         }
         if (mImageView.getDrawable() == null) {
-            ImageLog.e("ImageView 'drawable is null");
+            ImageLog.d("ImageView 'drawable is null");
             return null;
         }
         if (!(mImageView.getDrawable() instanceof BitmapDrawable)) {
-            ImageLog.e("only support the type of BitmapDrawable");
+            ImageLog.d("only support the type of BitmapDrawable");
             return null;
         }
         IShape iShape = mLayerView.getShape();
         if (iShape == null) {
-            ImageLog.e("shape is null");
+            ImageLog.d("shape is null");
             return null;
         }
 
         BitmapDrawable drawable = (BitmapDrawable) mImageView.getDrawable();
         Bitmap bitmap = drawable.getBitmap();
         if (bitmap == null) {
-            ImageLog.e("bitmap is null");
+            ImageLog.d("bitmap is null");
             return null;
         }
         //以下所有步骤的思路，均是将点或者大小还原到加载图片大小比例后，再进行处理。

@@ -38,17 +38,17 @@ public class BitmapUtile {
     //对拍摄的照片进行旋转处理
     public static Bitmap imageRotate(String imagePath, Bitmap bm) {
         if (bm == null) {
-            ImageLog.e(TAG, "Bitmap 无效");
+            ImageLog.d(TAG, "Bitmap 无效");
             return null;
         }
         if (TextUtils.isEmpty(imagePath)) {
-            ImageLog.e(TAG, "原始图片path不能为空");
+            ImageLog.d(TAG, "原始图片path不能为空");
             return null;
         }
         //1.获取图片旋转的角度，然后给它旋转回来
         int degree = readPictureDegree(imagePath);
         if (degree == 0) {
-            ImageLog.e(TAG, "无须处理");
+            ImageLog.d(TAG, "无须处理");
             return bm;
         }
         //3.根据指定旋转度数进行图片旋转
@@ -93,12 +93,12 @@ public class BitmapUtile {
             FileInputStream stream2 = new FileInputStream(f);
             Bitmap bitmap = BitmapFactory.decodeStream(stream2, null, option2);
             stream2.close();
-            ImageLog.e(TAG, "读取图片成功 scale=" + scale);
+            ImageLog.d(TAG, "读取图片成功 scale=" + scale);
             return bitmap;
         } catch (FileNotFoundException e) {
-            ImageLog.e(TAG, "读取图片失败");
+            ImageLog.d(TAG, "读取图片失败");
         } catch (IOException e) {
-            ImageLog.e(TAG, "读取图片失败");
+            ImageLog.d(TAG, "读取图片失败");
             e.printStackTrace();
         }
         return null;
@@ -128,10 +128,10 @@ public class BitmapUtile {
                     degree = 270;
                     break;
             }
-            ImageLog.e(TAG, "get degree：" + degree);
+            ImageLog.d(TAG, "get degree：" + degree);
         } catch (IOException e) {
             e.printStackTrace();
-            ImageLog.e(TAG, "get degree error");
+            ImageLog.d(TAG, "get degree error");
         }
         return degree;
 
@@ -151,7 +151,7 @@ public class BitmapUtile {
         // 旋转图片 动作
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
-        ImageLog.e(TAG, "angle:" + angle + " complete");
+        ImageLog.d(TAG, "angle:" + angle + " complete");
         // 创建新的图片
         Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
                 bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -178,11 +178,11 @@ public class BitmapUtile {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
             bos.flush();
             bos.close();
-            ImageLog.e(TAG, "图片保存成功");
+            ImageLog.d(TAG, "图片保存成功");
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            ImageLog.e(TAG, "图片保存失败");
+            ImageLog.d(TAG, "图片保存失败");
         }
         return false;
     }

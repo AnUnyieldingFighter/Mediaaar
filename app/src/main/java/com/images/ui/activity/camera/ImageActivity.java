@@ -104,14 +104,14 @@ public class ImageActivity extends Activity implements View.OnClickListener {
         try {
             exif = new ExifInterface(filepath);
         } catch (IOException ex) {
-            ImageLog.e("", "cannot read exif" + ex);
+            ImageLog.d("", "cannot read exif" + ex);
         }
         return exif;
     }
 
     private int getAngle(ExifInterface exif) {
         String orientation = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
-        ImageLog.e("--------", "旋转" + orientation);
+        ImageLog.d("--------", "旋转" + orientation);
         int degree = -1;
         if (orientation == null) {
             return -3;
@@ -166,7 +166,7 @@ public class ImageActivity extends Activity implements View.OnClickListener {
         String longitudeRef = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE_REF);
         String lat = convertToCoordinate(latitude);
         String lon = convertToCoordinate(longitude);
-        ImageLog.e("-----", latitudeRef + "*" + longitudeRef);
+        ImageLog.d("-----", latitudeRef + "*" + longitudeRef);
         return lat + "*" + lon;
     }
 
@@ -190,7 +190,7 @@ public class ImageActivity extends Activity implements View.OnClickListener {
             return sizeI + "";
         }
         sizeI = file.length();
-        ImageLog.e("-------", "大小：" + sizeI);
+        ImageLog.d("-------", "大小：" + sizeI);
         String value = "B";
         double size = 0;
         if (sizeI > 1024) {

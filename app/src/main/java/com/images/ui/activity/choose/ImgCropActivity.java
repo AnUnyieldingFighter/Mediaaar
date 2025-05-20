@@ -31,7 +31,7 @@ public class ImgCropActivity extends AppCompatActivity {
         findViewById(R.id.tv_crop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                savePath = mediaLayout.saveImg("/temp/pictures");
+                savePath = mediaLayout.saveImg();
                 Glide.with(ImgCropActivity.this).load(savePath).placeholder(R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(ivCrop);

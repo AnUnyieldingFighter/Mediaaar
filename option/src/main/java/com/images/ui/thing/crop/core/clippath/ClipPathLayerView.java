@@ -26,14 +26,14 @@ public class ClipPathLayerView extends BaseLayerView {
     protected void onDraw(Canvas canvas) {
 
         if (mShape == null) {
-            ImageLog.e("Warning:Shape is null");
+            ImageLog.d("Warning:Shape is null");
             if (mMask != null) {
                 mMask.draw(this, canvas);
             }
             return;
         }
         if (!(mShape instanceof  IClipPathShape)) {
-            ImageLog.e("Shape must be subclass ofIClipPathShape ");
+            ImageLog.d("Shape must be subclass ofIClipPathShape ");
             return;
         }
        IClipPathShape shape = ( IClipPathShape) mShape;

@@ -118,7 +118,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             if (id == R.id.tv_opt) {
                 //选择了图片
                 if (!image.isOption && optData.size() == max) {
-                    ImageLog.e("已达上限");
+                    ImageLog.d("已达上限");
                     if (imgLoading != null) {
                         imgLoading.onImageSelect(null, -1);
                     }

@@ -226,7 +226,7 @@ public class PhotoManager {
 
         @Override
         public void interdictMsg(Context context, MediaEntity imageEntity) {
-            ImageLog.e("-------", "不能删除图片............");
+            ImageLog.d("-------", "不能删除图片............");
         }
     }
 

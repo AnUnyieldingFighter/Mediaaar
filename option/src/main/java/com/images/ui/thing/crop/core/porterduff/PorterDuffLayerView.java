@@ -29,10 +29,10 @@ public  class PorterDuffLayerView extends BaseLayerView {
     @Override
     protected void onDraw(Canvas canvas) {
         if(mShape==null){
-            ImageLog.e("Shape can not be null");
+            ImageLog.d("Shape can not be null");
          }
         if(!(mShape instanceof IPorterDuffShape)){
-            ImageLog.e("Shape must be subclass of IPorterDuffShape");
+            ImageLog.d("Shape must be subclass of IPorterDuffShape");
         }
         Bitmap bitmap = Bitmap.createBitmap(width(), height(), Bitmap.Config.ARGB_4444);
         Canvas c = new Canvas(bitmap);

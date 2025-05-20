@@ -7,6 +7,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.guomin.app.seletcimage.R;
+import com.images.photo.FileUtil;
 import com.images.ui.activity.choose.MediaActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -20,7 +21,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.image_test2_btn).setOnClickListener(this);
         findViewById(R.id.image_camera_btn).setOnClickListener(this);
         findViewById(R.id.video_btn).setOnClickListener(this);
-          //
 
 
     }

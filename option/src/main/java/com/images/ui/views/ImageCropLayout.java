@@ -3,24 +3,14 @@ package com.images.ui.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.viewpager.widget.ViewPager;
 
 import com.images.config.entity.MediaEntity;
-import com.images.imageselect.R;
-import com.images.photo.DataStore;
-import com.images.photo.FileUtile;
-import com.images.photo.MediaManager;
-import com.images.ui.adapter.AdapterPreviewClickList;
-import com.images.ui.adapter.MediaPreviewAdapter;
-import com.images.ui.adapter.OnMediaImgIbl;
+import com.images.photo.FileUtil;
 import com.images.ui.thing.crop.EnjoyCropLayout;
 import com.images.ui.thing.crop.core.BaseLayerView;
 import com.images.ui.thing.crop.core.clippath.ClipPathLayerView;
@@ -30,7 +20,6 @@ import com.images.unmix.BitmapUtile;
 import com.images.unmix.ImageLog;
 
 import java.io.File;
-import java.util.ArrayList;
 
 //图片裁剪
 public class ImageCropLayout extends RelativeLayout {
@@ -67,9 +56,9 @@ public class ImageCropLayout extends RelativeLayout {
         }
     }
 
-    public String saveImg(String filePath) {
+    public String saveImg() {
         Bitmap bitmap = enjoyCropLayout.crop();
-        File file = FileUtile.createPhotoFile(context, filePath, "");
+        File file = FileUtil.createCropFile(context);
         boolean isSave = BitmapUtile.saveBitmaps(bitmap, file);
         String path = "";
         if (isSave) {
@@ -90,7 +79,7 @@ public class ImageCropLayout extends RelativeLayout {
         //设置裁剪原图片
         Bitmap bitmap = BitmapUtile.resizeBitmap(path, width, height);
         if (bitmap == null) {
-            ImageLog.e("bitmap：读取失败");
+            ImageLog.d("bitmap：读取失败");
             return;
         }
         //旋转图片

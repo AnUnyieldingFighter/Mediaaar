@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -235,7 +234,7 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
         mScale = mScale * scaleFactor;
         mView.getImageMatrix().postScale(scaleFactor, scaleFactor,
                 px, py);
-         ImageLog.e("scale:" + scaleFactor + " (" + px + "," + py + ")");
+         ImageLog.d("scale:" + scaleFactor + " (" + px + "," + py + ")");
         mView.invalidate();
         return true;
     }

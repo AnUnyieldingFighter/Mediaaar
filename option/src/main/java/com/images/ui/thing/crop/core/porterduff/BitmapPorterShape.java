@@ -37,7 +37,7 @@ public class BitmapPorterShape implements IPorterDuffShape {
         canvasWrapper.setBitmapMode();
         Bitmap bitmap = BitmapFactory.decodeResource(mContext.getResources(),mResId);
         if(bitmap==null){
-           ImageLog.e("BitmapPorterShape must set a bitmap");
+           ImageLog.d("BitmapPorterShape must set a bitmap");
         }
         mWidth = bitmap.getWidth();
         mHeight = bitmap.getHeight();
