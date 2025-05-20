@@ -47,6 +47,11 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
         notifyDataSetChanged();
     }
 
+    //清除选中的数据
+    public void setOptDataReset() {
+        optData.clear();
+    }
+
     public ArrayList<MediaEntity> getOptData() {
         return optData;
     }

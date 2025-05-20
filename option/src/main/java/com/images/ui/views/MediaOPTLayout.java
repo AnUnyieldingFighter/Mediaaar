@@ -66,7 +66,7 @@ public class MediaOPTLayout extends RelativeLayout {
 
     /**
      *
-     * @param resType  1:全部 2:图片 3：视频
+     * @param resType  1:全部 2:图片 3：视频 4：GIF
      * @param isShowCamera
      */
     public void doRequest(int resType, boolean isShowCamera) {

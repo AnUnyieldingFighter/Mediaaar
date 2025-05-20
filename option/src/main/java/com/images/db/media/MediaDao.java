@@ -39,8 +39,13 @@ public interface MediaDao {
 
     @Query("select * from tab_media ORDER BY mediaTime DESC")
     List<MediaEntity> queryAll();
+
     @Query("select * from tab_media where type=:type ORDER BY mediaTime DESC")
     List<MediaEntity> queryTypeAll(int type);
+
+    @Query("select * from tab_media where mediaType LIKE :mediaType ORDER BY mediaTime DESC")
+    List<MediaEntity> queryAll(String mediaType);
+
     @Query("SELECT COUNT(*) FROM tab_media")
     int queryCount();
 

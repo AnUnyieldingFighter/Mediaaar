@@ -18,7 +18,7 @@ import java.util.List;
  *
  */
 public class MediaManager {
-     private static MediaManager manager;
+    private static MediaManager manager;
 
     public static MediaManager getInstance() {
         if (manager == null) {
@@ -112,7 +112,7 @@ public class MediaManager {
     /**
      * 请求获取照片
      *
-     * @param resType 1:全部 2:图片 3：视频
+     * @param resType 1:全部 2:图片 3：视频 4：GIF
      */
     public void doReq(int resType) {
         this.resType = resType;
@@ -202,7 +202,7 @@ public class MediaManager {
             isRuning = true;
             switch (resType) {
                 case 1:
-                    //获取所有 但是要排序
+                    //获取所有 并且要排序
                     List<MediaEntity> datas = MediaRoom.geMediaDb(context).getDao().queryAll();
                     Message msg = new Message();
                     msg.what = 200;
@@ -210,7 +210,7 @@ public class MediaManager {
                     imagesHandle.sendMessage(msg);
                     break;
                 case 2:
-                    //获取所有图片 但是要排序
+                    //获取所有图片 并且要排序
                     datas = MediaRoom.geMediaDb(context).getDao().queryTypeAll(1);
                     msg = new Message();
                     msg.what = 200;
@@ -219,8 +219,16 @@ public class MediaManager {
                     break;
 
                 case 3:
-                    //获取所有视频 但是要排序
+                    //获取所有视频 并且要排序
                     datas = MediaRoom.geMediaDb(context).getDao().queryTypeAll(2);
+                    msg = new Message();
+                    msg.what = 200;
+                    msg.obj = datas;
+                    imagesHandle.sendMessage(msg);
+                    break;
+                case 4:
+                    //获取所有GIF 并且要排序
+                    datas = MediaRoom.geMediaDb(context).getDao().queryAll("%gif%");
                     msg = new Message();
                     msg.what = 200;
                     msg.obj = datas;
