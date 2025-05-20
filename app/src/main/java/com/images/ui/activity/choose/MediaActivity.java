@@ -1,17 +1,24 @@
 package com.images.ui.activity.choose;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.images.config.entity.MediaEntity;
+import com.images.photo.PhotoUtil;
+import com.images.ui.Manger.ImageUtile;
 import com.images.ui.Manger.PhotoManager;
 import com.guomin.app.seletcimage.R;
+import com.images.unmix.ImageLog;
 
+import java.io.File;
 import java.util.ArrayList;
+
 //老板
 public class MediaActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -27,6 +34,8 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.image_btn31).setOnClickListener(this);
         findViewById(R.id.image_btn4).setOnClickListener(this);
         findViewById(R.id.image_btn5).setOnClickListener(this);
+        findViewById(R.id.image_btn51).setOnClickListener(this);
+
         findViewById(R.id.image_btn6).setVisibility(View.GONE);
         findViewById(R.id.image_btn7).setVisibility(View.GONE);
 
@@ -73,6 +82,12 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 it.setClass(this, MediaOptActivity.class);
                 startActivity(it);
                 break;
+            case R.id.image_btn51:
+                //相机拍照
+                PhotoUtil.showCameraAction(this);
+                break;
+
+
             case R.id.image_btn2:
                 //只预览
                 photoManager.previewImage(getPaths());
@@ -101,6 +116,16 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (PhotoUtil.isTakeOK(requestCode, resultCode)) {
+            //拍照成功
+            File file = PhotoUtil.getTakeResFile();
+            if (file != null && file.exists()) {
+                ImageLog.d("拍照成功", file.getPath());
+            }
 
-
+        }
+    }
 }

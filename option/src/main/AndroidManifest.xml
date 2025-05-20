@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.images.imageselect"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.images.imageselect">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -16,45 +18,13 @@
             android:name="com.images.ui.provider.OptionFileProvider"
             android:authorities="${applicationId}"
             android:exported="false"
-            android:grantUriPermissions="true"
-            >
+            android:grantUriPermissions="true">
             <!--//用于设置FileProvider的文件访问路径-->
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/paths"
-                />
+                android:resource="@xml/paths" />
         </provider>
 
-        <activity
-            android:name="com.images.ui.activity.IncidentActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        </activity>
-        <activity
-            android:name="com.images.ui.activity.CropActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        </activity>
-        <activity
-            android:name="com.images.ui.activity.PreviewSelectActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/PickerThemeFullScreen">
-        </activity>
-        <activity
-            android:name="com.images.ui.activity.PreviewDeleteActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/PickerThemeFullScreen">
-        </activity>
-        <activity
-            android:name="com.images.ui.activity.PreviewOnlyActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/PickerThemeFullScreen">
-        </activity>
 
     </application>
 
