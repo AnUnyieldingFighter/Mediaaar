@@ -66,6 +66,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     public void onBindViewHolder(ViewHolder holder, int position) {
         MediaEntity bean = datas.get(position);
         if ("-1".equals(bean.mediaType)) {
+            holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER);
             holder.ivMedia.setImageResource(R.mipmap.images_select_camera);
             holder.tvOpt.setVisibility(View.GONE);
             holder.tvType.setVisibility(View.GONE);
@@ -85,6 +86,11 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.tvOpt.setText("");
             }
             holder.tvOpt.setVisibility(View.VISIBLE);
+            if ((bean.width > 0 && bean.width <= itemImgWidth) && (bean.height > 0 && bean.height <= itemImgWidth)) {
+                holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER);
+            } else {
+                holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            }
             imgLoading.onImageLoading(context, bean.mediaPathSource, holder.ivMedia);
             holder.tvOpt.setOnClickListener(new Click(position));
             String mediaType = bean.mediaType;
