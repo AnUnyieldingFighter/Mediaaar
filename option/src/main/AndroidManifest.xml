@@ -7,7 +7,6 @@
 
     <application
         android:allowBackup="true"
-        android:label="@string/app_name"
         android:supportsRtl="true">
         <!--//指向v4包里的FileProvider类  -->
         <!--//对应你的content uri的基础域名，生成的uri将以content://com.example.myapp作为开头-->
