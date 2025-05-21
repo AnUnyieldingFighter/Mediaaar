@@ -62,8 +62,13 @@ public class MediaManager {
     }
 
     public interface OnLoadingListener {
-
-        void onLoadingMedia(ArrayList<MediaEntity> files);
+        /**
+         * 搜索数据库回调
+         *
+         * @param resType 1:全部 2:图片 3：视频 4：GIF
+         * @param files   搜索到的数据
+         */
+        void onLoadingMedia(int resType, ArrayList<MediaEntity> files);
 
         void onLoadingFail();
     }
@@ -114,7 +119,7 @@ public class MediaManager {
         run.start();
     }
 
-    //1:全部 2:图片 3：视频
+    //1:全部 2:图片 3：视频 4：GIF
     private int resType;
     private MediaThread mediaThread;
 
@@ -271,7 +276,7 @@ public class MediaManager {
                         temp = (ArrayList<MediaEntity>) obj;
                     }
                     if (onLoadingListener != null) {
-                        onLoadingListener.onLoadingMedia(temp);
+                        onLoadingListener.onLoadingMedia(resType, temp);
                     }
                     break;
 

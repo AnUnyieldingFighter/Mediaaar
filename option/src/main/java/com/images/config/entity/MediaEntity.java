@@ -42,4 +42,5 @@ public class MediaEntity implements Serializable {
     //true 发送的是压缩图
     public boolean optionTailor = true;
     public String url;
+
 }

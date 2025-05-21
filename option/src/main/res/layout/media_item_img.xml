@@ -42,4 +42,14 @@
         android:textSize="11sp"
         android:textStyle="bold"
         tools:text="GIF" />
+
+    <View
+        android:id="@+id/view_no_opt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/iv_media"
+        android:layout_alignTop="@+id/iv_media"
+        android:layout_alignRight="@+id/iv_media"
+        android:layout_alignBottom="@+id/iv_media"
+        android:background="#33000000" />
 </RelativeLayout>

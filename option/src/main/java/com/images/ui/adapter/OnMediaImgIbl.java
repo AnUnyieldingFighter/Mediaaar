@@ -20,7 +20,7 @@ public interface OnMediaImgIbl {
      * 选中了图片（选中，取消  具体看 imageEntity.isOption）
      *
      * @param imageEntity
-     * @param type        -1 到达上限
+     * @param type        -1 到达上限 -2 互斥
      */
     default void onImageSelect(MediaEntity imageEntity, int type) {
     }

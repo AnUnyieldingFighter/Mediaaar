@@ -27,12 +27,14 @@ public class MediaOptActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_opt);
         mediaLayout = findViewById(R.id.media_layout);
-        mediaLayout.setOptCount(9, new OnMediaImgIbl() {
+        mediaLayout.setOptMediaCount(9);
+        mediaLayout.setOptVideoCount(1);
+        mediaLayout.setOptDataOnly(true);
+        mediaLayout.setPart(true);
+        mediaLayout.setImgLoading(new OnMediaImgIbl() {
             @Override
             public void onImageLoading(Context context, String path, ImageView imageView) {
-                Glide.with(context)
-                        .load(path)
-                        .placeholder(R.mipmap.image_select_default)
+                Glide.with(context).load(path).placeholder(R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(imageView);
             }

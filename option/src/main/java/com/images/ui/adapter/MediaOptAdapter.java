@@ -22,12 +22,16 @@ import java.util.ArrayList;
 public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHolder> {
     private ArrayList<MediaEntity> datas = new ArrayList();
     private Context context;
-    private int max;
-
+    //选择媒体数量，选择视频数量 （0 无限制）
+    private int mediaCount, videoCount;
     private OnMediaImgIbl imgLoading;
     private int itemImgWidth = 0;
     //选中的数据
     private ArrayList<MediaEntity> optData = new ArrayList<>();
+    //true:设置数据时，清除已选中的数据
+    private boolean isOnly;
+    //true 图片（包括gif）与 视频互斥  即2选1
+    private boolean isPart;
 
     public void setItemImgWidth(int itemImgWidth) {
         this.itemImgWidth = itemImgWidth;
@@ -36,15 +40,35 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
         }
     }
 
-    public void setMediaOptMax(Context context, int max, OnMediaImgIbl imgLoading) {
-        this.context = context;
-        this.max = max;
+    public void setMediaOptMax(int mediaCount) {
+        this.mediaCount = mediaCount;
+    }
+
+    public void setVideoOptMax(int videoCount) {
+        this.videoCount = videoCount;
+    }
+
+    //设置互斥
+    public void setPart(boolean isPart) {
+        this.isPart = isPart;
+    }
+
+    public void setImgLoading(Context context, OnMediaImgIbl imgLoading) {
         this.imgLoading = imgLoading;
+        this.context = context;
     }
 
     public void setDatas(ArrayList<MediaEntity> datas) {
+        if (isOnly) {
+            this.datas.clear();
+        }
         this.datas = datas;
         notifyDataSetChanged();
+    }
+
+    //true  切换类型的时候 清除已选择的数据
+    public void setOptDataOnly(boolean isOnly) {
+        this.isOnly = isOnly;
     }
 
     //清除选中的数据
@@ -70,6 +94,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             holder.ivMedia.setImageResource(R.mipmap.images_select_camera);
             holder.tvOpt.setVisibility(View.GONE);
             holder.tvType.setVisibility(View.GONE);
+            holder.viewNoOpt.setVisibility(View.GONE);
         } else {
             boolean isOption = bean.isOption;
             if (isOption) {
@@ -108,6 +133,16 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.tvType.setText(mediaType.toUpperCase());
                 holder.tvType.setVisibility(View.VISIBLE);
             }
+            if (isPart && optData.size() > 0) {
+                int tempType = optData.get(0).type;
+                if (tempType == bean.type) {
+                    holder.viewNoOpt.setVisibility(View.GONE);
+                } else {
+                    holder.viewNoOpt.setVisibility(View.VISIBLE);
+                }
+            } else {
+                holder.viewNoOpt.setVisibility(View.GONE);
+            }
         }
         holder.ivMedia.setOnClickListener(new Click(position));
     }
@@ -118,14 +153,16 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        public ImageView ivMedia;
-        public TextView tvOpt, tvType;
+        private ImageView ivMedia;
+        private TextView tvOpt, tvType;
+        private View viewNoOpt;
 
         public ViewHolder(View itemView) {
             super(itemView);
             ivMedia = itemView.findViewById(R.id.iv_media);
             tvOpt = itemView.findViewById(R.id.tv_opt);
             tvType = itemView.findViewById(R.id.tv_type);
+            viewNoOpt = itemView.findViewById(R.id.view_no_opt);
 
             if (itemImgWidth > 0 && itemImgWidth != itemView.getWidth()) {
                 ViewGroup.LayoutParams lp = ivMedia.getLayoutParams();
@@ -135,6 +172,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             }
         }
     }
+
 
     //选择图片监听
     class Click implements View.OnClickListener {
@@ -149,11 +187,37 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             int id = v.getId();
             MediaEntity image = datas.get(index);
             if (id == R.id.tv_opt) {
+                if (isPart && optData.size() > 0) {
+                    int tempType = optData.get(0).type;
+                    if (tempType != image.type) {
+                        ImageLog.d("互斥");
+                        if (imgLoading != null) {
+                            imgLoading.onImageSelect(image, -2);
+                        }
+                        return;
+                    }
+                }
                 //选择了图片
-                if (!image.isOption && optData.size() == max) {
+                if (!image.isOption && image.type == 1 && optData.size() == mediaCount) {
+                    ImageLog.d("选择图片 已达上限");
+                    if (imgLoading != null) {
+                        imgLoading.onImageSelect(image, -1);
+                    }
+                    return;
+                }
+                //选择了视频
+                if (!image.isOption && image.type == 2 && optData.size() == videoCount && videoCount > 0) {
+                    ImageLog.d("选择视频 已达上限");
+                    if (imgLoading != null) {
+                        imgLoading.onImageSelect(image, -1);
+                    }
+                    return;
+                }
+                //选择了视频 但是视频数量设置为0 与是 videoCount=mediaCount
+                if (!image.isOption && image.type == 2 && optData.size() == mediaCount && videoCount == 0) {
                     ImageLog.d("已达上限");
                     if (imgLoading != null) {
-                        imgLoading.onImageSelect(null, -1);
+                        imgLoading.onImageSelect(image, -1);
                     }
                     return;
                 }
@@ -161,7 +225,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                     //添加一个
                     image.isOption = true;
                     optData.add(image);
-                    notifyItemChanged(index);
+                    notifyDataSetChanged();
+                    //notifyItemChanged(index);
                 } else {
                     //删除一个
                     image.isOption = false;

@@ -54,18 +54,45 @@ public class MediaOPTLayout extends RelativeLayout {
     private MediaOptAdapter adapter;
 
 
-    public void setOptCount(int count, OnMediaImgIbl imgLoading) {
+    public void setOptMediaCount(int count) {
+        adapter.setMediaOptMax(count);
+    }
+
+    public void setOptVideoCount(int count) {
+        adapter.setVideoOptMax(count);
+    }
+
+    //设置互斥
+    public void setPart(boolean isPart) {
+        adapter.setPart(isPart);
+    }
+
+    public void setImgLoading(OnMediaImgIbl imgLoading) {
         if (adapter == null) {
             initRecyclerView();
         }
-        adapter.setMediaOptMax(getContext(), count, imgLoading);
+        adapter.setImgLoading(getContext(), imgLoading);
+    }
+
+    //true  切换类型的时候 清除已选择的数据
+    public void setOptDataOnly(boolean isOnly) {
+        adapter.setOptDataOnly(isOnly);
+    }
+
+    //清除选中的数据
+    public void setOptDataReset() {
+        adapter.setOptDataReset();
+    }
+
+    //获取选中的数据
+    public ArrayList<MediaEntity> getOptData() {
+        return adapter.getOptData();
     }
 
     protected boolean isShowCamera;//true  允许拍照 未实现
 
     /**
-     *
-     * @param resType  1:全部 2:图片 3：视频 4：GIF
+     * @param resType      1:全部 2:图片 3：视频 4：GIF
      * @param isShowCamera
      */
     public void doRequest(int resType, boolean isShowCamera) {
@@ -83,22 +110,22 @@ public class MediaOPTLayout extends RelativeLayout {
         rvData.setLayoutManager(new GridLayoutManager(getContext(), 3));
     }
 
-    //获取选中的数据
-    public ArrayList<MediaEntity> getOptData() {
-        return adapter.getOptData();
+    protected void onLoadingMedia(int resType, ArrayList<MediaEntity> files) {
+        if (isShowCamera) {
+            MediaEntity img = new MediaEntity();
+            img.mediaType = "-1";
+            files.add(0, img);
+        }
+        adapter.setDatas(files);
     }
 
     //读取数据库照片监听
     class LoadingListener implements MediaManager.OnLoadingListener {
 
+
         @Override
-        public void onLoadingMedia(ArrayList<MediaEntity> files) {
-            if (isShowCamera) {
-                MediaEntity img = new MediaEntity();
-                img.mediaType = "-1";
-                files.add(0, img);
-            }
-            adapter.setDatas(files);
+        public void onLoadingMedia(int resType, ArrayList<MediaEntity> files) {
+            MediaOPTLayout.this.onLoadingMedia(resType, files);
         }
 
         @Override
