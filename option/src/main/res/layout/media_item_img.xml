@@ -51,5 +51,5 @@
         android:layout_alignTop="@+id/iv_media"
         android:layout_alignRight="@+id/iv_media"
         android:layout_alignBottom="@+id/iv_media"
-        android:background="#33000000" />
+        android:background="#4d000000" />
 </RelativeLayout>
