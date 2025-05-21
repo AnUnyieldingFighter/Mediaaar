@@ -60,7 +60,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
 
     public void setDatas(ArrayList<MediaEntity> datas) {
         if (isOnly) {
-            this.datas.clear();
+            this.optData.clear();
         }
         this.datas = datas;
         notifyDataSetChanged();
