@@ -21,6 +21,8 @@ import java.util.ArrayList;
 public class MediaActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView iv;
+    //多选  选择的数据保存
+    public static ArrayList<MediaEntity> temp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,8 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.image_btn4).setOnClickListener(this);
         findViewById(R.id.image_btn5).setOnClickListener(this);
         findViewById(R.id.image_btn51).setOnClickListener(this);
+        findViewById(R.id.image_btn52).setOnClickListener(this);
+
 
         findViewById(R.id.image_btn6).setVisibility(View.GONE);
         findViewById(R.id.image_btn7).setVisibility(View.GONE);
@@ -76,6 +80,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         switch (view.getId()) {
             case R.id.image_btn5:
                 //多选
+                temp = null;
                 Intent it = new Intent();
                 it.setClass(this, MediaOptActivity.class);
                 startActivity(it);
@@ -84,6 +89,17 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 //相机拍照
                 PhotoUtil.showCameraAction(this);
                 break;
+            case R.id.image_btn52:
+                //多选(回显)  先调用 R.id.image_btn5  temp 有数据之后可回显
+                it = new Intent();
+                it.setClass(this, MediaOptActivity.class);
+                startActivity(it);
+                break;
+
+
+
+
+
 
 
             case R.id.image_btn2:

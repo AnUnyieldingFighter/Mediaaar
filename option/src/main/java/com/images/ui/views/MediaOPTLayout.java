@@ -89,6 +89,11 @@ public class MediaOPTLayout extends RelativeLayout {
         return adapter.getOptData();
     }
 
+    //设置数据回显
+    public void setOptData(ArrayList<MediaEntity> temp) {
+        adapter.setMediaOpt(temp);
+    }
+
     protected boolean isShowCamera;//true  允许拍照 未实现
 
     /**

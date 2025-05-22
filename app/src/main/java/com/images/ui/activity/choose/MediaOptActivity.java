@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class MediaOptActivity extends AppCompatActivity {
 
     private MediaOPTLayout mediaLayout;
-    public static ArrayList<MediaEntity> temp;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +29,10 @@ public class MediaOptActivity extends AppCompatActivity {
         mediaLayout = findViewById(R.id.media_layout);
         mediaLayout.setOptMediaCount(9);
         mediaLayout.setOptVideoCount(1);
-        mediaLayout.setOptDataOnly(true);
+        //mediaLayout.setOptDataOnly(true);
         mediaLayout.setPart(true);
+        mediaLayout.setOptData(MediaActivity.temp);
+        //
         mediaLayout.setImgLoading(new OnMediaImgIbl() {
             @Override
             public void onImageLoading(Context context, String path, ImageView imageView) {
@@ -43,7 +45,7 @@ public class MediaOptActivity extends AppCompatActivity {
         findViewById(R.id.tv_ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                temp = mediaLayout.getOptData();
+                MediaActivity.temp = mediaLayout.getOptData();
                 Intent it = new Intent();
                 it.setClass(MediaOptActivity.this, MediaPreviewActivity.class);
                 startActivity(it);
@@ -52,7 +54,7 @@ public class MediaOptActivity extends AppCompatActivity {
         findViewById(R.id.tv_crop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                temp = mediaLayout.getOptData();
+                MediaActivity.temp = mediaLayout.getOptData();
                 Intent it = new Intent();
                 it.setClass(MediaOptActivity.this, ImgCropActivity.class);
                 startActivity(it);

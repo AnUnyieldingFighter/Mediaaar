@@ -33,7 +33,7 @@ public class MediaPreviewActivity extends AppCompatActivity {
                         .into(imageView);
             }
         });
-        mediaLayout.setMedias(this, MediaOptActivity.temp);
+        mediaLayout.setMedias(this, MediaActivity.temp);
     }
 
 }

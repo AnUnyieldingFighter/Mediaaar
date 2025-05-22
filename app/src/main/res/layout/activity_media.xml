@@ -12,6 +12,12 @@
         android:text="多选"
         />
     <Button
+        android:id="@+id/image_btn52"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="多选之后的回显"
+        />
+    <Button
         android:id="@+id/image_btn51"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

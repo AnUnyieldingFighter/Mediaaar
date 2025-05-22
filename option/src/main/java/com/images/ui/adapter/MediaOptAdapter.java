@@ -28,6 +28,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     private int itemImgWidth = 0;
     //选中的数据
     private ArrayList<MediaEntity> optData = new ArrayList<>();
+    //记录回显的 mediaPathSource
+    private ArrayList<String> optPaths = new ArrayList<>();
     //true:设置数据时，清除已选中的数据
     private boolean isOnly;
     //true 图片（包括gif）与 视频互斥  即2选1
@@ -60,7 +62,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
 
     public void setDatas(ArrayList<MediaEntity> datas) {
         if (isOnly) {
-            this.optData.clear();
+            setOptDataReset();
         }
         this.datas = datas;
         notifyDataSetChanged();
@@ -74,10 +76,22 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     //清除选中的数据
     public void setOptDataReset() {
         optData.clear();
+        optPaths.clear();
     }
 
     public ArrayList<MediaEntity> getOptData() {
         return optData;
+    }
+
+    //设置回显数据 不能设置 isOnly=true
+    public void setMediaOpt(ArrayList<MediaEntity> temp) {
+        if (temp == null || temp.size() == 0) {
+            return;
+        }
+        optData = temp;
+        for (int i = 0; i < temp.size(); i++) {
+            optPaths.add(temp.get(i).mediaPathSource);
+        }
     }
 
     @Override
@@ -96,6 +110,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             holder.tvType.setVisibility(View.GONE);
             holder.viewNoOpt.setVisibility(View.GONE);
         } else {
+            setSelectState(bean);
+            //设置选中
             boolean isOption = bean.isOption;
             if (isOption) {
                 holder.tvOpt.setBackgroundResource(R.drawable.media_select_true);
@@ -111,28 +127,24 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.tvOpt.setText("");
             }
             holder.tvOpt.setVisibility(View.VISIBLE);
+            holder.tvOpt.setOnClickListener(new Click(position));
+            //设置图片显示样式
             if ((bean.width > 0 && bean.width <= itemImgWidth) && (bean.height > 0 && bean.height <= itemImgWidth)) {
                 holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER);
             } else {
                 holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER_CROP);
             }
+            //加载图片
             imgLoading.onImageLoading(context, bean.mediaPathSource, holder.ivMedia);
-            holder.tvOpt.setOnClickListener(new Click(position));
-            String mediaType = bean.mediaType;
-            if (mediaType == null) {
-                mediaType = "";
-            }
-            mediaType = mediaType.replace("image/", "");
-            mediaType = mediaType.replace("video/", "");
-            mediaType = mediaType.replace("png", "");
-            mediaType = mediaType.replace("jpg", "");
-            mediaType = mediaType.replace("webp", "");
+            //设置标签
+            String mediaType = getTag(bean);
             if (TextUtils.isEmpty(mediaType)) {
                 holder.tvType.setVisibility(View.GONE);
             } else {
                 holder.tvType.setText(mediaType.toUpperCase());
                 holder.tvType.setVisibility(View.VISIBLE);
             }
+            //设置互斥
             if (isPart && optData.size() > 0) {
                 int tempType = optData.get(0).type;
                 if (tempType == bean.type) {
@@ -144,7 +156,44 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.viewNoOpt.setVisibility(View.GONE);
             }
         }
+        //设置图的点击事件
         holder.ivMedia.setOnClickListener(new Click(position));
+    }
+
+    //回显时要 重新赋值选中状态
+    private void setSelectState(MediaEntity bean) {
+        if (optPaths == null || optPaths.size() == 0) {
+            return;
+        }
+        int index = optPaths.indexOf(bean.mediaPathSource);
+        if (index >= 0) {
+            bean.isOption = true;
+            optPaths.remove(index);
+            for (int i = 0; i < optData.size(); i++) {
+                MediaEntity temp = optData.get(i);
+                if (bean.mediaPathSource.equals(temp.mediaPathSource)) {
+                    bean.url = temp.url;
+                    optData.set(i, bean);
+                    return;
+                }
+            }
+
+        }
+
+    }
+
+    //获取标签
+    private String getTag(MediaEntity bean) {
+        String mediaType = bean.mediaType;
+        if (mediaType == null) {
+            mediaType = "";
+        }
+        mediaType = mediaType.replace("image/", "");
+        mediaType = mediaType.replace("video/", "");
+        mediaType = mediaType.replace("png", "");
+        mediaType = mediaType.replace("jpg", "");
+        mediaType = mediaType.replace("webp", "");
+        return mediaType;
     }
 
     @Override
@@ -155,6 +204,8 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
     class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView ivMedia;
         private TextView tvOpt, tvType;
+
+        //不允许选择视图
         private View viewNoOpt;
 
         public ViewHolder(View itemView) {
@@ -172,7 +223,6 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
             }
         }
     }
-
 
     //选择图片监听
     class Click implements View.OnClickListener {
@@ -239,7 +289,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
 
             }
             if (id == R.id.iv_media) {
-                if ("1".equals(image.mediaType)) {
+                if ("-1".equals(image.mediaType)) {
                     //拍照
                     return;
                 }
