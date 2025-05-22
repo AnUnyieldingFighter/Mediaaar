@@ -25,11 +25,19 @@ public class FileUtil {
      * @return 拍照储存的地址
      */
     public static File createPhotoFile(Context context) {
+        return createPhotoFile(context, "");
+    }
+
+    /**
+     * @param context
+     * @return 拍照储存的地址
+     */
+    public static File createPhotoFile(Context context, String name) {
         String filePath = getFileExternal();
         if (TextUtils.isEmpty(filePath)) {
             filePath = getFileCacheInside(context);
         }
-        File file = new File(filePath, getImageName());
+        File file = new File(filePath, getImageName(name));
         ImageLog.d(TAG, "照片存储path:" + file.getAbsolutePath());
         return file;
     }
@@ -40,15 +48,18 @@ public class FileUtil {
      */
     public static File createCropFile(Context context) {
         String filePath = getFileCacheInside(context);
-        File file = new File(filePath, getImageName());
+        File file = new File(filePath, getImageName(""));
         ImageLog.d(TAG, "照片裁剪存储path:" + file.getAbsolutePath());
         return file;
     }
 
 
     //裁剪获取 File
-    public static String getImageName() {
-        String PATTERN = "yyyyMMddHHmmss";
+    public static String getImageName(String name) {
+        String PATTERN = "yyyyMMddHHmmss" + name;
+        if (!TextUtils.isEmpty(name)) {
+            PATTERN += "_" + name;
+        }
         return new SimpleDateFormat(PATTERN, Locale.CHINA).format(new Date()) + ".png";
     }
 
