@@ -54,7 +54,7 @@ public class MediaPreviewLayout extends RelativeLayout {
     private MediaPagerAdapter2 adapter;
 
     public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias) {
-        setMedias(act, medias);
+        setMedias(act, medias,0);
     }
 
     /**
