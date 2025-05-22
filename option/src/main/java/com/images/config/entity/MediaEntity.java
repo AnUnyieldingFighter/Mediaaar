@@ -17,23 +17,27 @@ public class MediaEntity implements Serializable {
     public String mediaName;
     //创建时间
     public long mediaTime;
+    //拍摄时间
+    public long mediaDateTaken;
     @PrimaryKey()
     @NonNull
-    //图片id
+    //图片/视频id
     public String mediaId;
     //相册名字
     public String mediaFileName;
     //图片类型 -1 表示显示添加
     public String mediaType;
-    //图片大小
-    public String mediaSize;
+    //图片/视频大小
+    public long mediaSize;//字节为单位
     //相册id
     public String mediaFileId;
     // 经度
     public int mediaAngle;
     public int width;
     public int height;
-    //true 被选中
+    //视频持续时间  毫秒
+    public long videoDurations;
+     //true 被选中
     //1 图片/gif 2 视频
     public int type;
     public boolean isOption;

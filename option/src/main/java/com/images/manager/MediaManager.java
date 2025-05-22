@@ -38,6 +38,7 @@ public class MediaManager {
             MediaStore.Images.Media.LONGITUDE,             // 经度
             MediaStore.Images.Media.WIDTH,             // 宽度
             MediaStore.Images.Media.HEIGHT,             // 高度
+            MediaStore.Images.Media.DATE_TAKEN,         // 拍摄日期
 
     };
     private final String[] VIDEO_PROJECTION = {MediaStore.Video.Media.DATA, //视频路径
@@ -51,6 +52,12 @@ public class MediaManager {
             MediaStore.Video.Media.LONGITUDE,             // 经度
             MediaStore.Video.Media.WIDTH,             // 宽度
             MediaStore.Video.Media.HEIGHT,             // 高度
+            MediaStore.Video.Media.DATE_TAKEN,         // 拍摄日期
+
+
+            MediaStore.Video.Media.DURATION,             // 持续时间
+
+
     };
 
 
@@ -82,28 +89,31 @@ public class MediaManager {
         image.mediaId = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[3]));
         image.mediaFileName = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[4]));
         image.mediaType = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[5]));
-        image.mediaSize = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[6]));
+        image.mediaSize = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION[6]));
         image.mediaFileId = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION[7]));
         image.mediaAngle = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[8]));
         image.width = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[9]));
         image.height = data.getInt(data.getColumnIndexOrThrow(IMAGE_PROJECTION[10]));
+        image.mediaDateTaken = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION[11]));
         return image;
     }
 
     private MediaEntity readCursorVideo(Cursor data) {
-        MediaEntity image = new MediaEntity();
-        image.mediaPathSource = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[0]));
-        image.mediaName = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[1]));
-        image.mediaTime = data.getLong(data.getColumnIndexOrThrow(VIDEO_PROJECTION[2]));
-        image.mediaId = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[3]));
-        image.mediaFileName = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[4]));
-        image.mediaType = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[5]));
-        image.mediaSize = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[6]));
-        image.mediaFileId = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[7]));
-        image.mediaAngle = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[8]));
-        image.width = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[9]));
-        image.height = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[10]));
-        return image;
+        MediaEntity video = new MediaEntity();
+        video.mediaPathSource = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[0]));
+        video.mediaName = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[1]));
+        video.mediaTime = data.getLong(data.getColumnIndexOrThrow(VIDEO_PROJECTION[2]));
+        video.mediaId = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[3]));
+        video.mediaFileName = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[4]));
+        video.mediaType = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[5]));
+        video.mediaSize = data.getLong(data.getColumnIndexOrThrow(VIDEO_PROJECTION[6]));
+        video.mediaFileId = data.getString(data.getColumnIndexOrThrow(VIDEO_PROJECTION[7]));
+        video.mediaAngle = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[8]));
+        video.width = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[9]));
+        video.height = data.getInt(data.getColumnIndexOrThrow(VIDEO_PROJECTION[10]));
+        video.mediaDateTaken = data.getLong(data.getColumnIndexOrThrow(VIDEO_PROJECTION[11]));
+        video.videoDurations = data.getLong(data.getColumnIndexOrThrow(VIDEO_PROJECTION[12]));
+        return video;
     }
     //================获取照片=====================================
 
