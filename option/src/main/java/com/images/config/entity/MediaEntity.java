@@ -2,6 +2,7 @@ package com.images.config.entity;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
@@ -37,14 +38,22 @@ public class MediaEntity implements Serializable {
     public int height;
     //视频持续时间  毫秒
     public long videoDurations;
-     //true 被选中
+    //true 被选中
     //1 图片/gif 2 视频
     public int type;
+    @Ignore
     public boolean isOption;
     //false 不可以删除
+    @Ignore
     public boolean isDelete = true;
     //true 发送的是压缩图
+    @Ignore
     public boolean optionTailor = true;
+    @Ignore
     public String url;
-
+    @Ignore
+    //上传状态 0 未上传 1：上传中 2：上传成功 3：上传失败
+    public int upSate;
+    @Ignore
+    public String other;
 }

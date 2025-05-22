@@ -51,11 +51,21 @@ public class MediaRoom {
         private void checkDBmedia(@NonNull SupportSQLiteDatabase database) {
             //检查城市数据库
             ImageLog.d("数据库 检查城市数据库");
-            String sq21 = "CREATE TABLE IF NOT EXISTS tab_media (" + "mediaId TEXT PRIMARY KEY NOT NULL," + "mediaPathSource TEXT ," + "mediaPath TEXT ," + "mediaName TEXT," + "mediaTime Long," + "mediaFileName TEXT," + "mediaType TEXT," + "mediaSize TEXT,"
+            String sq21 = "CREATE TABLE IF NOT EXISTS tab_media (" + "mediaId TEXT PRIMARY KEY NOT NULL,"
+                    + "mediaPathSource TEXT ,"
+                    + "mediaPath TEXT ,"
+                    + "mediaName TEXT,"
+                    + "mediaTime Long,"
+                    + "mediaFileName TEXT,"
+                    + "mediaType TEXT,"
+                    + "mediaSize TEXT,"
                     + "mediaFileId TEXT,"
                     + "type Int,"
                     + "width Int,"
                     + "height Int,"
+                    + "videoDurations Long,"
+                    + "mediaDateTaken Long,"
+
                     + "mediaAngle TEXT" + ")";
             database.execSQL(sq21);
         }

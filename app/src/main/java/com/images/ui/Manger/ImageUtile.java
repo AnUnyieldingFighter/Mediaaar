@@ -276,7 +276,6 @@ public class ImageUtile {
         float sizeRow = (float) bimap.getRowBytes() / 1024;
         float sizeCount = bimap.getByteCount() / 1024;// 3168
         Log.e("sizeRow:" + sizeRow, "sizeCount:" + sizeCount);
-
         return bimap;
     }
 

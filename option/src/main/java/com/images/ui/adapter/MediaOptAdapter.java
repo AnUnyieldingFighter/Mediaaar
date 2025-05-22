@@ -173,6 +173,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 MediaEntity temp = optData.get(i);
                 if (bean.mediaPathSource.equals(temp.mediaPathSource)) {
                     bean.url = temp.url;
+                    bean.upSate = temp.upSate;
                     optData.set(i, bean);
                     return;
                 }
