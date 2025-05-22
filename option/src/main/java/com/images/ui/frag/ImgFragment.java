@@ -65,7 +65,7 @@ public class ImgFragment extends MediaFragment {
 
     private void setData() {
         if (imgLoading != null) {
-            imgLoading.onImageLoading(getActivity(), mediaEntity.mediaPathSource, photoView);
+            imgLoading.onImageLoading(getActivity(), mediaEntity, photoView);
         }
         photoView.setOnPhotoTapListener(new PhotoTapListener());
     }

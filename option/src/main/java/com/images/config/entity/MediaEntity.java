@@ -23,7 +23,7 @@ public class MediaEntity implements Serializable {
     public String mediaId;
     //相册名字
     public String mediaFileName;
-    //图片类型
+    //图片类型 -1 表示显示添加
     public String mediaType;
     //图片大小
     public String mediaSize;

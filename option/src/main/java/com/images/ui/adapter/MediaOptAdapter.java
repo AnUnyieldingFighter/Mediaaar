@@ -135,7 +135,7 @@ public class MediaOptAdapter extends RecyclerView.Adapter<MediaOptAdapter.ViewHo
                 holder.ivMedia.setScaleType(ImageView.ScaleType.CENTER_CROP);
             }
             //加载图片
-            imgLoading.onImageLoading(context, bean.mediaPathSource, holder.ivMedia);
+            imgLoading.onImageLoading(context, bean, holder.ivMedia);
             //设置标签
             String mediaType = getTag(bean);
             if (TextUtils.isEmpty(mediaType)) {

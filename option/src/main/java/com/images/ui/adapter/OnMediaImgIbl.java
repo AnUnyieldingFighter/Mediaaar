@@ -10,10 +10,10 @@ public interface OnMediaImgIbl {
      * 加载图片
      *
      * @param context
-     * @param path
+     * @param imageEntity
      * @param imageView
      */
-    default void onImageLoading(Context context, String path, ImageView imageView) {
+    default void onImageLoading(Context context, MediaEntity imageEntity, ImageView imageView) {
     }
 
     /**

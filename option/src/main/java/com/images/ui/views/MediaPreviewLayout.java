@@ -54,6 +54,16 @@ public class MediaPreviewLayout extends RelativeLayout {
     private MediaPagerAdapter2 adapter;
 
     public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias) {
+        setMedias(act, medias);
+    }
+
+    /**
+     * @param act
+     * @param medias 数据
+     * @param index  定位
+     */
+
+    public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias, int index) {
         if (adapter == null) {
             adapter = new MediaPagerAdapter2(act);
         }
@@ -62,6 +72,9 @@ public class MediaPreviewLayout extends RelativeLayout {
         viewPager.setOffscreenPageLimit(pages.size());
         viewPager.registerOnPageChangeCallback(new OnPagerChange());
         adapter.setData(pages);
+        if (index != 0) {
+            viewPager.setCurrentItem(index, false);
+        }
     }
 
     protected ArrayList<MediaFragment> getFrag(ArrayList<MediaEntity> medias) {
