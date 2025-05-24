@@ -117,6 +117,33 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
         setResume();
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (manager != null) {
+            manager.setMediaPlayerPause();
+        }
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (manager != null) {
+            manager.setMediaPlayerStop();
+        }
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (manager != null) {
+            manager.onDestroy();
+        }
+
+    }
+
     protected void setResume() {
         if (!isSetData) {
             //播放初始化
@@ -133,6 +160,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
     protected void initPlayer() {
         if (isAvailable) {
             manager = new MediaPlayerManager();
+            manager.setOnMediaListener(this);
             manager.setAutoplay(true);
             SurfaceTexture su = textureView.getSurfaceTexture();
             Surface surface = new Surface(su);
@@ -161,7 +189,6 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
         //mtextureViewWidth为textureView宽，mtextureViewHeight为textureView高
         //mtextureViewWidth宽高，为什么需要用传入的，因为全屏显示时宽高不会及时更新
         Matrix matrix = new Matrix();
-        //videoView为new MediaPlayer()
         int videoWidth = mediaPlayer.getVideoWidth();
         int videoHeight = mediaPlayer.getVideoHeight();
 
@@ -242,33 +269,6 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
     }
 
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (manager != null) {
-            manager.setMediaPlayerPause();
-        }
-
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (manager != null) {
-            manager.setMediaPlayerStop();
-        }
-
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (manager != null) {
-            manager.onDestroy();
-        }
-
-    }
-
     public static VideoFragment newInstance(MediaEntity mediaEntity) {
         VideoFragment frg = new VideoFragment();
         Bundle bundle = new Bundle();
@@ -286,6 +286,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
 
     }
+
     /**
      * @param mp
      * @param state  100:准备完成（开始播放）
@@ -297,7 +298,9 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
      */
     @Override
     public void onPayState(MediaPlayer mp, int state, String source) {
-
+        /*if (state == 100) {
+            manager.setMediaPlayerStart();
+        }*/
     }
 
     @Override
