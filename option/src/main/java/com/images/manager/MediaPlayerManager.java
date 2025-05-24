@@ -265,7 +265,7 @@ public class MediaPlayerManager {
         } else {
             //mediaPlayer.setVolume(1, 1);
             AudioManager audioManager = (AudioManager) context.getSystemService(Service.AUDIO_SERVICE);
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_SYSTEM);
+            //mediaPlayer.setAudioStreamType(AudioManager.STREAM_SYSTEM);
             mediaPlayer.setVolume(audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM), audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM));
         }
 
