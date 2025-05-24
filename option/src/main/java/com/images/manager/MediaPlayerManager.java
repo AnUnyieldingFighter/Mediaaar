@@ -31,6 +31,8 @@ public class MediaPlayerManager {
     private int sourceType;
     //true:播放完可以重播
     //private boolean isRebroadcast;
+    //true 准备完成之后自动播放
+    private boolean isAutoplay;
 
     public MediaPlayer getMediaPlayer() {
         return mediaPlayer;
@@ -41,6 +43,10 @@ public class MediaPlayerManager {
             mediaPlayerManager = new MediaPlayerManager();
         }
         return mediaPlayerManager;
+    }
+
+    public void setAutoplay(boolean isAutoplay) {
+        this.isAutoplay = isAutoplay;
     }
 
     //播放初始化
@@ -60,8 +66,10 @@ public class MediaPlayerManager {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 d("准备完成");
-                setMediaStart();
-                //setMediaWork(2);
+                setListenerBack(2);
+                if (isAutoplay) {
+                    setMediaPlayerStart();
+                }
             }
         });
 
@@ -203,16 +211,6 @@ public class MediaPlayerManager {
         setMediaWork(5);
     }
 
-    //设置开始播放
-    private void setMediaStart() {
-        //
-        // MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
-        // mediaPlayer.start();
-        //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
-        mediaPlayer.start();
-        playProgressHander.start();
-        setListenerBack(2);
-    }
 
     //true 没有在播放
     public boolean isStopPlay() {
@@ -250,7 +248,12 @@ public class MediaPlayerManager {
                 if (!isPay) {
                     break;
                 }
-                setMediaStart();
+                //
+                // MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
+                // mediaPlayer.start();
+                //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
+                mediaPlayer.start();
+                playProgressHander.start();
                 break;
             case 3:
                 if (workType == 3) {
@@ -380,7 +383,7 @@ public class MediaPlayerManager {
     }
 
     /**
-     * @param type    回调类型（1：获取到视频大小；2：开始播放；3：缓存；
+     * @param type    回调类型（1：获取到视频大小；2：准备完成(播放准备就绪)；3：缓存；
      *                4：播放完成；5：播放错误；6：播放进度；7：播放暂停）
      * @param percent 缓存进度
      * @param width   视频宽

@@ -6,6 +6,7 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -55,6 +56,16 @@ public class VideoFragment extends MediaFragment {
         Serializable bean = getArguments().getSerializable("bean");
         if (bean instanceof MediaEntity) {
             mediaEntity = (MediaEntity) bean;
+            String other = mediaEntity.other;
+            if (TextUtils.isEmpty(other)) {
+                type = 1;
+            }
+            if ("1".equals(other)) {
+                type = 1;
+            }
+            if ("2".equals(other)) {
+                type = 2;
+            }
         }
         textureView = view.findViewById(R.id.texture_view);
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -63,15 +74,15 @@ public class VideoFragment extends MediaFragment {
                 // 当 SurfaceTexture 可用时执行的操作
                 isAvailable = true;
                 if (isSetData && manager == null) {
-                    setData();
+                    initPlayer();
                 }
             }
 
             @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
                 // SurfaceTexture 尺寸变化时的操作
-                MediaPlayer mediaPlayer = manager.getMediaPlayer();
-                setVideoAspectFull(mediaPlayer, textureView);
+                setPlayViewZoom(textureView);
+
             }
 
             @Override
@@ -83,8 +94,7 @@ public class VideoFragment extends MediaFragment {
             @Override
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
                 // SurfaceTexture 更新时的操作
-                MediaPlayer mediaPlayer = manager.getMediaPlayer();
-                setVideoAspectFull(mediaPlayer, textureView);
+                setPlayViewZoom(textureView);
             }
         });
     }
@@ -99,7 +109,7 @@ public class VideoFragment extends MediaFragment {
         if (!isSetData) {
             //播放初始化
             isSetData = true;
-            setData();
+            initPlayer();
             return;
         }
         if (manager != null && manager.isStopPlay()) {
@@ -109,17 +119,26 @@ public class VideoFragment extends MediaFragment {
 
     }
 
-    private void setData() {
+    private void initPlayer() {
         if (isAvailable) {
             manager = new MediaPlayerManager();
+            manager.setAutoplay(true);
             SurfaceTexture su = textureView.getSurfaceTexture();
             Surface surface = new Surface(su);
             manager.setDataSourcePlay(mediaEntity.url, mediaEntity.mediaPathSource);
             manager.setSurfaceView(surface);
+        }
+    }
 
-            //mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-            //mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING); // 如果需要裁剪以适应屏幕
+    private int type = 1;//1：等比 2：满View播放
 
+    private void setPlayViewZoom(TextureView textureView) {
+        MediaPlayer mediaPlayer = manager.getMediaPlayer();
+        if (type == 1) {
+            setVideoAspect(mediaPlayer, textureView);
+        }
+        if (type == 2) {
+            setVideoAspectFull(mediaPlayer, textureView);
         }
     }
 
@@ -199,10 +218,16 @@ public class VideoFragment extends MediaFragment {
         float scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
         // 创建Matrix并设置缩放变换
         Matrix matrix = new Matrix();
+        //设置缩放比例
         matrix.setScale(scale, scale);
-        // 应用Matrix到TextureView上（注意：在某些Android版本中，直接设置Matrix可能无效）
-        textureView.setTransform(matrix); // 注意：在某些Android版本上，直接使用setTransform可能会导致问题，特别是在API 21及以下版本。
-        textureView.postInvalidate();//重绘视图
+        // 计算平移量，使视频内容居中显示
+        float translateX = (textureWidth - videoWidth * scale) / 2;
+        float translateY = (textureHeight - videoHeight * scale) / 2;
+        matrix.postTranslate(translateX, translateY);
+        //
+        textureView.setTransform(matrix);
+        //重绘视图
+        textureView.postInvalidate();
     }
 
 
