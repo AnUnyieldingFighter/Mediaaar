@@ -105,7 +105,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 startActivity(it);
                 break;
             case R.id.image_7:
-                VideoDataBean videoData = MediaPlayerManager.getVideoData(video1);
+                VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video1);
                 ivVideo.setImageBitmap(videoData.videoBitmap);
                 break;
 

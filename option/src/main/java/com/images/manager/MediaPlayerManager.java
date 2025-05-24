@@ -113,13 +113,34 @@ public class MediaPlayerManager {
         //mediaPlayer.setLooping(true);
     }
 
-    //获取一张图片
-    public static VideoDataBean getVideoData(String videoPath) {
+    public static VideoDataBean getVideoData1S(String videoPath) {
+        //timeUs 这里设置为1秒处的帧
+        return getVideoDataNS(1, videoPath);
+    }
+
+    /**
+     * @param time      单位秒
+     * @param videoPath
+     * @return
+     */
+    public static VideoDataBean getVideoDataNS(int time, String videoPath) {
+        long timeUs = time * 1000000;
+        return getVideoData(timeUs, videoPath);
+    }
+
+    /**
+     * 获取视频数据
+     *
+     * @param timeUs    获取第一帧图像 (微秒)
+     * @param videoPath 视频链接
+     * @return
+     */
+    public static VideoDataBean getVideoData(long timeUs, String videoPath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(videoPath); // 设置数据源路径
-            // 获取第一帧图像，参数为时间微秒，这里设置为1秒处的帧，可根据需要调整。
-            Bitmap bitmap = retriever.getFrameAtTime(1000000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+            // 获取第一帧图像，参数为时间微秒，这里设置为1秒处的帧
+            Bitmap bitmap = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
             String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
             String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
             String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
@@ -248,8 +269,8 @@ public class MediaPlayerManager {
         }
 
     }
-    //设置音量
 
+    //设置音量
     public void seVolume(float leftVolume, float rightVolume) {
         if (mediaPlayer == null) {
             return;
