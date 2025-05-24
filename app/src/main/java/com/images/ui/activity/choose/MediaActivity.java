@@ -1,6 +1,7 @@
 package com.images.ui.activity.choose;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -9,6 +10,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.images.config.entity.MediaEntity;
+import com.images.manager.MediaManager;
+import com.images.manager.MediaPlayerManager;
+import com.images.manager.VideoDataBean;
 import com.images.utils.PhotoUtil;
 import com.images.ui.Manger.PhotoManager;
 import com.guomin.app.seletcimage.R;
@@ -20,7 +24,7 @@ import java.util.ArrayList;
 //老板
 public class MediaActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ImageView iv;
+    private ImageView ivVideo;
     //多选  选择的数据保存
     public static ArrayList<MediaEntity> temp;
 
@@ -35,9 +39,9 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.image_btn52).setOnClickListener(this);
 
         findViewById(R.id.image_6).setOnClickListener(this);
+        findViewById(R.id.image_7).setOnClickListener(this);
 
-
-        iv = (ImageView) findViewById(R.id.image_iv);
+        ivVideo = (ImageView) findViewById(R.id.iv_video);
     }
 
     private ArrayList<String> getPaths() {
@@ -93,14 +97,17 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 MediaEntity bean = new MediaEntity();
                 bean.type = 2;
                 bean.url = video1;
-                temp=new ArrayList<>();
+                temp = new ArrayList<>();
                 temp.add(bean);
 
                 it = new Intent();
                 it.setClass(this, MediaPreviewActivity.class);
                 startActivity(it);
                 break;
-
+            case R.id.image_7:
+                VideoDataBean videoData = MediaPlayerManager.getVideoData(video1);
+                ivVideo.setImageBitmap(videoData.videoBitmap);
+                break;
 
         }
 

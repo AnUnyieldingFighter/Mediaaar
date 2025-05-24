@@ -1,34 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
+
     <Button
         android:id="@+id/image_btn5"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="多选"
-        />
+        android:text="多选" />
+
     <Button
         android:id="@+id/image_btn52"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="多选之后的回显"
-        />
+        android:text="多选之后的回显" />
+
     <Button
         android:id="@+id/image_btn51"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="相机拍照"
-        />
+        android:text="相机拍照" />
 
     <Button
         android:id="@+id/image_6"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="播放一个网络视频"
-        />
+        android:text="播放一个网络视频" />
 
+    <Button
+        android:id="@+id/image_7"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="从网络视频解析出一张图片" />
+
+    <ImageView
+        android:id="@+id/iv_video"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        />
 </LinearLayout>

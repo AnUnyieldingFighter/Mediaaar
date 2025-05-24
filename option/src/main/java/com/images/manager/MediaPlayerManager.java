@@ -1,5 +1,12 @@
 package com.images.manager;
 
+import static androidx.core.content.ContextCompat.getSystemService;
+
+import android.app.Service;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
@@ -106,6 +113,40 @@ public class MediaPlayerManager {
         //mediaPlayer.setLooping(true);
     }
 
+    //获取一张图片
+    public static VideoDataBean getVideoData(String videoPath) {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            retriever.setDataSource(videoPath); // 设置数据源路径
+            // 获取第一帧图像，参数为时间微秒，这里设置为1秒处的帧，可根据需要调整。
+            Bitmap bitmap = retriever.getFrameAtTime(1000000, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+            String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+            String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+            retriever.release(); // 释放资源
+            VideoDataBean videoData = new VideoDataBean();
+            videoData.videoBitmap = bitmap;
+            videoData.time = time;
+            videoData.width = width;
+            videoData.height = height;
+            return videoData;
+        } catch (IllegalArgumentException ex) {
+            // 处理异常，例如文件路径无效等。
+        } catch (IOException e) {
+
+        } finally {
+            if (retriever != null) {
+                try {
+                    // 确保释放资源。
+                    retriever.release();
+                } catch (Exception e) {
+
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * 设置播放源
      *
@@ -189,6 +230,32 @@ public class MediaPlayerManager {
         }
         mediaPlayer.seekTo(seekTo);
         return true;
+    }
+
+    //设置禁音 isSilence true 静音
+    public void setSilence(boolean isSilence, Context context) {
+        if (mediaPlayer == null) {
+            return;
+        }
+        //在onPrepared（准备完成）后调用
+        if (isSilence) {
+            mediaPlayer.setVolume(0f, 0f);
+        } else {
+            //mediaPlayer.setVolume(1, 1);
+            AudioManager audioManager = (AudioManager) context.getSystemService(Service.AUDIO_SERVICE);
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_SYSTEM);
+            mediaPlayer.setVolume(audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM), audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM));
+        }
+
+    }
+    //设置音量
+
+    public void seVolume(float leftVolume, float rightVolume) {
+        if (mediaPlayer == null) {
+            return;
+        }
+        //在onPrepared（准备完成）后调用
+        mediaPlayer.setVolume(leftVolume, rightVolume);
     }
 
     //暂停播放
