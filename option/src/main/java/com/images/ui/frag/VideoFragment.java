@@ -27,7 +27,7 @@ import com.images.ui.thing.photoview.PhotoViewAttacher;
 
 import java.io.Serializable;
 
-public class VideoFragment extends MediaFragment {
+public class VideoFragment extends MediaFragment implements MediaPlayerManager.OnMediaPlayerListener {
 
     private OnMediaImgIbl imgLoading;
     private MediaEntity mediaEntity;
@@ -44,6 +44,10 @@ public class VideoFragment extends MediaFragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return getView(inflater);
+    }
+
+    protected View getView(LayoutInflater inflater) {
         View view = inflater.inflate(R.layout.media_layout_video, null);
         return view;
     }
@@ -53,6 +57,10 @@ public class VideoFragment extends MediaFragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        initView(view);
+    }
+
+    protected void initView(View view) {
         Serializable bean = getArguments().getSerializable("bean");
         if (bean instanceof MediaEntity) {
             mediaEntity = (MediaEntity) bean;
@@ -101,11 +109,15 @@ public class VideoFragment extends MediaFragment {
 
     private boolean isAvailable;
     private boolean isSetData;
-    private MediaPlayerManager manager;
+    protected MediaPlayerManager manager;
 
     @Override
     public void onResume() {
         super.onResume();
+        setResume();
+    }
+
+    protected void setResume() {
         if (!isSetData) {
             //播放初始化
             isSetData = true;
@@ -116,10 +128,9 @@ public class VideoFragment extends MediaFragment {
             //继续播放
             manager.setMediaPlayerStart();
         }
-
     }
 
-    private void initPlayer() {
+    protected void initPlayer() {
         if (isAvailable) {
             manager = new MediaPlayerManager();
             manager.setAutoplay(true);
@@ -130,7 +141,7 @@ public class VideoFragment extends MediaFragment {
         }
     }
 
-    private int type = 1;//1：等比 2：满View播放
+    protected int type = 1;//1：等比 2：满View播放
 
     private void setPlayViewZoom(TextureView textureView) {
         MediaPlayer mediaPlayer = manager.getMediaPlayer();
@@ -231,14 +242,6 @@ public class VideoFragment extends MediaFragment {
     }
 
 
-    public static VideoFragment newInstance(MediaEntity mediaEntity) {
-        VideoFragment frg = new VideoFragment();
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("bean", mediaEntity);
-        frg.setArguments(bundle);
-        return frg;
-    }
-
     @Override
     public void onPause() {
         super.onPause();
@@ -263,6 +266,42 @@ public class VideoFragment extends MediaFragment {
         if (manager != null) {
             manager.onDestroy();
         }
+
+    }
+
+    public static VideoFragment newInstance(MediaEntity mediaEntity) {
+        VideoFragment frg = new VideoFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("bean", mediaEntity);
+        frg.setArguments(bundle);
+        return frg;
+    }
+
+    @Override
+    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+
+    }
+
+    @Override
+    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+
+    }
+    /**
+     * @param mp
+     * @param state  100:准备完成（开始播放）
+     *               101：播放暂停
+     *               102：播放完成
+     *               103：停止播放
+     *               104：播放进度
+     * @param source 播放的url
+     */
+    @Override
+    public void onPayState(MediaPlayer mp, int state, String source) {
+
+    }
+
+    @Override
+    public void onError(MediaPlayer mp, int what, int extra) {
 
     }
 }

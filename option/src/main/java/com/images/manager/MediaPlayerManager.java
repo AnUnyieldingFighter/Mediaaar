@@ -31,7 +31,7 @@ public class MediaPlayerManager {
     private int sourceType;
     //true:播放完可以重播
     //private boolean isRebroadcast;
-    //true 准备完成之后自动播放
+    //true 准备完成之后自动播放 (本地视频 一般直接播放)
     private boolean isAutoplay;
 
     public MediaPlayer getMediaPlayer() {
