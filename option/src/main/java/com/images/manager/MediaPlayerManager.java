@@ -342,6 +342,7 @@ public class MediaPlayerManager {
                 //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
                 mediaPlayer.start();
                 playProgressHander.start();
+                setListenerBack(9);
                 break;
             case 3:
                 if (workType == 3) {
@@ -517,6 +518,10 @@ public class MediaPlayerManager {
                 //播放停止
                 listener.onPayState(mediaPlayer, 103, source);
                 break;
+            case 9:
+                //开始播放 调用了start
+                listener.onPayState(mediaPlayer, 105, source);
+                break;
         }
     }
 
@@ -531,11 +536,12 @@ public class MediaPlayerManager {
 
         /**
          * @param mp
-         * @param state  100:准备完成（开始播放）
+         * @param state  100:准备完成（播放就绪）
          *               101：播放暂停
          *               102：播放完成
          *               103：停止播放
          *               104：播放进度
+         *               105: 开始播放（调用start）
          * @param source 播放的url
          */
         void onPayState(MediaPlayer mp, int state, String source);
