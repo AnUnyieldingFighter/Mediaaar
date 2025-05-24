@@ -28,18 +28,14 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media);
-        findViewById(R.id.image_btn2).setOnClickListener(this);
-        findViewById(R.id.image_btn21).setOnClickListener(this);
-        findViewById(R.id.image_btn3).setOnClickListener(this);
-        findViewById(R.id.image_btn31).setOnClickListener(this);
-        findViewById(R.id.image_btn4).setOnClickListener(this);
+
+
         findViewById(R.id.image_btn5).setOnClickListener(this);
         findViewById(R.id.image_btn51).setOnClickListener(this);
         findViewById(R.id.image_btn52).setOnClickListener(this);
 
+        findViewById(R.id.image_6).setOnClickListener(this);
 
-        findViewById(R.id.image_btn6).setVisibility(View.GONE);
-        findViewById(R.id.image_btn7).setVisibility(View.GONE);
 
         iv = (ImageView) findViewById(R.id.image_iv);
     }
@@ -70,13 +66,10 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         return iamges;
     }
 
-    PhotoManager photoManager;
 
     @Override
     public void onClick(View view) {
-        if (photoManager == null) {
-            photoManager = new PhotoManager(this);
-        }
+
         switch (view.getId()) {
             case R.id.image_btn5:
                 //多选
@@ -95,40 +88,25 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 it.setClass(this, MediaOptActivity.class);
                 startActivity(it);
                 break;
+            case R.id.image_6:
+                //播放一个网络视频
+                MediaEntity bean = new MediaEntity();
+                bean.type = 2;
+                bean.url = video1;
+                temp=new ArrayList<>();
+                temp.add(bean);
 
-
-
-
-
-
-
-            case R.id.image_btn2:
-                //只预览
-                photoManager.previewImage(getPaths());
-                break;
-            case R.id.image_btn21:
-                //预览和删除
-                // photoManager.previewImageDelect(getPaths());
-                photoManager.previewImageDelect2(getImage());
-                break;
-            case R.id.image_btn3:
-                //单张图片+裁剪
-                photoManager.getCrop(true);
-                break;
-            case R.id.image_btn31:
-                //选图+系统裁剪
-                //photoManager.getCrop(false);
-                photoManager.crop(false);
-                break;
-            case R.id.image_btn4:
-                //只拍照
-                photoManager.getSinglePhotoConfig();
+                it = new Intent();
+                it.setClass(this, MediaPreviewActivity.class);
+                startActivity(it);
                 break;
 
 
         }
 
     }
+
+    private String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

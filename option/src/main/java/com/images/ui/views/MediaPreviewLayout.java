@@ -54,7 +54,7 @@ public class MediaPreviewLayout extends RelativeLayout {
     private MediaPagerAdapter2 adapter;
 
     public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias) {
-        setMedias(act, medias,0);
+        setMedias(act, medias, 0);
     }
 
     /**
@@ -77,17 +77,20 @@ public class MediaPreviewLayout extends RelativeLayout {
         }
     }
 
+    //加载图片或者视频 page
     protected ArrayList<MediaFragment> getFrag(ArrayList<MediaEntity> medias) {
         ArrayList<MediaFragment> pages = new ArrayList<>();
         for (int i = 0; i < medias.size(); i++) {
             MediaEntity bean = medias.get(i);
             if (bean.type == 1) {
                 ImgFragment frg = ImgFragment.newInstance(bean);
+                //设置图片点击事件  和 加载回调
                 frg.setOnImgClickListener(previewClickList, imgLoading);
                 pages.add(frg);
             }
             if (bean.type == 2) {
                 VideoFragment frg = VideoFragment.newInstance(bean);
+                //设置加载回调
                 frg.setOnImgClickListener(imgLoading);
                 pages.add(frg);
             }
@@ -95,21 +98,24 @@ public class MediaPreviewLayout extends RelativeLayout {
         return pages;
     }
 
-
+    //viewPager 切换回调
     protected void onPageOpt(int position) {
     }
 
+    //图片点击事件回调
     protected void OnPhotoTapListener(View view, MediaEntity mediaEntity, float v, float v1) {
     }
 
     private OnMediaImgIbl imgLoading;
 
+    //设置图片加载回调
     public void setImageLoading(OnMediaImgIbl imgLoading) {
         this.imgLoading = imgLoading;
     }
 
     private PreviewClickList previewClickList = new PreviewClickList();
 
+    //图片的点击事件 回调
     class PreviewClickList implements OnImgClickListener {
 
 

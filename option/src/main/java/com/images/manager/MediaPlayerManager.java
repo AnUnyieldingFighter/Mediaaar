@@ -32,6 +32,9 @@ public class MediaPlayerManager {
     //true:播放完可以重播
     //private boolean isRebroadcast;
 
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
+    }
 
     public static MediaPlayerManager getInstance() {
         if (mediaPlayerManager == null) {

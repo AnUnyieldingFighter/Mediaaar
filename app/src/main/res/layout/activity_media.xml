@@ -24,62 +24,11 @@
         android:text="相机拍照"
         />
 
-
     <Button
-        android:id="@+id/image_btn2"
+        android:id="@+id/image_6"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="只预览"
-        />
-
-    <Button
-        android:id="@+id/image_btn21"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="预览删除"
-        />
-
-    <Button
-        android:id="@+id/image_btn3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="单张照片裁剪"
-        />
-
-    <Button
-        android:id="@+id/image_btn31"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="单张照片系统裁剪"
-        />
-
-
-    <Button
-        android:id="@+id/image_btn4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="系统拍照"
-        />
-
-    <Button
-        android:id="@+id/image_btn6"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="系统录制视频"
-        />
-
-    <Button
-        android:id="@+id/image_btn7"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="录音"
-        />
-
-    <ImageView
-        android:id="@+id/image_iv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerInside"
+        android:text="播放一个网络视频"
         />
 
 </LinearLayout>
