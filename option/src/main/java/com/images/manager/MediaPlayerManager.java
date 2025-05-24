@@ -328,9 +328,11 @@ public class MediaPlayerManager {
                 break;
             case 1:
                 //暂停
-                mediaPlayer.pause();
-                playProgressHander.stop();
-                setListenerBack(7);
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    playProgressHander.stop();
+                    setListenerBack(7);
+                }
                 break;
             case 2:
                 //上一个播放状态 :是暂停 或者 准备
