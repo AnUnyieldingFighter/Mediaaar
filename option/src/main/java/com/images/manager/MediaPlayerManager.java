@@ -89,6 +89,7 @@ public class MediaPlayerManager {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
+                //播放完成
                 setListenerBack(4);
                 playProgressHander.stop();
             }
@@ -302,11 +303,12 @@ public class MediaPlayerManager {
 
     //true 没有在播放
     public boolean isStopPlay() {
-        return (workType == 1 || workType == 3) && mediaPlayer != null;
+        if (mediaPlayer == null) {
+            return true;
+        }
+        return !mediaPlayer.isPlaying();
     }
 
-    //保存播放状态
-    private int workType;
 
     /**
      * 媒体开始工作
@@ -314,7 +316,7 @@ public class MediaPlayerManager {
      * @param type 工作类型（0：准备；1：暂停；2：继续播放 或者 播放；3：停止）
      */
     public void setMediaWork(int type) {
-        d("状态--：" + workType + "  type:" + type);
+        d("状态--：" + type + "  type:" + type);
         switch (type) {
             case 0:
                 //准备
@@ -332,23 +334,17 @@ public class MediaPlayerManager {
                 break;
             case 2:
                 //上一个播放状态 :是暂停 或者 准备
-                boolean isPay = (workType == 1 || workType == 0);
-                if (!isPay) {
-                    break;
-                }
                 //
                 // MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
                 // mediaPlayer.start();
                 //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
-                mediaPlayer.start();
-                playProgressHander.start();
-                setListenerBack(9);
+                if (!mediaPlayer.isPlaying()) {
+                    mediaPlayer.start();
+                    playProgressHander.start();
+                    setListenerBack(9);
+                }
                 break;
             case 3:
-                if (workType == 3) {
-                    //已经停止播放状态了
-                    break;
-                }
                 //停止
                 if (playProgressHander != null) {
                     playProgressHander.stop();
@@ -379,7 +375,6 @@ public class MediaPlayerManager {
                 mediaPlayer = null;
                 break;
         }
-        workType = type;
         d("状态：" + type);
 
     }
