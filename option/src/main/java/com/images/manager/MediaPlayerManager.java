@@ -272,6 +272,9 @@ public class MediaPlayerManager {
     //设置进度
     public int getCurrentPosition(String url) {
         int position = -1;
+        if (!isSamePlayUrl(url)) {
+            return position;
+        }
         if (mediaPlayer == null) {
             position = mediaPlayer.getCurrentPosition();
 

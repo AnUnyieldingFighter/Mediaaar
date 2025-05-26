@@ -206,6 +206,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
      *               102：播放完成
      *               103：停止播放
      *               104：播放进度
+     *               105: 开始播放（调用start）
      * @param source 播放的url
      */
     @Override
