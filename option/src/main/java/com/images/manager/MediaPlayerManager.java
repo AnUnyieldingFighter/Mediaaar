@@ -364,11 +364,13 @@ public class MediaPlayerManager {
                     setListenerBack(5);
                     break;
                 }
-                mediaPlayer.prepareAsync();
+                if (mediaPlayer != null) {
+                    mediaPlayer.prepareAsync();
+                }
                 break;
             case 1:
                 //暂停
-                if (mediaPlayer.isPlaying()) {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
                     playProgressHander.stop();
                     setListenerBack(7);
@@ -380,7 +382,7 @@ public class MediaPlayerManager {
                 // MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.sound_file_1);
                 // mediaPlayer.start();
                 //播放  使用create()方法创建 MediaPlayer对象不需要调用prepare()方法，直接调用start()方法
-                if (!mediaPlayer.isPlaying()) {
+                if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                     mediaPlayer.start();
                     playProgressHander.start();
                     setListenerBack(9);
