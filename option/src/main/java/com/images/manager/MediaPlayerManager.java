@@ -279,24 +279,35 @@ public class MediaPlayerManager {
         return position;
     }
 
-    //设置禁音 isSilence true 静音
+
+    /**
+     * 设置禁音(setVolume方法放到play(m.start())之后)
+     *
+     * @param isSilence true 静音
+     * @param context
+     */
     public void setSilence(boolean isSilence, Context context) {
         if (mediaPlayer == null) {
             return;
         }
         //在onPrepared（准备完成）后调用
         if (isSilence) {
-            mediaPlayer.setVolume(0f, 0f);
+            seVolume(0, 0);
         } else {
             //mediaPlayer.setVolume(1, 1);
             AudioManager audioManager = (AudioManager) context.getSystemService(Service.AUDIO_SERVICE);
             //mediaPlayer.setAudioStreamType(AudioManager.STREAM_SYSTEM);
-            mediaPlayer.setVolume(audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM), audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM));
+            seVolume(audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM), audioManager.getStreamVolume(AudioManager.STREAM_SYSTEM));
         }
 
     }
 
-    //设置音量
+    /**
+     * 设位置音量(设置禁音(setVolume方法放到play(m.start())之后))
+     *
+     * @param leftVolume
+     * @param rightVolume
+     */
     public void seVolume(float leftVolume, float rightVolume) {
         if (mediaPlayer == null) {
             return;
@@ -496,6 +507,7 @@ public class MediaPlayerManager {
     /**
      * @param type    回调类型（1：获取到视频大小；2：准备完成(播放准备就绪)；3：缓存；
      *                4：播放完成；5：播放错误；6：播放进度；7：播放暂停 8:重置播放器（播放停止）
+     *                9：开始播放 调用了start
      * @param percent 缓存进度
      * @param width   视频宽
      * @param height  视频高
