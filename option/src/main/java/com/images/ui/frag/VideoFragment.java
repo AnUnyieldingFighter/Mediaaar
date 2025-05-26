@@ -24,6 +24,7 @@ import com.images.ui.adapter.OnImgClickListener;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.thing.photoview.PhotoView;
 import com.images.ui.thing.photoview.PhotoViewAttacher;
+import com.images.ui.views.VideoTextureView;
 
 import java.io.Serializable;
 
@@ -52,7 +53,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
         return view;
     }
 
-    private TextureView textureView;
+    private VideoTextureView textureView;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -171,101 +172,12 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
 
     protected int type = 1;//1：等比 2：满View播放
 
-    private void setPlayViewZoom(TextureView textureView) {
+    private void setPlayViewZoom(VideoTextureView textureView) {
         MediaPlayer mediaPlayer = manager.getMediaPlayer();
-        if (type == 1) {
-            setVideoAspect(mediaPlayer, textureView);
-        }
-        if (type == 2) {
-            setVideoAspectFull(mediaPlayer, textureView);
-        }
-    }
-
-    private int oVideoW, oViewH;
-    private int oTextureW, oTureH;
-
-    //等比播放
-    private void setVideoAspect(MediaPlayer mediaPlayer, TextureView textureView) {
-        //mtextureViewWidth为textureView宽，mtextureViewHeight为textureView高
-        //mtextureViewWidth宽高，为什么需要用传入的，因为全屏显示时宽高不会及时更新
-        Matrix matrix = new Matrix();
-        int videoWidth = mediaPlayer.getVideoWidth();
-        int videoHeight = mediaPlayer.getVideoHeight();
-
-        if (videoWidth == 0 || videoHeight == 0) {
-            return;
-        }
-        float textureWidth = (float) textureView.getWidth();
-        float textureHeight = (float) textureView.getHeight();
-        if (oVideoW == videoWidth && oViewH == videoHeight && oTextureW == textureWidth && oTureH == textureHeight) {
-            return;
-        }
-        //
-        oVideoW = videoWidth;
-        oViewH = videoHeight;
-        oTextureW = (int) textureWidth;
-        oTureH = (int) textureHeight;
-
-        //得到缩放比，从而获得最佳缩放比
-        float sx = textureWidth / videoWidth;
-        float sy = textureHeight / videoHeight;
-        //先将视频变回原来的大小
-        float sx1 = videoWidth / textureWidth;
-        float sy1 = videoHeight / textureHeight;
-        matrix.preScale(sx1, sy1);
-        //然后判断最佳比例，满足一边能够填满
-        if (sx >= sy) {
-            matrix.preScale(sy, sy);
-            //然后判断出左右偏移，实现居中，进入到这个判断，证明y轴是填满了的
-            float leftX = (textureWidth - videoWidth * sy) / 2;
-            matrix.postTranslate(leftX, 0);
-        } else {
-            matrix.preScale(sx, sx);
-            float leftY = (textureHeight - videoHeight * sx) / 2;
-            matrix.postTranslate(0, leftY);
-        }
-        textureView.setTransform(matrix);//将矩阵添加到textureView
-        textureView.postInvalidate();//重绘视图
-    }
-
-    private int oVideoW2, oViewH2;
-    private int oTextureW2, oTureH2;
+        textureView.setType(type);
+        textureView.setPlayViewZoom(mediaPlayer);
 
 
-    private void setVideoAspectFull(MediaPlayer mediaPlayer, TextureView textureView) {
-        // 获取视频的原始宽高比
-        int videoWidth = mediaPlayer.getVideoWidth();
-        int videoHeight = mediaPlayer.getVideoHeight();
-        if (videoWidth == 0 || videoHeight == 0) {
-            return;
-        }
-        // 获取TextureView的宽高
-        int textureWidth = textureView.getWidth();
-        int textureHeight = textureView.getHeight();
-        if (oVideoW2 == videoWidth && oViewH2 == videoHeight && oTextureW2 == textureWidth && oTureH2 == textureHeight) {
-            return;
-        }
-        //
-        oVideoW2 = videoWidth;
-        oViewH2 = videoHeight;
-        oTextureW2 = (int) textureWidth;
-        oTureH2 = (int) textureHeight;
-        // 计算缩放比例以适应TextureView的宽高比
-        float scaleX = textureWidth / (float) videoWidth;
-        float scaleY = textureHeight / (float) videoHeight;
-        float scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
-        // 创建Matrix并设置缩放变换
-        Matrix matrix = new Matrix();
-        //设置缩放比例
-        matrix.setScale(scale, scale);
-        // 计算平移量，使视频内容居中显示
-        float translateX = (textureWidth - videoWidth * scale) / 2;
-        float translateY = (textureHeight - videoHeight * scale) / 2;
-        matrix.postTranslate(translateX, translateY);
-        //
-        textureView.setTransform(matrix);
-        //重绘视图
-        textureView.postInvalidate();
     }
 
 

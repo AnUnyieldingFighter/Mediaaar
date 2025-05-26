@@ -40,6 +40,8 @@ public class MediaPlayerManager {
     //private boolean isRebroadcast;
     //true 准备完成之后自动播放 (本地视频 一般直接播放)
     private boolean isAutoplay;
+    //true ：准备完成
+    private boolean isPrepareComplete;
 
     public MediaPlayer getMediaPlayer() {
         return mediaPlayer;
@@ -169,24 +171,37 @@ public class MediaPlayerManager {
         return null;
     }
 
+    //比较是不是相同的播放 url
+    public boolean isSamePlayUrl(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+        return url.equals(source);
+    }
+
     /**
      * 设置播放源
      *
      * @param url  网络
      * @param path 本地
      */
+    public void setDataSourcePlay(String url, String path) {
+        if ((isSamePlayUrl(url) || isSamePlayUrl(path)) && isPrepareComplete) {
+            setListenerBack(2);
+            return;
+        }
+        setDataSource(url, path);
+        //准备好之后会去播放，因此调用此方法后面  不要再调用 setMediaPlayerStart
+        setMediaWork(0);
+    }
+
     private void setDataSource(String url, String path) {
+        isPrepareComplete = false;
         if (!TextUtils.isEmpty(path)) {
             setPayPath(path);
             return;
         }
         setPayUrl(url);
-    }
-
-    public void setDataSourcePlay(String url, String path) {
-        setDataSource(url, path);
-        //准备好之后会去播放，因此调用此方法后面  不要再调用 setMediaPlayerStart
-        setMediaWork(0);
     }
 
     /**
@@ -254,6 +269,16 @@ public class MediaPlayerManager {
         return true;
     }
 
+    //设置进度
+    public int getCurrentPosition(String url) {
+        int position = -1;
+        if (mediaPlayer == null) {
+            position = mediaPlayer.getCurrentPosition();
+
+        }
+        return position;
+    }
+
     //设置禁音 isSilence true 静音
     public void setSilence(boolean isSilence, Context context) {
         if (mediaPlayer == null) {
@@ -313,7 +338,7 @@ public class MediaPlayerManager {
     /**
      * 媒体开始工作
      *
-     * @param type 工作类型（0：准备；1：暂停；2：继续播放 或者 播放；3：停止）
+     * @param type 工作类型（0：准备；1：暂停；2：继续播放 或者 播放；3：停止,重置播放器）
      */
     public void setMediaWork(int type) {
         d("状态--：" + type + "  type:" + type);
@@ -470,7 +495,7 @@ public class MediaPlayerManager {
 
     /**
      * @param type    回调类型（1：获取到视频大小；2：准备完成(播放准备就绪)；3：缓存；
-     *                4：播放完成；5：播放错误；6：播放进度；7：播放暂停）
+     *                4：播放完成；5：播放错误；6：播放进度；7：播放暂停 8:重置播放器（播放停止）
      * @param percent 缓存进度
      * @param width   视频宽
      * @param height  视频高
@@ -479,45 +504,65 @@ public class MediaPlayerManager {
      */
     private void setListenerBack(int type, int percent, int width, int height, int what, int extra) {
         OnMediaPlayerListener listener = getListener();
-        if (listener == null) {
-            return;
-        }
+
         switch (type) {
             case 1:
                 //获取到视频大小
-                listener.onVideoSizeChanged(mediaPlayer, width, height);
+                if (listener != null) {
+                    listener.onVideoSizeChanged(mediaPlayer, width, height);
+                }
                 break;
             case 2:
                 //准备完成
-                listener.onPayState(mediaPlayer, 100, source);
+                isPrepareComplete = true;
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 100, source);
+                }
                 break;
             case 3:
                 //缓存
-                listener.onBufferingUpdate(mediaPlayer, percent);
+                if (listener != null) {
+                    listener.onBufferingUpdate(mediaPlayer, percent);
+                }
                 break;
             case 4:
                 //播放完成
-                listener.onPayState(mediaPlayer, 102, source);
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 102, source);
+                }
                 break;
             case 5:
                 //播放错误
-                listener.onError(mediaPlayer, what, extra);
+                if (listener != null) {
+                    listener.onError(mediaPlayer, what, extra);
+                }
+                isPrepareComplete = false;
                 break;
             case 6:
                 //播放进度
-                listener.onPayState(mediaPlayer, 104, source);
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 104, source);
+                }
+
                 break;
             case 7:
                 //播放暂停
-                listener.onPayState(mediaPlayer, 101, source);
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 101, source);
+                }
                 break;
             case 8:
                 //播放停止
-                listener.onPayState(mediaPlayer, 103, source);
+                isPrepareComplete = true;
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 103, source);
+                }
                 break;
             case 9:
                 //开始播放 调用了start
-                listener.onPayState(mediaPlayer, 105, source);
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 105, source);
+                }
                 break;
         }
     }
