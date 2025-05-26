@@ -2,6 +2,7 @@ package com.images.ui.views;
 
 import android.content.Context;
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.view.TextureView;
@@ -33,6 +34,7 @@ public class VideoTextureView extends TextureView {
     }
 
     public void setPlayViewZoom(MediaPlayer mediaPlayer) {
+
         if (type == 1) {
             setVideoAspect(mediaPlayer, this);
         }
@@ -43,12 +45,30 @@ public class VideoTextureView extends TextureView {
 
     private int oVideoW, oViewH;
     private int oTextureW, oTureH;
+    public Matrix matrix;
+    private RectF videoRectF;
+    public boolean isChange;
+
+    /**
+     * 获取变换之后的宽和高
+     *
+     * @return
+     */
+    public RectF getRectF() {
+        if (videoRectF != null && matrix != null) {
+            RectF transformedRect = new RectF(videoRectF);
+            matrix.mapRect(transformedRect);
+            return transformedRect;
+        }
+        return null;
+    }
 
     //等比播放
     private void setVideoAspect(MediaPlayer mediaPlayer, TextureView textureView) {
         //mtextureViewWidth为textureView宽，mtextureViewHeight为textureView高
         //mtextureViewWidth宽高，为什么需要用传入的，因为全屏显示时宽高不会及时更新
-        Matrix matrix = new Matrix();
+        isChange = false;
+
         int videoWidth = mediaPlayer.getVideoWidth();
         int videoHeight = mediaPlayer.getVideoHeight();
 
@@ -60,11 +80,15 @@ public class VideoTextureView extends TextureView {
         if (oVideoW == videoWidth && oViewH == videoHeight && oTextureW == textureWidth && oTureH == textureHeight) {
             return;
         }
+
         //
         oVideoW = videoWidth;
         oViewH = videoHeight;
         oTextureW = (int) textureWidth;
         oTureH = (int) textureHeight;
+        //
+        isChange = true;
+        videoRectF = new RectF(0, 0, videoWidth, videoHeight);
 
         //得到缩放比，从而获得最佳缩放比
         float sx = textureWidth / videoWidth;
@@ -72,6 +96,7 @@ public class VideoTextureView extends TextureView {
         //先将视频变回原来的大小
         float sx1 = videoWidth / textureWidth;
         float sy1 = videoHeight / textureHeight;
+        matrix = new Matrix();
         matrix.preScale(sx1, sy1);
         //然后判断最佳比例，满足一边能够填满
         if (sx >= sy) {
@@ -93,6 +118,7 @@ public class VideoTextureView extends TextureView {
 
 
     private void setVideoAspectFull(MediaPlayer mediaPlayer, TextureView textureView) {
+        isChange = false;
         // 获取视频的原始宽高比
         int videoWidth = mediaPlayer.getVideoWidth();
         int videoHeight = mediaPlayer.getVideoHeight();
@@ -105,17 +131,21 @@ public class VideoTextureView extends TextureView {
         if (oVideoW2 == videoWidth && oViewH2 == videoHeight && oTextureW2 == textureWidth && oTureH2 == textureHeight) {
             return;
         }
+
         //
         oVideoW2 = videoWidth;
         oViewH2 = videoHeight;
         oTextureW2 = (int) textureWidth;
         oTureH2 = (int) textureHeight;
+        //
+        isChange = true;
+        videoRectF = new RectF(0, 0, videoWidth, videoHeight);
         // 计算缩放比例以适应TextureView的宽高比
         float scaleX = textureWidth / (float) videoWidth;
         float scaleY = textureHeight / (float) videoHeight;
         float scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
         // 创建Matrix并设置缩放变换
-        Matrix matrix = new Matrix();
+        matrix = new Matrix();
         //设置缩放比例
         matrix.setScale(scale, scale);
         // 计算平移量，使视频内容居中显示

@@ -201,7 +201,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
 
     /**
      * @param mp
-     * @param state  100:准备完成（开始播放）
+     * @param state  100:准备完成（开始播放 可以调用start）
      *               101：播放暂停
      *               102：播放完成
      *               103：停止播放
