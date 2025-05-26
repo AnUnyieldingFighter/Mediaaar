@@ -88,7 +88,7 @@ public class VideoTextureView extends TextureView {
         oTureH = (int) textureHeight;
         //
         isChange = true;
-        videoRectF = new RectF(0, 0, videoWidth, videoHeight);
+        videoRectF = new RectF(0, 0, textureWidth, textureHeight);
 
         //得到缩放比，从而获得最佳缩放比
         float sx = textureWidth / videoWidth;
@@ -139,7 +139,7 @@ public class VideoTextureView extends TextureView {
         oTureH2 = (int) textureHeight;
         //
         isChange = true;
-        videoRectF = new RectF(0, 0, videoWidth, videoHeight);
+        videoRectF = new RectF(0, 0, textureWidth, textureHeight);
         // 计算缩放比例以适应TextureView的宽高比
         float scaleX = textureWidth / (float) videoWidth;
         float scaleY = textureHeight / (float) videoHeight;
