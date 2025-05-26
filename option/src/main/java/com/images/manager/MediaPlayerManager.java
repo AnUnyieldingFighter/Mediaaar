@@ -109,7 +109,7 @@ public class MediaPlayerManager {
         mediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
             @Override
             public void onSeekComplete(MediaPlayer mp) {
-                setMediaWork(2);
+                setListenerBack(11);
             }
         });
         // 设置循环播放
@@ -265,6 +265,7 @@ public class MediaPlayerManager {
         if (mediaPlayer == null) {
             return false;
         }
+        setListenerBack(10);
         mediaPlayer.seekTo(seekTo);
         return true;
     }
@@ -509,8 +510,8 @@ public class MediaPlayerManager {
 
     /**
      * @param type    回调类型（1：获取到视频大小；2：准备完成(播放准备就绪)；3：缓存；
-     *                4：播放完成；5：播放错误；6：播放进度；7：播放暂停 8:重置播放器（播放停止）
-     *                9：开始播放 调用了start
+     *                4：播放完成；5：播放错误； 6：播放进度；7：播放暂停 8:重置播放器（播放停止）
+     *                9：开始播放 调用了start  10:设置拖动 11：拖动回调（拖动完成）
      * @param percent 缓存进度
      * @param width   视频宽
      * @param height  视频高
@@ -579,6 +580,16 @@ public class MediaPlayerManager {
                     listener.onPayState(mediaPlayer, 105, source);
                 }
                 break;
+            case 10:
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 106, source);
+                }
+                break;
+            case 11:
+                if (listener != null) {
+                    listener.onPayState(mediaPlayer, 107, source);
+                }
+                break;
         }
     }
 
@@ -599,6 +610,8 @@ public class MediaPlayerManager {
          *               103：停止播放
          *               104：播放进度
          *               105: 开始播放（调用start）
+         *               106:设置拖动
+         *               107：拖动完成
          * @param source 播放的url
          */
         void onPayState(MediaPlayer mp, int state, String source);
