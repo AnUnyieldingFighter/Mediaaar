@@ -171,12 +171,34 @@ public class MediaPlayerManager {
         return null;
     }
 
-    //比较是不是相同的播放 url
+    /**
+     * 比较视频播放地址
+     *
+     * @param url 视频播放地址
+     * @return
+     */
     public boolean isSamePlayUrl(String url) {
         if (TextUtils.isEmpty(url)) {
             return false;
         }
         return url.equals(source);
+    }
+
+    /**
+     * 设置播放下一个视频的url
+     *
+     * @param url
+     */
+    public void setNextPlayUrl(String url) {
+        if (TextUtils.isEmpty(source)) {
+            return;
+        }
+        if (source.equals(url)) {
+            return;
+        }
+        if (mediaPlayer != null) {
+            setMediaWork(3);
+        }
     }
 
     /**
