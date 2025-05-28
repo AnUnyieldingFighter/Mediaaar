@@ -29,6 +29,12 @@
         android:text="播放一个网络视频" />
 
     <Button
+        android:id="@+id/image_8"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="播放一个本地视频" />
+
+    <Button
         android:id="@+id/image_7"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

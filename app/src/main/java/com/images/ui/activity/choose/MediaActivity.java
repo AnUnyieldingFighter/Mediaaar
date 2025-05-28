@@ -40,6 +40,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
 
         findViewById(R.id.image_6).setOnClickListener(this);
         findViewById(R.id.image_7).setOnClickListener(this);
+        findViewById(R.id.image_8).setOnClickListener(this);
 
         ivVideo = (ImageView) findViewById(R.id.iv_video);
     }
@@ -96,7 +97,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 //播放一个网络视频
                 MediaEntity bean = new MediaEntity();
                 bean.type = 2;
-                bean.url = video2;
+                bean.url = video1;
                 bean.other = "2";
                 temp = new ArrayList<>();
                 temp.add(bean);
@@ -105,6 +106,20 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 it.setClass(this, MediaPreviewActivity.class);
                 startActivity(it);
                 break;
+            case R.id.image_8:
+                //播放一个网络视频
+                bean = new MediaEntity();
+                bean.type = 2;
+                bean.mediaPathSource = "/storage/emulated/0/DCIM/ScreenRecorder/Screenrecorder-2025-03-13-12-17-36-126.mp4";
+                bean.other = "2";
+                temp = new ArrayList<>();
+                temp.add(bean);
+                it = new Intent();
+                it.setClass(this, MediaPreviewActivity.class);
+                startActivity(it);
+                break;
+
+
             case R.id.image_7:
                 VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video2);
                 ivVideo.setImageBitmap(videoData.videoBitmap);
@@ -116,6 +131,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
 
     private String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
     private String video2 = "https://nbc.vtnbo.com/nbc-file/file/video/beta/17484063665794360.mp4";
+    private String video3 = "http://10.168.3.102:5233/chfs/shared/nbc-apk/test1.mp4";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

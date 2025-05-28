@@ -143,29 +143,53 @@ public class VideoTextureView extends TextureView {
         }
         isChange = true;
         videoRectF = new RectF(0, 0, textureWidth, textureHeight);
-        // 计算缩放比例以适应TextureView的宽高比
+        if (videoWidth > videoHeight || videoWidth == videoHeight) {
+            //横屏 视频
+            horizontalScreen(textureView, textureWidth, textureHeight, videoWidth, videoHeight);
+        }
+        if (videoHeight > videoWidth) {
+            //竖屏视频
+            verticalScreen(textureView, textureWidth, textureHeight, videoWidth, videoHeight);
+        }
+
+    }
+
+    //竖屏
+    private void verticalScreen(TextureView textureView, float textureWidth, float textureHeight, float videoWidth, float videoHeight) {
         float scaleX = textureWidth / videoWidth;
         float scaleY = textureHeight / videoHeight;
-        float scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
-        float translateX = (textureWidth - videoWidth * scale) / 2;
-        float translateY = (textureHeight - videoHeight * scale) / 2;
-        if (scale == 1) {
-            scaleX = videoWidth / textureWidth;
-            scaleY = videoHeight / textureHeight;
-            scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
-            translateX = (videoWidth - textureWidth * scale) / 2;
-            translateY = (videoHeight - textureHeight * scale) / 2;
-        }
-        // 创建Matrix并设置缩放变换
+        float scale = Math.max(scaleX, scaleY);
+        //
+        matrix = new Matrix();
+        //第1步:把视频区移动到View区,使两者中心点重合.
+        matrix.preTranslate((textureWidth - videoWidth) / 2, (textureHeight - videoHeight) / 2);
+        //第2步:因为默认视频是fitXY的形式显示的,所以首先要缩放还原回来.
+        matrix.preScale(videoWidth / textureWidth, videoHeight / textureHeight);
+        //第3步
+        matrix.postScale(scale, scale, textureWidth / 2, textureHeight / 2);
+
+        textureView.setTransform(matrix);
+        textureView.postInvalidate();
+
+
+    }
+
+    private void horizontalScreen(TextureView textureView, float textureWidth, float textureHeight, float videoWidth, float videoHeight) {
+        float scaleX = textureWidth / videoWidth;
+        float scaleY = textureHeight / videoHeight;
+        float scale = Math.max(scaleX, scaleY);
+        //创建Matrix并设置缩放变换
         matrix = new Matrix();
         //设置缩放比例
         matrix.setScale(scale, scale);
         // 计算平移量，使视频内容居中显示
+        float translateX = (textureWidth - videoWidth * scale) / 2.0F;
+        float translateY = (textureHeight - videoHeight * scale) / 2.0F;
         matrix.postTranslate(translateX, translateY);
         //
         textureView.setTransform(matrix);
         //重绘视图
         textureView.postInvalidate();
-
     }
+
 }
