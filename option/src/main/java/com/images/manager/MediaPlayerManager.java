@@ -198,6 +198,8 @@ public class MediaPlayerManager {
         }
         if (mediaPlayer != null) {
             setMediaWork(3);
+        } else {
+            setListenerBack(8);
         }
     }
 
