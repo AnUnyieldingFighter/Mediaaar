@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,6 +33,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
 
     private OnMediaImgIbl imgLoading;
     private MediaEntity mediaEntity;
+
 
     public void setOnImgClickListener(OnMediaImgIbl imgLoading) {
         this.imgLoading = imgLoading;
@@ -76,6 +78,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
                 type = 2;
             }
         }
+
         textureView = view.findViewById(R.id.texture_view);
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
@@ -172,7 +175,7 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
 
     protected int type = 1;//1：等比 2：满View播放
 
-    private void setPlayViewZoom(VideoTextureView textureView) {
+    protected void setPlayViewZoom(VideoTextureView textureView) {
         MediaPlayer mediaPlayer = manager.getMediaPlayer();
         textureView.setType(type);
         textureView.setPlayViewZoom(mediaPlayer);
@@ -180,6 +183,22 @@ public class VideoFragment extends MediaFragment implements MediaPlayerManager.O
 
     }
 
+    private RelativeLayout loadView;
+
+    protected void setLoadingView() {
+        if (textureView.isChange) {
+            if (loadView == null) {
+                return;
+            }
+            RectF rectf = textureView.getRectF();
+            ViewGroup.LayoutParams layoutParams = loadView.getLayoutParams();
+            var h = rectf.height();
+            var w = rectf.width();
+            layoutParams.height = (int) h;
+            layoutParams.width = (int) w;
+            loadView.setLayoutParams(layoutParams);
+        }
+    }
 
     public static VideoFragment newInstance(MediaEntity mediaEntity) {
         VideoFragment frg = new VideoFragment();

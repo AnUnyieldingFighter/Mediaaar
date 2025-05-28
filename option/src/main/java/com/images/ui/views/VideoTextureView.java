@@ -145,16 +145,16 @@ public class VideoTextureView extends TextureView {
         videoRectF = new RectF(0, 0, textureWidth, textureHeight);
         if (videoWidth > videoHeight || videoWidth == videoHeight) {
             //横屏 视频
-            horizontalScreen(textureView, textureWidth, textureHeight, videoWidth, videoHeight);
+            verticalScreen(textureView, textureWidth, textureHeight, videoWidth, videoHeight);
         }
         if (videoHeight > videoWidth) {
-            //竖屏视频
+            //竖屏 视频
             verticalScreen(textureView, textureWidth, textureHeight, videoWidth, videoHeight);
         }
 
     }
 
-    //竖屏
+    //竖屏(似乎通用)
     private void verticalScreen(TextureView textureView, float textureWidth, float textureHeight, float videoWidth, float videoHeight) {
         float scaleX = textureWidth / videoWidth;
         float scaleY = textureHeight / videoHeight;
