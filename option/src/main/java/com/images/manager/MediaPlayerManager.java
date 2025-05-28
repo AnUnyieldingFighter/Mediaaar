@@ -360,6 +360,11 @@ public class MediaPlayerManager {
         setMediaWork(3);
     }
 
+    //重置播放器
+    public void setMediaPlayerRest() {
+        setMediaWork(4);
+    }
+
     //关闭播放器
     public void setMediaPlayerClose() {
         setMediaWork(5);
@@ -380,7 +385,7 @@ public class MediaPlayerManager {
     /**
      * 媒体开始工作
      *
-     * @param type 工作类型（0：准备；1：暂停；2：继续播放 或者 播放；3：停止,重置播放器）
+     * @param type 工作类型（0：准备；1：暂停；2：继续播放 或者 播放；3：停止,重置播放器  4 停止与清除数据）
      */
     public void setMediaWork(int type) {
         d("状态--：" + type + "  type:" + type);
@@ -434,13 +439,9 @@ public class MediaPlayerManager {
                 setListenerBack(8);
                 break;
             case 4:
-                //废弃？？？因为重播没有意义
-                //准备 或者 重播
-                /*if (isRebroadcast) {
-                    setMediaWork(2);
-                    break;
-                }
-                setMediaWork(0);*/
+                setMediaWork(3);
+                isInPrepare = false;
+                source = "";
                 break;
             case 5:
                 //关闭播放 并且释放播放器
