@@ -75,6 +75,7 @@ public class MediaPlayerManager {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 d("准备完成");
+                isInPrepare = false;
                 setListenerBack(2);
                 if (isAutoplay) {
                     setMediaPlayerStart();
@@ -373,6 +374,8 @@ public class MediaPlayerManager {
         return !mediaPlayer.isPlaying();
     }
 
+    //true 准备中
+    private boolean isInPrepare;
 
     /**
      * 媒体开始工作
@@ -389,6 +392,7 @@ public class MediaPlayerManager {
                     break;
                 }
                 if (mediaPlayer != null) {
+                    isInPrepare = true;
                     mediaPlayer.prepareAsync();
                 }
                 break;
@@ -397,8 +401,14 @@ public class MediaPlayerManager {
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     mediaPlayer.pause();
                     playProgressHander.stop();
-                    setListenerBack(7);
+                } else {
+                    //如果是在准备中，就停止掉
+                    if (mediaPlayer != null && isInPrepare) {
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                    }
                 }
+                setListenerBack(7);
                 break;
             case 2:
                 //上一个播放状态 :是暂停 或者 准备
@@ -420,8 +430,8 @@ public class MediaPlayerManager {
                 if (mediaPlayer != null) {
                     mediaPlayer.stop();
                     mediaPlayer.reset();
-                    setListenerBack(8);
                 }
+                setListenerBack(8);
                 break;
             case 4:
                 //废弃？？？因为重播没有意义
