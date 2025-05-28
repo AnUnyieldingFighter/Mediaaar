@@ -96,7 +96,8 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 //播放一个网络视频
                 MediaEntity bean = new MediaEntity();
                 bean.type = 2;
-                bean.url = video1;
+                bean.url = video2;
+                bean.other = "2";
                 temp = new ArrayList<>();
                 temp.add(bean);
 
@@ -105,7 +106,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
                 startActivity(it);
                 break;
             case R.id.image_7:
-                VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video1);
+                VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video2);
                 ivVideo.setImageBitmap(videoData.videoBitmap);
                 break;
 
@@ -114,6 +115,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
     }
 
     private String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
+    private String video2 = "https://nbc.vtnbo.com/nbc-file/file/video/beta/17484063665794360.mp4";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

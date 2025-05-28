@@ -43,8 +43,8 @@ public class VideoTextureView extends TextureView {
         }
     }
 
-    private int oVideoW, oViewH;
-    private int oTextureW, oTureH;
+    private float oVideoW, oViewH;
+    private float oTextureW, oTureH;
     public Matrix matrix;
     private RectF videoRectF;
     public boolean isChange;
@@ -69,14 +69,14 @@ public class VideoTextureView extends TextureView {
         //mtextureViewWidth宽高，为什么需要用传入的，因为全屏显示时宽高不会及时更新
         isChange = false;
 
-        int videoWidth = mediaPlayer.getVideoWidth();
-        int videoHeight = mediaPlayer.getVideoHeight();
+        float videoWidth = mediaPlayer.getVideoWidth();
+        float videoHeight = mediaPlayer.getVideoHeight();
 
         if (videoWidth == 0 || videoHeight == 0) {
             return;
         }
-        float textureWidth = (float) textureView.getWidth();
-        float textureHeight = (float) textureView.getHeight();
+        float textureWidth = textureView.getWidth();
+        float textureHeight = textureView.getHeight();
         if (oVideoW == videoWidth && oViewH == videoHeight && oTextureW == textureWidth && oTureH == textureHeight) {
             return;
         }
@@ -84,8 +84,8 @@ public class VideoTextureView extends TextureView {
         //
         oVideoW = videoWidth;
         oViewH = videoHeight;
-        oTextureW = (int) textureWidth;
-        oTureH = (int) textureHeight;
+        oTextureW = textureWidth;
+        oTureH = textureHeight;
         //
         isChange = true;
         videoRectF = new RectF(0, 0, textureWidth, textureHeight);
@@ -113,21 +113,21 @@ public class VideoTextureView extends TextureView {
         textureView.postInvalidate();//重绘视图
     }
 
-    private int oVideoW2, oViewH2;
-    private int oTextureW2, oTureH2;
+    private float oVideoW2, oViewH2;
+    private float oTextureW2, oTureH2;
 
 
     private void setVideoAspectFull(MediaPlayer mediaPlayer, TextureView textureView) {
         isChange = false;
         // 获取视频的原始宽高比
-        int videoWidth = mediaPlayer.getVideoWidth();
-        int videoHeight = mediaPlayer.getVideoHeight();
+        float videoWidth = mediaPlayer.getVideoWidth();
+        float videoHeight = mediaPlayer.getVideoHeight();
         if (videoWidth == 0 || videoHeight == 0) {
             return;
         }
         // 获取TextureView的宽高
-        int textureWidth = textureView.getWidth();
-        int textureHeight = textureView.getHeight();
+        float textureWidth = textureView.getWidth();
+        float textureHeight = textureView.getHeight();
         if (oVideoW2 == videoWidth && oViewH2 == videoHeight && oTextureW2 == textureWidth && oTureH2 == textureHeight) {
             return;
         }
@@ -135,26 +135,37 @@ public class VideoTextureView extends TextureView {
         //
         oVideoW2 = videoWidth;
         oViewH2 = videoHeight;
-        oTextureW2 = (int) textureWidth;
-        oTureH2 = (int) textureHeight;
+        oTextureW2 = textureWidth;
+        oTureH2 = textureHeight;
         //
+        if (videoWidth == textureWidth && videoHeight == textureHeight) {
+            return;
+        }
         isChange = true;
         videoRectF = new RectF(0, 0, textureWidth, textureHeight);
         // 计算缩放比例以适应TextureView的宽高比
-        float scaleX = textureWidth / (float) videoWidth;
-        float scaleY = textureHeight / (float) videoHeight;
+        float scaleX = textureWidth / videoWidth;
+        float scaleY = textureHeight / videoHeight;
         float scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
+        float translateX = (textureWidth - videoWidth * scale) / 2;
+        float translateY = (textureHeight - videoHeight * scale) / 2;
+        if (scale == 1) {
+            scaleX = videoWidth / textureWidth;
+            scaleY = videoHeight / textureHeight;
+            scale = Math.max(scaleX, scaleY); // 选择最大的缩放比例以适应整个视图
+            translateX = (videoWidth - textureWidth * scale) / 2;
+            translateY = (videoHeight - textureHeight * scale) / 2;
+        }
         // 创建Matrix并设置缩放变换
         matrix = new Matrix();
         //设置缩放比例
         matrix.setScale(scale, scale);
         // 计算平移量，使视频内容居中显示
-        float translateX = (textureWidth - videoWidth * scale) / 2;
-        float translateY = (textureHeight - videoHeight * scale) / 2;
         matrix.postTranslate(translateX, translateY);
         //
         textureView.setTransform(matrix);
         //重绘视图
         textureView.postInvalidate();
+
     }
 }
