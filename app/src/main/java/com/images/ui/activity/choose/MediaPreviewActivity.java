@@ -7,7 +7,7 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.guomin.app.seletcimage.R;
+import com.media.option.R;
 import com.images.config.entity.MediaEntity;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.views.MediaOPTLayout;

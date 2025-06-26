@@ -9,13 +9,14 @@ import android.widget.ImageView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.images.config.entity.MediaEntity;
 import com.images.manager.MediaManager;
 import com.images.manager.MediaPlayerManager;
 import com.images.manager.VideoDataBean;
 import com.images.utils.PhotoUtil;
 import com.images.ui.Manger.PhotoManager;
-import com.guomin.app.seletcimage.R;
+import com.media.option.R;
 import com.images.unmix.ImageLog;
 
 import java.io.File;
@@ -141,6 +142,9 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
             File file = PhotoUtil.getTakeResFile();
             if (file != null && file.exists()) {
                 ImageLog.d("拍照成功", file.getPath());
+                Glide.with(this).load(file.getPath()).placeholder(R.mipmap.image_select_default)
+                        //.centerCrop()
+                        .into(ivVideo);
             }
 
         }

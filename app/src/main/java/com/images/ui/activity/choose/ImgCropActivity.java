@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.guomin.app.seletcimage.R;
+import com.media.option.R;
 import com.images.ui.adapter.OnMediaImgIbl;
 import com.images.ui.views.ImageCropLayout;
 import com.images.ui.views.MediaPreviewLayout;

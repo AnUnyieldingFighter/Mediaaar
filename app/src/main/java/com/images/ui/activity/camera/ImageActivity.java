@@ -17,7 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.images.unmix.ImageLog;
-import com.guomin.app.seletcimage.R;
+import com.media.option.R;
 
 
 import java.io.BufferedInputStream;
