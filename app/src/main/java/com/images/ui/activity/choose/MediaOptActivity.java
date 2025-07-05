@@ -29,6 +29,8 @@ public class MediaOptActivity extends AppCompatActivity {
         mediaLayout = findViewById(R.id.media_layout);
         mediaLayout.setOptMediaCount(9);
         mediaLayout.setOptVideoCount(1);
+
+
         //mediaLayout.setOptDataOnly(true);
         mediaLayout.setPart(true);
         mediaLayout.setOptData(MediaActivity.temp);
@@ -42,7 +44,8 @@ public class MediaOptActivity extends AppCompatActivity {
                         .into(imageView);
             }
         });
-        mediaLayout.doRequest(1, true);
+        //mediaLayout.doRequest(1, true);
+        mediaLayout.doRequest(5, false);
         findViewById(R.id.tv_ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

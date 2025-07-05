@@ -38,6 +38,8 @@ dependencies {
     //compile 'nl.bravobit:android-ffmpeg:1.1.5'
     //compile 'com.github.452693688:SelectImage:ef724466b4'
     implementation project(':option')
+    //api 'com.github.AnUnyieldingFighter.Mediaaar:media:3.0'
+
     // implementation(name:'option1.2.6',ext:'aar')
 
 

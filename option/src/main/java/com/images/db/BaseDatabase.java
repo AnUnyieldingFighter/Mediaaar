@@ -12,7 +12,7 @@ import com.images.db.media.MediaDb;
 /**
  * @author 86134
  */
-@Database(entities = {MediaEntity.class}, version = 1, exportSchema = false)
+@Database(entities = {MediaEntity.class}, version = 2, exportSchema = false)
 public abstract class BaseDatabase extends RoomDatabase {
     public abstract MediaDao mediaDao();
 

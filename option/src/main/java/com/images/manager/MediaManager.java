@@ -129,14 +129,14 @@ public class MediaManager {
         run.start();
     }
 
-    //1:全部 2:图片 3：视频 4：GIF
+    //1:全部 2:图片 3：视频 4：GIF 5 ：图片和gif
     private int resType;
     private MediaThread mediaThread;
 
     /**
      * 请求获取照片
      *
-     * @param resType 1:全部 2:图片 3：视频 4：GIF
+     * @param resType 1:全部 2:图片 3：视频 4：GIF  5：图片和Gif
      */
     public void doReq(int resType) {
         this.resType = resType;
@@ -253,6 +253,14 @@ public class MediaManager {
                 case 4:
                     //获取所有GIF 并且要排序
                     datas = MediaRoom.geMediaDb(context).getDao().queryAll("%gif%");
+                    msg = new Message();
+                    msg.what = 200;
+                    msg.obj = datas;
+                    imagesHandle.sendMessage(msg);
+                    break;
+                case 5:
+                    //获取所有图片，GIF 并且要排序
+                    datas = MediaRoom.geMediaDb(context).getDao().queryAll("%gif%", 1);
                     msg = new Message();
                     msg.what = 200;
                     msg.obj = datas;
