@@ -97,7 +97,7 @@ public class MediaOPTLayout extends RelativeLayout {
     protected boolean isShowCamera;//true  允许拍照 未实现
 
     /**
-     * @param resType      1:全部 2:图片 3：视频 4：GIF 5：图片和GIF
+     * @param resType      1:全部 2:图片（含GIF） 3：视频 4：GIF 5：图片和GIF  6：只有图片
      * @param isShowCamera
      */
     public void doRequest(int resType, boolean isShowCamera) {

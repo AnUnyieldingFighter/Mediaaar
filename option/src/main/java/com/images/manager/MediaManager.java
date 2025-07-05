@@ -129,14 +129,14 @@ public class MediaManager {
         run.start();
     }
 
-    //1:全部 2:图片 3：视频 4：GIF 5 ：图片和gif
+    //1:全部 2:图片（含GIT） 3：视频 4：GIF 5 ：图片和gif  6：只有图片
     private int resType;
     private MediaThread mediaThread;
 
     /**
      * 请求获取照片
      *
-     * @param resType 1:全部 2:图片 3：视频 4：GIF  5：图片和Gif
+     * @param resType 1:全部 2:图片（含GIF） 3：视频 4：GIF  5：图片和Gif  6：只有图片
      */
     public void doReq(int resType) {
         this.resType = resType;
@@ -234,7 +234,7 @@ public class MediaManager {
                     imagesHandle.sendMessage(msg);
                     break;
                 case 2:
-                    //获取所有图片 并且要排序
+                    //获取所有图片 并且要排序(含GIF)
                     datas = MediaRoom.geMediaDb(context).getDao().queryTypeAll(1);
                     msg = new Message();
                     msg.what = 200;
@@ -259,8 +259,17 @@ public class MediaManager {
                     imagesHandle.sendMessage(msg);
                     break;
                 case 5:
+                    //与2重叠
                     //获取所有图片，GIF 并且要排序
                     datas = MediaRoom.geMediaDb(context).getDao().queryAll("%gif%", 1);
+                    msg = new Message();
+                    msg.what = 200;
+                    msg.obj = datas;
+                    imagesHandle.sendMessage(msg);
+                    break;
+                case 6:
+                    //获取所有图片 （只有图片）
+                    datas = MediaRoom.geMediaDb(context).getDao().queryTypeAllAndNotMediaType(1,"%gif%");
                     msg = new Message();
                     msg.what = 200;
                     msg.obj = datas;

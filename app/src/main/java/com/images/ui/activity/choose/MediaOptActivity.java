@@ -45,7 +45,8 @@ public class MediaOptActivity extends AppCompatActivity {
             }
         });
         //mediaLayout.doRequest(1, true);
-        mediaLayout.doRequest(5, false);
+        mediaLayout.doRequest(2, false);
+        //mediaLayout.doRequest(6, false);
         findViewById(R.id.tv_ok).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
