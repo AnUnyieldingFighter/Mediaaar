@@ -60,6 +60,35 @@ public class PhotoUtil {
         }
     }
 
+    //获取跳转Intent
+    public static Intent getCameraActionIntent(Activity activity) {
+        takeResFile = null;
+        // 跳转到系统照相机
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (cameraIntent.resolveActivity(activity.getPackageManager()) != null) {
+            // 设置系统相机拍照后的输出路径
+            takeResFile = FileUtil.createPhotoFile(activity);
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Context con = activity.getApplicationContext();
+                String pck = con.getPackageName();
+                uri = FileProvider.getUriForFile(con, pck, takeResFile);
+                ImageLog.d("pck", pck);
+                cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } else {
+                uri = Uri.fromFile(takeResFile);
+            }
+            ImageLog.d("url", uri.toString());
+            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            cameraIntent.putExtra(MediaStore.Images.Media.ORIENTATION, 0);
+            //
+        } else {
+            Toast.makeText(activity, "No system camera found", Toast.LENGTH_SHORT).show();
+            cameraIntent = null;
+        }
+        return cameraIntent;
+    }
+
     public static boolean isTakeOK(int reqCode, int resCode) {
         return (reqCode == REQUEST_CAMERA) && (resCode == Activity.RESULT_OK);
     }
