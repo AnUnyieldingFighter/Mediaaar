@@ -1,3 +1,6 @@
 <resources>
-
+    <string name="application_name">ExoPlayer SurfaceControl demo(ExoPlayer表面控制演示)</string>
+    <string name="no_output_label">No output(没有画面)</string>
+    <string name="full_screen_label">Full screen(全屏幕)</string>
+    <string name="new_activity_label">New activity(新窗口)</string>
 </resources>

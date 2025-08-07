@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:show_buffering="always"
+        app:resize_mode="fixed_height"
+        app:show_shuffle_button="true"
+        app:show_subtitle_button="true"
+        app:use_controller="false" />
+    <!--app:resize_mode="fill" 设置满屏，  默认是 fit 等比播放-->
+    <!--show_shuffle_button 随机播放功能按钮-->
+    <!--show_subtitle_button 字幕/辅助内容 -->
+
+    <TextView
+        android:id="@+id/tv_index"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        android:textColor="#181818"
+        android:textSize="15dp" />
+</RelativeLayout>

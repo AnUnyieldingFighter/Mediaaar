@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.media.option.R;
 import com.images.ui.activity.choose.MediaActivity;
 
+import library.player.act.TestVideoStartAct;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
 
@@ -17,6 +19,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findViewById(R.id.image_test1_btn).setOnClickListener(this);
+        findViewById(R.id.video_test1_btn).setOnClickListener(this);
         findViewById(R.id.image_test2_btn).setOnClickListener(this);
         findViewById(R.id.image_camera_btn).setOnClickListener(this);
         findViewById(R.id.video_btn).setOnClickListener(this);
@@ -35,7 +38,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(it);
             return;
         }
-
+        if (id == R.id.video_test1_btn) {
+            //短视频
+            Intent it = new Intent();
+            it.setClass(this, TestVideoStartAct.class);
+            startActivity(it);
+            return;
+        }
 
 
     }

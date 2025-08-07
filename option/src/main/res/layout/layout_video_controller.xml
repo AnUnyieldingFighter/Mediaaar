@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!--exo_position –>当前播放位置-->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp">
+
+        <TextView
+            android:id="@+id/exo_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="#999"
+            android:textColor="#181818" />
+        <!--exo_duration –>视频总时长-->
+        <TextView
+            android:id="@+id/exo_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="#999"
+            android:textColor="#272"
+            app:layout_constraintRight_toRightOf="parent" />
+    </RelativeLayout>
+    <!--exo_play_pause 播放/暂停-->
+    <ImageButton
+        android:id="@id/exo_play_pause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="#999" />
+
+    <!--exo_play 播放-->
+    <!--<ImageView
+        android:id="@+id/exo_play"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerInParent="true"
+        android:background="#999"
+        android:src="@android:drawable/ic_media_play" />-->
+    <!--exo_pause 暂停-->
+    <!--<ImageView
+        android:id="@+id/exo_pause"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerInParent="true"
+        android:background="#999"
+        android:src="@android:drawable/ic_media_pause" />-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="40dp">
+        <!--pre_btn 后退-->
+        <ImageView
+            android:id="@+id/exo_rew"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#999"
+            tools:src="@android:drawable/ic_menu_back" />
+        <!--exo_progress –>播放进度-->
+        <androidx.media3.ui.DefaultTimeBar
+            android:id="@id/exo_progress"
+            android:layout_width="match_parent"
+            android:layout_height="26dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_toLeftOf="@+id/exo_ffwd"
+            android:layout_toRightOf="@+id/exo_rew"
+            android:layout_weight="1"
+            android:background="#999"
+            app:buffered_color="@android:color/darker_gray"
+            app:played_color="#FFDE81"
+            app:unplayed_color="@android:color/black" />
+        <!--exo_ffwd 前进-->
+        <ImageView
+            android:id="@+id/exo_ffwd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="#999"
+            tools:src="@android:drawable/ic_media_ff" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="80dp">
+        <!--exo_prev –>上一个-->
+        <ImageView
+            android:id="@+id/exo_prev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#999"
+            tools:src="@android:drawable/ic_menu_back" />
+        <!--exo_next –>下一个-->
+        <ImageView
+            android:id="@+id/exo_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="#999"
+            tools:src="@android:drawable/ic_menu_back" />
+    </RelativeLayout>
+
+
+    <!--exo_repeat_toggle –>重复模式开关-->
+</RelativeLayout>

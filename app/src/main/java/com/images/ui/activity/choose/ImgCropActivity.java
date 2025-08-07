@@ -32,7 +32,7 @@ public class ImgCropActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 savePath = mediaLayout.saveImg();
-                Glide.with(ImgCropActivity.this).load(savePath).placeholder(R.mipmap.image_select_default)
+                Glide.with(ImgCropActivity.this).load(savePath).placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(ivCrop);
             }

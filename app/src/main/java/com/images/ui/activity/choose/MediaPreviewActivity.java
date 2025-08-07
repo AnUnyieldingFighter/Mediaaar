@@ -27,7 +27,7 @@ public class MediaPreviewActivity extends AppCompatActivity {
         mediaLayout.setImageLoading(new OnMediaImgIbl() {
             @Override
             public void onImageLoading(Context context, MediaEntity imageEntity, ImageView imageView) {
-                Glide.with(context).load(imageEntity.mediaPathSource).placeholder(R.mipmap.image_select_default)
+                Glide.with(context).load(imageEntity.mediaPathSource).placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(imageView);
             }

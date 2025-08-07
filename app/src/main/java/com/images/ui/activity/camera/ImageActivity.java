@@ -68,24 +68,14 @@ public class ImageActivity extends Activity implements View.OnClickListener {
         if (exifInterface == null) {
             return;
         }
-        String msg = "路径：" + path +
-                "\n旋转：" + getAngle(exifInterface) +
-                "\n尺寸：" + getResolution(exifInterface) +
-                "\n拍照gps时间：" + getTakeTime(exifInterface) +
-                "\n创建时间：" + getCreateTime(exifInterface) +
-                "\n修改时间：" + getUpdateTime(exifInterface) +
-                "\n经纬度：" + getLocation(exifInterface) +
-                "\n设备品牌：" + getMake(exifInterface) +
-                "\n设备机型：" + getModel(exifInterface) +
-                "\n大小：" + getSize(path);
+        String msg = "路径：" + path + "\n旋转：" + getAngle(exifInterface) + "\n尺寸：" + getResolution(exifInterface) + "\n拍照gps时间：" + getTakeTime(exifInterface) + "\n创建时间：" + getCreateTime(exifInterface) + "\n修改时间：" + getUpdateTime(exifInterface) + "\n经纬度：" + getLocation(exifInterface) + "\n设备品牌：" + getMake(exifInterface) + "\n设备机型：" + getModel(exifInterface) + "\n大小：" + getSize(path);
         msgTv.setText(msg);
     }
 
     private void setWindow() {
         //
         requestWindowFeature(Window.FEATURE_NO_TITLE);// 去掉标题栏
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置全屏
         type = "2";
         if ("1".equals(type)) {
             // 设置横屏
@@ -318,23 +308,22 @@ public class ImageActivity extends Activity implements View.OnClickListener {
     }
 
 
-
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        switch (id) {
-            case R.id.jwd_tv:
-                //设置经纬度
-                //纬度
-                double latitude = 31.284550;
-                //经度
-                double longitude = 121.080940;
-                setLocation(convertToDegree(longitude), convertToDegree(latitude));
-                break;
-            case R.id.xz_tv:
-                //设置旋转方向
-                setAngle(ExifInterface.ORIENTATION_ROTATE_180);
-                break;
+        if (id == R.id.jwd_tv) {
+            //设置经纬度
+            //纬度
+            double latitude = 31.284550;
+            //经度
+            double longitude = 121.080940;
+            setLocation(convertToDegree(longitude), convertToDegree(latitude));
+            return;
+        }
+        if (id == R.id.xz_tv) {
+            //设置旋转方向
+            setAngle(ExifInterface.ORIENTATION_ROTATE_180);
+            return;
         }
     }
 
@@ -350,8 +339,7 @@ public class ImageActivity extends Activity implements View.OnClickListener {
         float degrees = (float) Math.floor(lat);
         float minutes = (float) Math.floor(60 * (lat - degrees));
         float seconds = (float) (3600 * (lat - degrees) - 60 * minutes);
-        sb.append((long) degrees * 1000000).append("/1000000,").append((long) minutes * 100000)
-                .append("/100000,").append((long) seconds * 65540).append("/65540");
+        sb.append((long) degrees * 1000000).append("/1000000,").append((long) minutes * 100000).append("/100000,").append((long) seconds * 65540).append("/65540");
         return sb.toString();
     }
 
@@ -397,8 +385,7 @@ public class ImageActivity extends Activity implements View.OnClickListener {
         float degrees = (float) Math.floor(lon);
         float minutes = (float) Math.floor(60 * (lon - degrees));
         float seconds = (float) (3600 * (lon - degrees) - 60 * minutes);
-        sb.append((long) degrees * 100000).append("/100000,").append((long) minutes * 65540)
-                .append("/65540,").append((long) seconds * 33685504).append("/33685504");
+        sb.append((long) degrees * 100000).append("/100000,").append((long) minutes * 65540).append("/65540,").append((long) seconds * 33685504).append("/33685504");
         return sb.toString();
     }
 }

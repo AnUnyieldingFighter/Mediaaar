@@ -12,7 +12,12 @@
         android:layout_height="wrap_content"
         android:text="图片选择"
         />
-
+    <Button
+        android:id="@+id/video_test1_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="短视频"
+        />
     <Button
         android:visibility="gone"
         android:id="@+id/image_test2_btn"

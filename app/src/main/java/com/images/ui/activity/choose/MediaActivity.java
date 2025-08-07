@@ -75,59 +75,59 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View view) {
-
-        switch (view.getId()) {
-            case R.id.image_btn5:
-                //多选
-                temp = null;
-                Intent it = new Intent();
-                it.setClass(this, MediaOptActivity.class);
-                startActivity(it);
-                break;
-            case R.id.image_btn51:
-                //相机拍照
-                PhotoUtil.showCameraAction(this);
-                break;
-            case R.id.image_btn52:
-                //多选(回显)  先调用 R.id.image_btn5  temp 有数据之后可回显
-                it = new Intent();
-                it.setClass(this, MediaOptActivity.class);
-                startActivity(it);
-                break;
-            case R.id.image_6:
-                //播放一个网络视频
-                MediaEntity bean = new MediaEntity();
-                bean.type = 2;
-                bean.url = video1;
-                bean.other = "2";
-                temp = new ArrayList<>();
-                temp.add(bean);
-
-                it = new Intent();
-                it.setClass(this, MediaPreviewActivity.class);
-                startActivity(it);
-                break;
-            case R.id.image_8:
-                //播放一个网络视频
-                bean = new MediaEntity();
-                bean.type = 2;
-                bean.mediaPathSource = "/storage/emulated/0/DCIM/ScreenRecorder/Screenrecorder-2025-03-13-12-17-36-126.mp4";
-                bean.other = "2";
-                temp = new ArrayList<>();
-                temp.add(bean);
-                it = new Intent();
-                it.setClass(this, MediaPreviewActivity.class);
-                startActivity(it);
-                break;
-
-
-            case R.id.image_7:
-                VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video2);
-                ivVideo.setImageBitmap(videoData.videoBitmap);
-                break;
-
+        int id = view.getId();
+        if (id == R.id.image_btn5) {
+            //多选
+            temp = null;
+            Intent it = new Intent();
+            it.setClass(this, MediaOptActivity.class);
+            startActivity(it);
+            return;
         }
+        if (id == R.id.image_btn51) {
+            //相机拍照
+            PhotoUtil.showCameraAction(this);
+            return;
+        }
+        if (id == R.id.image_btn52) {
+            //多选(回显)  先调用 R.id.image_btn5  temp 有数据之后可回显
+            Intent it = new Intent();
+            it.setClass(this, MediaOptActivity.class);
+            startActivity(it);
+            return;
+        }
+        if (id == R.id.image_6) {
+            //播放一个网络视频
+            MediaEntity bean = new MediaEntity();
+            bean.type = 2;
+            bean.url = video1;
+            bean.other = "2";
+            temp = new ArrayList<>();
+            temp.add(bean);
 
+            Intent it = new Intent();
+            it.setClass(this, MediaPreviewActivity.class);
+            startActivity(it);
+            return;
+        }
+        if (id == R.id.image_8) {
+            //播放一个网络视频
+            MediaEntity bean = new MediaEntity();
+            bean.type = 2;
+            bean.mediaPathSource = "/storage/emulated/0/DCIM/ScreenRecorder/Screenrecorder-2025-03-13-12-17-36-126.mp4";
+            bean.other = "2";
+            temp = new ArrayList<>();
+            temp.add(bean);
+            Intent it = new Intent();
+            it.setClass(this, MediaPreviewActivity.class);
+            startActivity(it);
+            return;
+        }
+        if (id == R.id.image_7) {
+            VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video2);
+            ivVideo.setImageBitmap(videoData.videoBitmap);
+            return;
+        }
     }
 
     private String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
@@ -142,7 +142,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
             File file = PhotoUtil.getTakeResFile();
             if (file != null && file.exists()) {
                 ImageLog.d("拍照成功", file.getPath());
-                Glide.with(this).load(file.getPath()).placeholder(R.mipmap.image_select_default)
+                Glide.with(this).load(file.getPath()).placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(ivVideo);
             }
