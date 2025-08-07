@@ -1,4 +1,4 @@
-package media.library.images.utils;
+package media.library.utils;
 
 import android.content.Context;
 import android.os.Environment;
@@ -19,6 +19,8 @@ import static android.os.Environment.getExternalStorageDirectory;
 public class FileUtil {
     private final static String PATTERN = "yyyyMMddHHmmss";
     private static String TAG = "FileUtil";
+    private static String imgDir = "_media";
+    private static String videoDir = "_video";
 
     /**
      * @param context
@@ -27,24 +29,26 @@ public class FileUtil {
     public static File createPhotoFile(Context context) {
         return createImgFile(context, ".png");
     }
+
     /**
      * @param context
      * @return 裁剪图片的file
      */
     public static File createCropFile(Context context) {
-        String filePath = getFileCacheInside(context);
+        String filePath = getFileCacheInside(context, imgDir);
         File file = new File(filePath, getImageName(".png"));
         ImageLog.d(TAG, "照片裁剪存储path:" + file.getAbsolutePath());
         return file;
     }
+
     /**
      * @param context
      * @return 拍照储存的地址
      */
     public static File createImgFile(Context context, String name) {
-        String filePath = getFileExternal();
+        String filePath = getFileExternal(imgDir);
         if (TextUtils.isEmpty(filePath)) {
-            filePath = getFileCacheInside(context);
+            filePath = getFileCacheInside(context, imgDir);
         }
         File file = new File(filePath, getImageName(name));
         ImageLog.d(TAG, "照片存储path:" + file.getAbsolutePath());
@@ -57,43 +61,72 @@ public class FileUtil {
         return new SimpleDateFormat(PATTERN, Locale.CHINA).format(new Date()) + name;
     }
 
-    private static String fileCacheRoot;
 
-    //获取内部缓存文件地址
-    public static String getFileCacheInside(Context context) {
+    /**
+     * 获取视频缓存目录
+     *
+     * @param context
+     * @return
+     */
+    public static String getVideoCacheDir(Context context) {
+        String filePath = getFileCacheExternal(context, videoDir);
+        if (TextUtils.isEmpty(filePath)) {
+            filePath = getFileCacheInside(context, videoDir);
+        }
+        return filePath;
+    }
+
+//==================================================================
+
+    private static String fileCacheRoot;
+    private static String tempName1;
+
+    //获取内部缓存文件目录
+    public static String getFileCacheInside(Context context, String dirName) {
+        if (!dirName.equals(tempName1)) {
+            fileCacheRoot = "";
+        }
         if (!TextUtils.isEmpty(fileCacheRoot)) {
             return fileCacheRoot;
         }
-        File file = new File(context.getFilesDir(), "_media");
+        File file = new File(context.getFilesDir(), dirName);
         if (!file.exists()) {
             file.mkdir();
         }
+        tempName1 = dirName;
         fileCacheRoot = file.getPath();
         return fileCacheRoot;
     }
 
     private static String fileCacheRoot2;
+    private static String tempName2;
 
-    //获取外部缓存文件地址
-    public static String getFileCacheExternal(Context context) {
+    //获取外部缓存文件目录
+    public static String getFileCacheExternal(Context context, String dirName) {
+        if (!dirName.equals(tempName2)) {
+            fileCacheRoot2 = "";
+        }
         if (!TextUtils.isEmpty(fileCacheRoot2)) {
             return fileCacheRoot2;
         }
         File externalCacheDir = context.getExternalCacheDir();
-        File file = new File(externalCacheDir, "_media");
+        File file = new File(externalCacheDir, dirName);
         if (!file.exists()) {
             file.mkdir();
         }
+        tempName2 = dirName;
         fileCacheRoot2 = file.getPath();
         return fileCacheRoot2;
     }
-    //获取外部储存地址
 
-
-    //获取外部缓存文件地址
+    //获取外部文件目录
     private static String fileRoot;
+    private static String tempName3;
 
-    public static String getFileExternal() {
+    public static String getFileExternal(String dirName) {
+        if (!dirName.equals(tempName3)) {
+            fileRoot = "";
+        }
         if (!existSDCard()) {
             return "";
         }
@@ -101,10 +134,11 @@ public class FileUtil {
             return fileRoot;
         }
         File file = getExternalStorageDirectory();
-        File dir = new File(file, "_media");
+        File dir = new File(file, dirName);
         if (!dir.exists()) {
             dir.mkdirs();
         }
+        tempName3 = dirName;
         fileRoot = file.getPath();
         return fileRoot;
     }

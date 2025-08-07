@@ -1,4 +1,4 @@
-package media.library.images.utils;
+package media.library.utils;
 
 import android.Manifest;
 import android.app.Activity;

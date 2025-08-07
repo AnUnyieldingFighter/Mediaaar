@@ -12,7 +12,7 @@ import com.bumptech.glide.Glide;
 import media.library.images.config.entity.MediaEntity;
 import media.library.images.manager.MediaPlayerManager;
 import media.library.images.manager.VideoDataBean;
-import media.library.images.utils.PhotoUtil;
+import media.library.utils.PhotoUtil;
 
 import com.media.option.R;
 import media.library.images.unmix.ImageLog;

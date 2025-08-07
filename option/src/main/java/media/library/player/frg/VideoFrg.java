@@ -12,8 +12,13 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.cache.CacheDataSource;
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
+import androidx.media3.datasource.cache.NoOpCacheEvictor;
+import androidx.media3.datasource.cache.SimpleCache;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
 import androidx.media3.exoplayer.source.MediaSource;
@@ -23,8 +28,16 @@ import androidx.media3.ui.PlayerView;
 
 import com.images.imageselect.R;
 
+import java.io.File;
+import java.util.List;
+
+import media.library.db.MediaRoom;
+import media.library.images.config.entity.MediaEntity;
 import media.library.player.able.OnVideoOperate;
+import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
+import media.library.utils.FileUtil;
+import media.library.utils.Md5Media;
 
 public class VideoFrg extends VideoBaseFrg {
     @Override
@@ -171,6 +184,81 @@ public class VideoFrg extends VideoBaseFrg {
         initExoPlayer();
     }
 
+    protected long maxBytes = 100 * 1024 * 1024;//100M
+    @UnstableApi
+    protected SimpleCache simpleCache;
+
+    //构建缓存
+    @OptIn(markerClass = UnstableApi.class)
+    protected SimpleCache createCache(File file) {
+        setCacheRelease();
+        SimpleCache cache = null;
+        if (maxBytes == 0) {
+            cache = new SimpleCache(file, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(getContext()));
+        } else {
+            cache = new SimpleCache(file, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(getContext()));
+        }
+        return cache;
+    }
+
+    //释放缓存
+    @OptIn(markerClass = UnstableApi.class)
+    protected void setCacheRelease() {
+        if (simpleCache != null) {
+            simpleCache.release();
+        }
+        simpleCache = null;
+    }
+
+    //获取缓存文件
+    protected File getCacheFile(int pageIndex, String videoUrl) {
+        File file = null;
+        List<VideoEntity> datas = MediaRoom.geVideoDb(getContext())
+                .queryVideoCache(videoUrl);
+        if (datas == null || datas.size() == 0) {
+            String dir = FileUtil.getVideoCacheDir(getContext());
+            String md5 = Md5Media.encode(videoUrl);
+            file = new File(dir, md5);
+            VideoEntity videoEntity = new VideoEntity();
+            videoEntity.videoUrl = videoUrl;
+            videoEntity.videoCachePath = file.getPath();
+            MediaRoom.geVideoDb(getContext()).put(videoEntity);
+            PlayerLog.d("缓存地址", "新建 url:" + videoUrl + "\npath:" + file.getPath());
+        } else {
+            VideoEntity bean = datas.get(0);
+            file = new File(bean.videoCachePath);
+            PlayerLog.d("缓存地址", "取得 url:" + videoUrl + "\npath:" + file.getPath());
+        }
+        return file;
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    protected MediaSource getMediaSource(boolean isDef) {
+        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
+        MediaItem videoItem = new MediaItem.Builder()
+                .setUri(videoUrl)
+                .setMediaId(videoUrl).build();
+        MediaSource mediaSource;
+        if (isDef) {
+            //默认的
+            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(getContext());
+            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                    .createMediaSource(videoItem);
+        } else {
+            //有缓存的
+            File file = getCacheFile(pageIndex, videoUrl);
+            //构建缓存
+            simpleCache = createCache(file);
+            DataSource.Factory dataSourceFactory = new CacheDataSource.Factory().setCache(simpleCache)
+                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(getContext()));
+
+            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                    .createMediaSource(videoItem);
+        }
+        return mediaSource;
+    }
 
     @OptIn(markerClass = UnstableApi.class)
     protected void initExoPlayer() {
@@ -178,15 +266,11 @@ public class VideoFrg extends VideoBaseFrg {
         //
         exoPlayer = videoOperate.getExoPlayer(pageIndex, videoUrl);
         //方式一
-        MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
-        //MediaItem videoItem=MediaItem.fromUri(videoUrl);
-        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-        DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(getContext());
-        MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
+        MediaSource mediaSource = getMediaSource(false);
         exoPlayer.setMediaSource(mediaSource);
         //方式二
-        //MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId("" + pageIndex).build();
-        //player.setMediaItem(videoItem);
+        /*MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
+        exoPlayer.setMediaItem(videoItem);*/
         //
         playerView.setPlayer(exoPlayer);
         exoPlayer.prepare();
@@ -228,6 +312,7 @@ public class VideoFrg extends VideoBaseFrg {
         if (playerView != null) {
             playerView.setPlayer(null);
         }
+        setCacheRelease();
     }
 
     @Override
@@ -410,6 +495,11 @@ public class VideoFrg extends VideoBaseFrg {
 
     }
 
+    @OptIn(markerClass = UnstableApi.class)
+    protected void onPlayError(PlaybackException error) {
+        playerView.setCustomErrorMessage(error.getMessage());
+    }
+
     private PlayerListener playerListener = new PlayerListener();
 
     class PlayerListener implements Player.Listener {
@@ -489,8 +579,10 @@ public class VideoFrg extends VideoBaseFrg {
         @Override
         public void onPlayerError(PlaybackException error) {
             //Source error code:2007 codeName:ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED  不允许明文传输
-            PlayerLog.d("视频播放", "发生错误：" + error.getMessage()+" code:"+error.errorCode+" codeName:"+error.getErrorCodeName());
-            playerView.setCustomErrorMessage(error.getMessage());
+            //发生错误：Source error code:2002 codeName:ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT 网络连接失败
+            PlayerLog.d("视频播放", "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
+            onPlayError(error);
+
         }
 
     }

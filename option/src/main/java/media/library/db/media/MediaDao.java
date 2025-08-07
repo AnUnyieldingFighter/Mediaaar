@@ -12,7 +12,7 @@ import media.library.images.config.entity.MediaEntity;
 import java.util.List;
 
 /**
- * 操作城市
+ * 图片/视频
  *
  * @Description:
  * @Author: lp
