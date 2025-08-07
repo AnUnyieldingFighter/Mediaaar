@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.media.option.R;
 import com.images.ui.activity.choose.MediaActivity;
 
-import library.player.act.TestVideoStartAct;
+import media.library.player.act.TestVideoStartAct;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 

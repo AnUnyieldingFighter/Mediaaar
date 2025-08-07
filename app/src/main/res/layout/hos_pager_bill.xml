@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#e5e5e5">
-    <com.images.ui.thing.photoview.PhotoView
+    <media.library.images.ui.thing.photoview.PhotoView
         android:id="@+id/bill_iv"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

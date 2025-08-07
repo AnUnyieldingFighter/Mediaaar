@@ -10,11 +10,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.media.option.R;
-import com.images.config.entity.MediaEntity;
-import com.images.ui.adapter.OnMediaImgIbl;
-import com.images.ui.views.MediaOPTLayout;
-
-import java.util.ArrayList;
+import media.library.images.config.entity.MediaEntity;
+import media.library.images.ui.adapter.OnMediaImgIbl;
+import media.library.images.ui.views.MediaOPTLayout;
 
 //选择图片
 public class MediaOptActivity extends AppCompatActivity {

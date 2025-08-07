@@ -1,7 +1,6 @@
 package com.images.ui.activity.choose;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -10,14 +9,13 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
-import com.images.config.entity.MediaEntity;
-import com.images.manager.MediaManager;
-import com.images.manager.MediaPlayerManager;
-import com.images.manager.VideoDataBean;
-import com.images.utils.PhotoUtil;
-import com.images.ui.Manger.PhotoManager;
+import media.library.images.config.entity.MediaEntity;
+import media.library.images.manager.MediaPlayerManager;
+import media.library.images.manager.VideoDataBean;
+import media.library.images.utils.PhotoUtil;
+
 import com.media.option.R;
-import com.images.unmix.ImageLog;
+import media.library.images.unmix.ImageLog;
 
 import java.io.File;
 import java.util.ArrayList;

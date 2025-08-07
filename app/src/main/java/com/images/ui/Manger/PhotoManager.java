@@ -1,14 +1,11 @@
 package com.images.ui.Manger;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.util.Log;
 import android.util.TypedValue;
 
-import com.images.config.entity.MediaEntity;
+import media.library.images.config.entity.MediaEntity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by Administrator on 2016/10/17.
@@ -205,5 +202,5 @@ public class PhotoManager {
                 .build(activity);*/
     }
 
-   
+
 }

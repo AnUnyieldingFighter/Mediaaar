@@ -16,7 +16,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.images.unmix.ImageLog;
+import media.library.images.unmix.ImageLog;
 import com.media.option.R;
 
 

@@ -18,7 +18,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
-import com.images.unmix.BitmapUtile;
+import media.library.images.unmix.BitmapUtile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

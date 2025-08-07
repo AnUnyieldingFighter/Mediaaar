@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.media.option.R;
-import com.images.ui.thing.photoview.PhotoView;
+import media.library.images.ui.thing.photoview.PhotoView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
