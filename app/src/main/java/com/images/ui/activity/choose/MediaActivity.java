@@ -109,7 +109,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
         if (id == R.id.image_8) {
-            //播放一个网络视频
+            //播放一个本地视频
             MediaEntity bean = new MediaEntity();
             bean.type = 2;
             bean.mediaPathSource = "/storage/emulated/0/DCIM/ScreenRecorder/Screenrecorder-2025-03-13-12-17-36-126.mp4";

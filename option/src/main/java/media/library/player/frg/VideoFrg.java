@@ -29,6 +29,7 @@ import androidx.media3.ui.PlayerView;
 import com.images.imageselect.R;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 
 import media.library.db.MediaRoom;
@@ -222,6 +223,8 @@ public class VideoFrg extends VideoBaseFrg {
             VideoEntity videoEntity = new VideoEntity();
             videoEntity.videoUrl = videoUrl;
             videoEntity.videoCachePath = file.getPath();
+            long time = new Date().getTime();
+            videoEntity.recordTime = time;
             MediaRoom.geVideoDb(getContext()).put(videoEntity);
             PlayerLog.d("缓存地址", "新建 url:" + videoUrl + "\npath:" + file.getPath());
         } else {
@@ -232,6 +235,9 @@ public class VideoFrg extends VideoBaseFrg {
         return file;
     }
 
+    //true 使用缓存
+    protected boolean isUseCache;
+
     @OptIn(markerClass = UnstableApi.class)
     protected MediaSource getMediaSource(boolean isDef) {
         DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
@@ -240,12 +246,14 @@ public class VideoFrg extends VideoBaseFrg {
                 .setMediaId(videoUrl).build();
         MediaSource mediaSource;
         if (isDef) {
+            isUseCache = false;
             //默认的
             DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(getContext());
             mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                     .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
                     .createMediaSource(videoItem);
         } else {
+            isUseCache = true;
             //有缓存的
             File file = getCacheFile(pageIndex, videoUrl);
             //构建缓存
@@ -375,6 +383,15 @@ public class VideoFrg extends VideoBaseFrg {
         setVideoPause();
         if (exoPlayer != null) {
             exoPlayer.removeListener(playerListener);
+        }
+        if (isUseCache) {
+            Player player = playerView.getPlayer();
+            if (player != null) {
+                long currentPosition = exoPlayer.getCurrentPosition();
+                long duration = exoPlayer.getDuration();
+                long time = new Date().getTime();
+                MediaRoom.geVideoDb(getContext()).updateVideoLookHis(videoUrl, currentPosition, duration, time);
+            }
         }
         PlayerLog.d("frg_", "onPause  " + pageIndex);
     }

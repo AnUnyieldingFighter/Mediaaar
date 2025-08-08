@@ -10,7 +10,9 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import media.library.images.config.entity.MediaEntity;
+
 import com.images.imageselect.R;
+
 import media.library.images.ui.adapter.MediaPagerAdapter2;
 import media.library.images.ui.adapter.OnImgClickListener;
 import media.library.images.ui.adapter.OnMediaImgIbl;
@@ -57,19 +59,24 @@ public class MediaPreviewLayout extends RelativeLayout {
         setMedias(act, medias, 0);
     }
 
-    /**
-     * @param act
-     * @param medias 数据
-     * @param index  定位
-     */
 
     public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias, int index) {
+        setMedias(act, medias, index, medias.size());
+    }
+
+    /**
+     * @param act
+     * @param medias    数据
+     * @param index     定位
+     * @param pageLimit 缓存页数
+     */
+    public void setMedias(FragmentActivity act, ArrayList<MediaEntity> medias, int index, int pageLimit) {
         if (adapter == null) {
             adapter = new MediaPagerAdapter2(act);
         }
         ArrayList<MediaFragment> pages = getFrag(medias);
         viewPager.setAdapter(adapter);
-        viewPager.setOffscreenPageLimit(pages.size());
+        viewPager.setOffscreenPageLimit(pageLimit);
         viewPager.registerOnPageChangeCallback(new OnPagerChange());
         adapter.setData(pages);
         if (index != 0) {

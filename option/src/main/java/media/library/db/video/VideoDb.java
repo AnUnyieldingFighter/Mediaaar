@@ -37,7 +37,12 @@ public class VideoDb {
         getDao().update(data);
     }
 
-
+    public int updateVideoLookHis(String videoUrl, long pro, long total, long lookTime) {
+        return getDao().updateVideoLookHis(videoUrl, pro, total, lookTime);
+    }
+    public int updateVideoSize(String videoUrl, int videoWidth, int videoHeight) {
+        return getDao().updateVideoSize(videoUrl, videoWidth, videoHeight);
+    }
     public void delete(VideoEntity data) {
         getDao().delete(data);
     }

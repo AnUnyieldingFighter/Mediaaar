@@ -8,6 +8,7 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import java.util.List;
+
 import media.library.player.bean.VideoEntity;
 
 /**
@@ -29,6 +30,12 @@ public interface VideoDao {
 
     @Update
     int update(VideoEntity media);
+
+    @Query("UPDATE tab_video SET pro = :pro, total = :total, lookTime = :lookTime WHERE videoUrl = :videoUrl")
+    int updateVideoLookHis(String videoUrl, long pro, long total, long lookTime);
+
+    @Query("UPDATE tab_video SET videoWidth = :videoWidth, total = :videoHeight  WHERE videoUrl = :videoUrl")
+    int updateVideoSize(String videoUrl, int videoWidth, int videoHeight);
 
     @Delete
     void delete(VideoEntity media);
