@@ -30,6 +30,7 @@ import com.images.imageselect.R;
 
 import java.io.File;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import media.library.db.MediaRoom;
@@ -39,6 +40,7 @@ import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
 import media.library.utils.Md5Media;
+
 
 public class VideoFrg extends VideoBaseFrg {
     @Override
@@ -139,22 +141,6 @@ public class VideoFrg extends VideoBaseFrg {
         }
     }
 
-    //调整视频比例 没有用到
-    @OptIn(markerClass = UnstableApi.class)
-    protected void adjustVideoAspectRatio() {
-        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
-        // 根据视频的宽高比调整布局
-        playerView.post(() -> {
-            int width = playerView.getWidth();
-            int height = playerView.getHeight();
-            float videoAspectRatio = 16f / 9f; // 假设视频宽高比为16:9
-
-            ViewGroup.LayoutParams layoutParams = playerView.getLayoutParams();
-            layoutParams.height = (int) (width / videoAspectRatio);
-            playerView.setLayoutParams(layoutParams);
-        });
-    }
-
     //更新播放源
     public void updateVideoUrl(int pageIndex, String url) {
         PlayerLog.d("视频播放Url", "计划播放 pageIndex：" + pageIndex + " url:" + url);
@@ -188,17 +174,25 @@ public class VideoFrg extends VideoBaseFrg {
     protected long maxBytes = 100 * 1024 * 1024;//100M
     @UnstableApi
     protected SimpleCache simpleCache;
+    @UnstableApi
+    private static HashMap<String, SimpleCache> map = new HashMap<>();
 
     //构建缓存
     @OptIn(markerClass = UnstableApi.class)
     protected SimpleCache createCache(File file) {
-        setCacheRelease();
-        SimpleCache cache = null;
+        //setCacheRelease();
+        SimpleCache cache = map.get(file.getPath());
+        if (cache != null) {
+            cache.release();
+            map.remove(file.getPath());
+        }
         if (maxBytes == 0) {
             cache = new SimpleCache(file, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(getContext()));
         } else {
-            cache = new SimpleCache(file, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(getContext()));
+            cache = new SimpleCache(file, new LeastRecentlyUsedCacheEvictor(maxBytes),
+                    new StandaloneDatabaseProvider(getContext()));
         }
+        map.put(file.getPath(), cache);
         return cache;
     }
 
