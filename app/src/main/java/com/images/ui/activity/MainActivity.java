@@ -6,6 +6,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.images.ui.activity.google.GoogleActivity;
 import com.media.option.R;
 import com.images.ui.activity.me.media.MediaActivity;
 
@@ -20,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         findViewById(R.id.image_test1_btn).setOnClickListener(this);
         findViewById(R.id.video_test1_btn).setOnClickListener(this);
-        findViewById(R.id.image_test2_btn).setOnClickListener(this);
+        findViewById(R.id.google_btn).setOnClickListener(this);
         findViewById(R.id.image_camera_btn).setOnClickListener(this);
         findViewById(R.id.video_btn).setOnClickListener(this);
 
@@ -42,6 +43,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //短视频
             Intent it = new Intent();
             it.setClass(this, TestVideoStartAct.class);
+            startActivity(it);
+            return;
+        }
+        if (id == R.id.google_btn) {
+            //短视频
+            Intent it = new Intent();
+            it.setClass(this, GoogleActivity.class);
             startActivity(it);
             return;
         }

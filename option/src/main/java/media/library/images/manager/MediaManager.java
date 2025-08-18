@@ -1,7 +1,9 @@
 package media.library.images.manager;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -60,6 +62,31 @@ public class MediaManager {
 
     };
 
+    //不需要权限
+    public MediaEntity getImg(Uri uri, Context context) {
+        //
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(uri, IMAGE_PROJECTION, null, null, null);
+        cursor.moveToFirst();
+        MediaEntity image = readCursorImg(cursor);
+        //image.type = 1;
+        cursor.close();
+        return image;
+
+    }
+
+    //不需要权限
+    public MediaEntity getVideo(Uri uri, Context context) {
+        //
+        ContentResolver contentResolver = context.getContentResolver();
+        Cursor cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
+        cursor.moveToFirst();
+        MediaEntity image = readCursorVideo(cursor);
+        //image.type = 2;
+        cursor.close();
+        return image;
+
+    }
 
     //==================设置监听======================================
     private OnLoadingListener onLoadingListener;
@@ -269,7 +296,7 @@ public class MediaManager {
                     break;
                 case 6:
                     //获取所有图片 （只有图片）
-                    datas = MediaRoom.geMediaDb(context).getDao().queryTypeAllAndNotMediaType(1,"%gif%");
+                    datas = MediaRoom.geMediaDb(context).getDao().queryTypeAllAndNotMediaType(1, "%gif%");
                     msg = new Message();
                     msg.what = 200;
                     msg.obj = datas;

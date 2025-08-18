@@ -22,3 +22,5 @@ TextureView SurfaceView SphericalGLSurfaceView VideoDecoderGLSurfaceView 优缺�
 1.SurfaceView：全API支持，但API24以下动画受限
 2.TextureView：API14+完全支持
 3.GLSurfaceView：需要OpenGL ES 2.0+/3.0+
+
+

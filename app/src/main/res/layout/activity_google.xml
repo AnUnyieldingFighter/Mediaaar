@@ -1,43 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/tv_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择结果"
+        />
+    <Button
+        android:id="@+id/image_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择一张图片" />
+    <Button
+        android:id="@+id/image_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择多张图片" />
+    <Button
+        android:id="@+id/video_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择一个视频" />
+    <Button
+        android:id="@+id/video_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择多个个视频" />
 
-    <Button
-        android:id="@+id/image_test1_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="图片选择"
-        />
-    <Button
-        android:id="@+id/video_test1_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="内置短视频"
-        />
-    <Button
-         android:id="@+id/google_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="google图片选择器"
-        />
-
-    <Button
-        android:visibility="gone"
-        android:id="@+id/image_camera_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="相机测试"
-        />
-
-    <Button
-        android:visibility="gone"
-        android:id="@+id/video_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="视频编辑"
-        />
 </LinearLayout>

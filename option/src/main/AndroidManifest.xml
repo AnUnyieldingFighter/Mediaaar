@@ -22,7 +22,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/paths" />
         </provider>
-
+        <!--google 图片选择器-->
+        <activity
+            android:name="media.library.google.GoogleImgVideoAct"
+            android:screenOrientation="portrait"
+            android:theme="@style/ImgVideoTransparentTheme"
+            tools:ignore="DiscouragedApi" />
         <!--视频相关-->
         <activity
             android:name="media.library.player.act.TestVideoAct2"

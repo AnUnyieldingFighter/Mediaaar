@@ -51,6 +51,9 @@
         <activity
             android:name="com.images.ui.activity.PdfActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name="com.images.ui.activity.google.GoogleActivity"
+            android:screenOrientation="portrait" />
 
     </application>
 
