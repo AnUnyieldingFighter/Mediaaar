@@ -1,4 +1,4 @@
-package com.images.ui.activity.choose;
+package com.images.ui.activity.me.media;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import media.library.images.unmix.ImageLog;
 import java.io.File;
 import java.util.ArrayList;
 
-//老板
+
 public class MediaActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView ivVideo;

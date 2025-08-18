@@ -7,7 +7,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.media.option.R;
-import com.images.ui.activity.choose.MediaActivity;
+import com.images.ui.activity.me.media.MediaActivity;
 
 import media.library.player.act.TestVideoStartAct;
 

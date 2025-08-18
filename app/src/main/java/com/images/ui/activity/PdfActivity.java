@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //查看pdf
-public class BillActivity extends AppCompatActivity {
+public class PdfActivity extends AppCompatActivity {
 
 
     @Override

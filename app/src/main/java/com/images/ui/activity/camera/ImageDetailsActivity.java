@@ -25,8 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
-public class ImageActivity extends Activity implements View.OnClickListener {
+//照片详情
+public class ImageDetailsActivity extends Activity implements View.OnClickListener {
 
     private ImageView iv;
     private String type;

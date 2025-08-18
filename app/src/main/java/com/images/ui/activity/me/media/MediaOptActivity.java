@@ -1,4 +1,4 @@
-package com.images.ui.activity.choose;
+package com.images.ui.activity.me.media;
 
 import android.content.Context;
 import android.content.Intent;

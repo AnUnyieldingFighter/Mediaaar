@@ -1,4 +1,4 @@
-package com.images.ui.activity.choose;
+package com.images.ui.activity.me.media;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,7 +12,7 @@ import media.library.images.config.entity.MediaEntity;
 import media.library.images.ui.adapter.OnMediaImgIbl;
 import media.library.images.ui.views.MediaPreviewLayout;
 
-//预览
+//照片与视频预览
 public class MediaPreviewActivity extends AppCompatActivity {
 
     private MediaPreviewLayout mediaLayout;

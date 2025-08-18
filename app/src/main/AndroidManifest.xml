@@ -30,26 +30,26 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.images.ui.activity.choose.MediaActivity"
+            android:name="com.images.ui.activity.me.media.MediaActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.images.ui.activity.choose.MediaOptActivity"
+            android:name="com.images.ui.activity.me.media.MediaOptActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.images.ui.activity.choose.MediaPreviewActivity"
+            android:name="com.images.ui.activity.me.media.MediaPreviewActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.images.ui.activity.choose.ImgCropActivity"
+            android:name="com.images.ui.activity.me.media.ImgCropActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
 
         <activity
-            android:name="com.images.ui.activity.camera.ImageActivity"
+            android:name="com.images.ui.activity.camera.ImageDetailsActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name="com.images.ui.activity.BillActivity"
+            android:name="com.images.ui.activity.PdfActivity"
             android:screenOrientation="portrait" />
 
     </application>
