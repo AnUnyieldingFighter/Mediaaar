@@ -64,6 +64,11 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 tvMsg.setText("数量：" + res.size());
             }
+
+            @Override
+            public void onDismiss() {
+                finish();
+            }
         });
         //initPickMedia();
         //initPickMultipleMedia(9);
@@ -102,6 +107,7 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
         }
 
     }
+
     private void selectOneImg2(boolean isOne, int type) {
         if (isOne) {
             GoogleImgVideo.getInstance().setSingleChoice(type);

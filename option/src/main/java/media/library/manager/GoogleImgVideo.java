@@ -51,6 +51,9 @@ public class GoogleImgVideo {
                 }
             } else {
                 ImageLog.d("google图片选择器", "No media selected");
+                if (mediaResIbl != null) {
+                    mediaResIbl.onDismiss();
+                }
             }
         });
 
@@ -69,6 +72,9 @@ public class GoogleImgVideo {
                 }
             } else {
                 ImageLog.d("google图片选择器", "结果:No media selected");
+                if (mediaResIbl != null) {
+                    mediaResIbl.onDismiss();
+                }
             }
         });
     }
