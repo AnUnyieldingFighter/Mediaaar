@@ -133,6 +133,24 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ArrayList<MediaEntity> res = MainActivity.res;
+        if (res == null || res.size() == 0) {
+            return;
+        }
+
+        for (int i = 0; i < res.size(); i++) {
+            MediaEntity img = res.get(i);
+            File file = new File(img.mediaPathSource);
+            boolean isExit = file.exists();
+            boolean isFile = file.isFile();
+            ///sdcard/.transforms/synthetic/picker/0/com.android.providers.media.photopicker/media/1000000489.png
+            Log.d("google图片选择器", "type：" + img.type + " path:"
+                    + img.mediaPathSource + " isExit:" + isExit + " isFile:" + isFile);
+        }
+    }
 
     //-----------------------------------
     private HashMap<String, Integer> numMap = new HashMap<>();
