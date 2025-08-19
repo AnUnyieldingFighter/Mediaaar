@@ -2,6 +2,7 @@ package media.library.manager;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
@@ -84,7 +85,10 @@ public class GoogleImgVideo {
         ArrayList<MediaEntity> res = new ArrayList();
         for (int i = 0; i < uris.size(); i++) {
             Uri uri = uris.get(i);
-            MediaEntity video = MediaManager.getInstance().getVideo(uri, context);
+            int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            context.getContentResolver().takePersistableUriPermission(uri, flag);
+            //
+            MediaEntity video = MediaManager.getInstance().getImg(uri, context);
             if (video == null) {
                 continue;
             }

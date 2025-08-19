@@ -82,7 +82,7 @@ public class FileUriPath {
      */
     public static String getDataColumn(Context context, Uri uri, String selection,
                                 String[] selectionArgs) {
-        Log.d("查询：","uri:"+uri+" selection:"+selection+" selectionArgs:"+selectionArgs.toString());
+        Log.d("查询：","uri:"+uri+" selection:"+selection+" selectionArgs:"+selectionArgs);
         Cursor cursor = null;
         final String column = "_data";
         final String[] projection = {column};

@@ -14,17 +14,72 @@ android {
         versionName "1.2"
 
     }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
+
     repositories {
         flatDir {
             dirs 'libs'
         }
     }
+    signingConfigs {
+        key {
+            storeFile file(signFile)
+            storePassword signPwd
+            keyAlias signAlias
+            keyPassword signPwd
+        }
+
+    }
+    buildTypes {
+        //有日志
+        release {
+            minifyEnabled true
+            shrinkResources true//去掉不用资源
+            signingConfig signingConfigs.key
+            resValue "string", "app_buildTypes", "release"
+
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+        }
+
+        debug {
+            minifyEnabled false
+            shrinkResources false//去掉不用资源
+            signingConfig signingConfigs.key
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+        }
+    }
+   /* productFlavors {
+        //测试环境
+        trial {
+
+
+        }
+        //正式环境
+        dev {
+
+        }
+
+    }*/
+    /*applicationVariants.all { variant ->
+        def outputFileDir = "${project.projectDir.absolutePath}/${variant.buildType.name}"
+        def today = new Date()
+        def env = ""
+        variant.outputs.forEach {
+            variant.productFlavors.each { product ->
+                if (product.name == "trial") {
+                    env = "test_"
+                } else if (product.name == "dev") {
+                    env = "dev_"
+                }
+            }
+            def appNameData = "app"
+            def versionName = "version"
+            def path = appNameData + "_" + android.defaultConfig.applicationId + "_V" + variant.versionName + "_" + env + "_" + today.format('yyyyMMddHHmm', TimeZone.getTimeZone("GMT+08:00")) + "_" + variant.buildType.name + ".apk"
+            //def path=env+appNameData
+            it.outputFileName = path
+        }
+    }*/
 }
 
 //使用arr配置
