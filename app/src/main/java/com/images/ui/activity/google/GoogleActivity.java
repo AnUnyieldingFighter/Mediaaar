@@ -23,8 +23,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.images.ui.activity.MainActivity;
 import com.media.option.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -36,10 +39,9 @@ import media.library.manager.GoogleImgVideo;
 
 //google 图片选择器 不需要权限
 public class GoogleActivity extends AppCompatActivity implements View.OnClickListener {
-
+    private ImageView ivVideo;
     private TextView tvMsg;
     //多选  选择的数据保存
-    public static ArrayList<MediaEntity> temp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,17 +54,31 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
 
         findViewById(R.id.video_1).setOnClickListener(this);
         findViewById(R.id.video_2).setOnClickListener(this);
+        ivVideo = (ImageView) findViewById(R.id.iv_video);
+
         tvMsg = (TextView) findViewById(R.id.tv_msg);
         GoogleImgVideo.getInstance().initPickMedia(this);
         GoogleImgVideo.getInstance().initPickMultipleMedia(this, 9);
         GoogleImgVideo.getInstance().setMediaResIbl(new MediaResIbl() {
             @Override
             public void onMediaRes(ArrayList<MediaEntity> res) {
+                MainActivity.res = res;
                 for (int i = 0; i < res.size(); i++) {
                     MediaEntity img = res.get(i);
-                    Log.d("google图片选择器", "type：" + img.type + " path:" + img.mediaPathSource);
+                    File file = new File(img.mediaPathSource);
+                    boolean isExit = file.exists();
+                    boolean isFile = file.isFile();
+                    ///sdcard/.transforms/synthetic/picker/0/com.android.providers.media.photopicker/media/1000000489.png
+                    Log.d("google图片选择器", "type：" + img.type + " path:"
+                            + img.mediaPathSource + " isExit:" + isExit + " isFile:" + isFile);
                 }
                 tvMsg.setText("数量：" + res.size());
+                if (res.size() > 0) {
+                    Glide.with(GoogleActivity.this).load(res.get(0).mediaPathSource)
+                            .placeholder(com.images.imageselect.R.mipmap.image_select_default)
+                            //.centerCrop()
+                            .into(ivVideo);
+                }
             }
 
             @Override

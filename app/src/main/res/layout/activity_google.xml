@@ -9,6 +9,11 @@
         android:layout_height="wrap_content"
         android:text="选择结果"
         />
+    <ImageView
+        android:id="@+id/iv_video"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        />
     <Button
         android:id="@+id/image_1"
         android:layout_width="match_parent"
