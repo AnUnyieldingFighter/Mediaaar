@@ -41,10 +41,14 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     api 'androidx.recyclerview:recyclerview:1.2.1'
-    api 'androidx.appcompat:appcompat:1.2.0'
+    //绑定了 androidx.fragment:fragment:1.1.0 使用google图片选择器 就需要升级
+    //implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    //数据库
     def room_version = "2.3.0"
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
+    //
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     //视频
     api("androidx.media3:media3-exoplayer:1.7.1")
