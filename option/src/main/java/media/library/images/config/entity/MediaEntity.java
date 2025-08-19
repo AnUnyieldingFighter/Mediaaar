@@ -56,4 +56,33 @@ public class MediaEntity implements Serializable {
     public int upSate;
     @Ignore
     public String other;
+
+
+    @Override
+    public String toString() {
+        return "MediaEntity{" +
+                "index=" + index +
+                ", mediaPathSource='" + mediaPathSource + '\'' +
+                ", mediaPath='" + mediaPath + '\'' +
+                ", mediaName='" + mediaName + '\'' +
+                ", mediaTime=" + mediaTime +
+                ", mediaDateTaken=" + mediaDateTaken +
+                ", mediaId='" + mediaId + '\'' +
+                ", mediaFileName='" + mediaFileName + '\'' +
+                ", mediaType='" + mediaType + '\'' +
+                ", mediaSize=" + mediaSize +
+                ", mediaFileId='" + mediaFileId + '\'' +
+                ", mediaAngle=" + mediaAngle +
+                ", width=" + width +
+                ", height=" + height +
+                ", videoDurations=" + videoDurations +
+                ", type=" + type +
+                ", isOption=" + isOption +
+                ", isDelete=" + isDelete +
+                ", optionTailor=" + optionTailor +
+                ", url='" + url + '\'' +
+                ", upSate=" + upSate +
+                ", other='" + other + '\'' +
+                '}';
+    }
 }

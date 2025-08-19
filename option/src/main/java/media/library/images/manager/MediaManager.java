@@ -1,16 +1,23 @@
 package media.library.images.manager;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.TextUtils;
+import android.util.Log;
 
 
 import media.library.images.config.entity.MediaEntity;
 import media.library.db.MediaRoom;
+import media.library.images.unmix.ImageLog;
+import media.library.utils.FileUriPath;
 
 import java.util.ArrayList;
 
@@ -77,15 +84,56 @@ public class MediaManager {
 
     //不需要权限
     public MediaEntity getVideo(Uri uri, Context context) {
-        //
-        ContentResolver contentResolver = context.getContentResolver();
-        Cursor cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
+
+        //Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2  32 不要权限
+        // Android 14（UpsideDownCake, API 34）上则新增了 READ_MEDIA_VISUAL_USER_SELECTED 权限，用户可以选择性地让应用访问部分图片或视频。
+
+        //ContentResolver contentResolver = context.getContentResolver();
+        //Cursor cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
+        Cursor cursor = getCursor(uri, context);
+        if (cursor == null) {
+            return null;
+        }
         cursor.moveToFirst();
         MediaEntity image = readCursorVideo(cursor);
-        //image.type = 2;
+        ImageLog.d("google图片选择器", "地址---》" + " cursor isLast:" + cursor.isLast() + " isFirst" + cursor.isFirst());
+        ImageLog.d("google图片选择器", image.toString());
         cursor.close();
+        //String path = image.mediaPathSource;
+        /*if (TextUtils.isEmpty(path)) {
+            path = FileUriPath.getPath(context, uri);
+            ImageLog.d("google图片选择器", "path 重新获取：" + path);
+            image.mediaPathSource = path;
+        }*/
         return image;
 
+    }
+
+
+    private Cursor getCursor(Uri uri, Context context) {
+        Cursor cursor = null;
+        if (isMediaDocument(uri)) {
+            //Android从4.4版本(API_19)开始多了个DocumentsProvider
+            //uri 是 com.android.providers.media.documents 开头才行
+            // content://com.android.providers.media.documents/document/image%3A18323
+            String docId = DocumentsContract.getDocumentId(uri);
+            String[] split = docId.split(":");
+            String type = split[0];
+            String selection = "_id=?";
+            String[] selectionArgs = new String[]{split[1]};
+            Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            cursor = context.getContentResolver().query(contentUri, VIDEO_PROJECTION, selection, selectionArgs, null);
+        } else {
+            //content://media/picker/0/com.android.providers.media.photopicker/media/1000000501
+            ContentResolver contentResolver = context.getContentResolver();
+            cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
+        }
+        return cursor;
+    }
+
+    private boolean isMediaDocument(Uri uri) {
+        String authority = uri.getAuthority();
+        return "com.android.providers.media.documents".equals(authority);
     }
 
     //==================设置监听======================================

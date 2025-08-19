@@ -85,6 +85,9 @@ public class GoogleImgVideo {
         for (int i = 0; i < uris.size(); i++) {
             Uri uri = uris.get(i);
             MediaEntity video = MediaManager.getInstance().getVideo(uri, context);
+            if (video == null) {
+                continue;
+            }
             String mediaType = video.mediaType;
             if (mediaType == null) {
                 mediaType = "";
