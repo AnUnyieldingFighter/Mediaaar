@@ -32,7 +32,8 @@ public class MediaManager {
         return manager;
     }
 
-    private final String[] IMAGE_PROJECTION = {MediaStore.Images.Media.DATA,                  //图片路径
+    private final String[] IMAGE_PROJECTION = {
+            MediaStore.Images.Media.DATA,                  //图片路径
             MediaStore.Images.Media.DISPLAY_NAME,          //图片名称
             MediaStore.Images.Media.DATE_ADDED,            //创建时间
             MediaStore.Images.Media._ID,                   //图片id
@@ -47,7 +48,8 @@ public class MediaManager {
 
     };
     //阉割版 红米 android 13 api 33  它只能读取到这些数据
-    private final String[] IMAGE_PROJECTION_2 = {MediaStore.Images.Media.DATA,                  //图片路径
+    private final String[] IMAGE_PROJECTION_2 = {
+            MediaStore.Images.Media.DATA,                  //图片路径
             MediaStore.Images.Media.DISPLAY_NAME,          //图片名称
             // MediaStore.Images.Media.DATE_ADDED,            //创建时间
             //MediaStore.Images.Media._ID,                   //图片id
@@ -61,7 +63,8 @@ public class MediaManager {
             MediaStore.Images.Media.DATE_TAKEN,         // 拍摄日期
 
     };
-    private final String[] VIDEO_PROJECTION = {MediaStore.Video.Media.DATA, //视频路径
+    private final String[] VIDEO_PROJECTION = {
+            MediaStore.Video.Media.DATA, //视频路径
             MediaStore.Video.Media.DISPLAY_NAME,          //视频名称
             MediaStore.Video.Media.DATE_ADDED,            //视频创建时间
             MediaStore.Video.Media._ID,                   //视频id
@@ -73,8 +76,6 @@ public class MediaManager {
             MediaStore.Video.Media.WIDTH,             // 宽度
             MediaStore.Video.Media.HEIGHT,             // 高度
             MediaStore.Video.Media.DATE_TAKEN,         // 拍摄日期
-
-
             MediaStore.Video.Media.DURATION,             // 持续时间
 
 
@@ -100,7 +101,7 @@ public class MediaManager {
         String path = FileUriPath.getPath(context, uri);
         ImageLog.d("google图片选择器", "path 重新获取：" + path);
         Cursor cursor = null;
-        if (isMediaDocument(uri) || isMediaPhotopicker(uri)) {
+        if (isMediaDocument(uri)) {
             //Android从4.4版本(API_19)开始多了个DocumentsProvider
             //uri 是 com.android.providers.media.documents 开头才行
             // content://com.android.providers.media.documents/document/image%3A18323
@@ -122,11 +123,22 @@ public class MediaManager {
 
     private MediaEntity readCursor2(Cursor data) {
         MediaEntity video = new MediaEntity();
-        video.mediaPathSource = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[0]));
-        video.mediaName = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[1]));
-        video.mediaType = data.getString(data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[2]));
-        video.mediaSize = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[3]));
-        video.mediaDateTaken = data.getLong(data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[4]));
+        int index = data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[0]);
+        if (index >= 0) {
+            video.mediaPathSource = data.getString(index);
+        }
+        index = data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[2]);
+        if (index >= 0) {
+            video.mediaType = data.getString(index);
+        }
+        index = data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[3]);
+        if (index >= 0) {
+            video.mediaSize = data.getLong(index);
+        }
+        index = data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[4]);
+        if (index >= 0) {
+            video.mediaDateTaken = data.getLong(index);
+        }
         return video;
     }
 
@@ -159,8 +171,8 @@ public class MediaManager {
 
 
     private Cursor getCursorVideo(Uri uri, Context context) {
-        String path = FileUriPath.getPath(context, uri);
-        ImageLog.d("google图片选择器", "path 重新获取：" + path);
+        //String path = FileUriPath.getPath(context, uri);
+        //ImageLog.d("google图片选择器", "path 重新获取：" + path);
         Cursor cursor = null;
         if (isMediaDocument(uri) || isMediaPhotopicker(uri)) {
             //Android从4.4版本(API_19)开始多了个DocumentsProvider

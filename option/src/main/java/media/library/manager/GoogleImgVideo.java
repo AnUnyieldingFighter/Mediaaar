@@ -87,8 +87,8 @@ public class GoogleImgVideo {
             Uri uri = uris.get(i);
             int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
             context.getContentResolver().takePersistableUriPermission(uri, flag);
-            //
-            MediaEntity video = MediaManager.getInstance().getImg(uri, context);
+
+            MediaEntity video = MediaManager.getInstance().getVideo(uri, context);
             if (video == null) {
                 continue;
             }
@@ -118,8 +118,7 @@ public class GoogleImgVideo {
         if (pickMedia == null) {
             return;
         }
-        ActivityResultContracts.PickVisualMedia.SingleMimeType mediaType =
-                new ActivityResultContracts.PickVisualMedia.SingleMimeType(mediaTypeStr);
+        ActivityResultContracts.PickVisualMedia.SingleMimeType mediaType = new ActivityResultContracts.PickVisualMedia.SingleMimeType(mediaTypeStr);
         onRadio(mediaType);
     }
 
@@ -135,8 +134,7 @@ public class GoogleImgVideo {
         if (pickMultipleMedia == null) {
             return;
         }
-        ActivityResultContracts.PickVisualMedia.SingleMimeType mediaType =
-                new ActivityResultContracts.PickVisualMedia.SingleMimeType(mediaTypeStr);
+        ActivityResultContracts.PickVisualMedia.SingleMimeType mediaType = new ActivityResultContracts.PickVisualMedia.SingleMimeType(mediaTypeStr);
         onMultiple(mediaType);
 
     }
