@@ -109,13 +109,14 @@ public class PhotoUtil {
     }
 
     public static MediaEntity getTakePicture(Context context) {
+        MediaEntity entity = null;
         if (imgUrl == null) {
-            return null;
+            return entity;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
             // context.getContentResolver().takePersistableUriPermission(imgUrl, flag);
-            MediaEntity entity = MediaManager.getInstance().getVideo(imgUrl, context);
+            entity = MediaManager.getInstance().getVideo(imgUrl, context);
             if (entity == null) {
                 return null;
             }
@@ -129,7 +130,7 @@ public class PhotoUtil {
                 entity.type = 2;
             }
         }
-        return null;
+        return entity;
     }
 
     //裁剪
