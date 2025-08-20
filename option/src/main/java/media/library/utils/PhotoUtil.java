@@ -114,9 +114,9 @@ public class PhotoUtil {
             return entity;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
-            // context.getContentResolver().takePersistableUriPermission(imgUrl, flag);
-            entity = MediaManager.getInstance().getVideo(imgUrl, context);
+            int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            context.getContentResolver().takePersistableUriPermission(imgUrl, flag);
+            entity = MediaManager.getInstance().getImg(imgUrl, context);
             if (entity == null) {
                 return null;
             }

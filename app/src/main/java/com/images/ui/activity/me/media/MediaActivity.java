@@ -141,7 +141,7 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         File file = new File(path);
         boolean exists = file.exists();
         boolean isFile = file.isFile();
-        ImageLog.d("拍照成功", "isFile:" + isFile + " exists:" + exists);
+        ImageLog.d("拍照成功3", "isFile:" + isFile + " exists:" + exists);
         Glide.with(this).load(path)
                 .placeholder(com.images.imageselect.R.mipmap.image_select_default)
                 //.centerCrop()
@@ -158,8 +158,11 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         if (PhotoUtil.isTakeOK(requestCode, resultCode)) {
             //拍照成功
             File file = PhotoUtil.getTakeResFile(this);
+            boolean exists = file.exists();
+            boolean isFile = file.isFile();
+            ImageLog.d("拍照成功1", "isFile:" + isFile + " exists:" + exists);
             if (file != null && file.exists() && file.isFile()) {
-                ImageLog.d("拍照成功", file.getPath());
+                ImageLog.d("拍照成功2", file.getPath());
                 Glide.with(this).load(file.getPath())
                         .placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()

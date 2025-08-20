@@ -88,31 +88,47 @@ public class MediaManager {
         if (cursor == null) {
             return null;
         }
-        cursor.moveToFirst();
-        MediaEntity image = readCursor2(cursor);
+        //cursor.moveToFirst();
         ImageLog.d("google图片选择器", "地址---》" + " cursor isLast:" + cursor.isLast() + " isFirst" + cursor.isFirst());
-        ImageLog.d("google图片选择器", image.toString());
-        cursor.close();
+        MediaEntity image = null;
+        try {
+            image = readCursor2(cursor);
+            ImageLog.d("google图片选择器", image.toString());
+        } catch (Exception e) {
+            ImageLog.d("google图片选择器", e.getMessage());
+        } finally {
+            cursor.close();
+        }
         return image;
 
     }
 
     private Cursor getCursorImg(Uri uri, Context context) {
-        String path = FileUriPath.getPath(context, uri);
-        ImageLog.d("google图片选择器", "path 重新获取：" + path);
+        //String path = FileUriPath.getPath(context, uri);
+        //ImageLog.d("google图片选择器", "path 重新获取：" + path);
         Cursor cursor = null;
         if (isMediaDocument(uri)) {
+
             //Android从4.4版本(API_19)开始多了个DocumentsProvider
             //uri 是 com.android.providers.media.documents 开头才行
             // content://com.android.providers.media.documents/document/image%3A18323
             String docId = DocumentsContract.getDocumentId(uri);
             String[] split = docId.split(":");
             String type = split[0];
+            ImageLog.d("google图片选择器", "获取游标 type="+type+" docId="+docId);
             String selection = "_id=?";
             String[] selectionArgs = new String[]{split[1]};
-            Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            Uri contentUri = null;
+            if ("image".equals(type)) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if ("video".equals(type)) {
+                contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+            } else if ("audio".equals(type)) {
+                contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            }
             cursor = context.getContentResolver().query(contentUri, IMAGE_PROJECTION_2, selection, selectionArgs, null);
         } else {
+            ImageLog.d("google图片选择器", "获取游标2");
             //content://media/picker/0/com.android.providers.media.photopicker/media/1000000501
             //content://media/picker/0/com.android.providers.media.photopicker/media/1000014639
             ContentResolver contentResolver = context.getContentResolver();
@@ -121,6 +137,7 @@ public class MediaManager {
         return cursor;
     }
 
+    // Index 0 requested, with a size of 0
     private MediaEntity readCursor2(Cursor data) {
         MediaEntity video = new MediaEntity();
         int index = data.getColumnIndexOrThrow(IMAGE_PROJECTION_2[0]);
@@ -142,7 +159,7 @@ public class MediaManager {
         return video;
     }
 
-    //不需要权限
+    //不需要权限 废弃
     public MediaEntity getVideo(Uri uri, Context context) {
 
         //Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2  32 不要权限

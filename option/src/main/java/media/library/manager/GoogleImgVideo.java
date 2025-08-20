@@ -85,10 +85,10 @@ public class GoogleImgVideo {
         ArrayList<MediaEntity> res = new ArrayList();
         for (int i = 0; i < uris.size(); i++) {
             Uri uri = uris.get(i);
-            int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
-            context.getContentResolver().takePersistableUriPermission(uri, flag);
+            //int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            //context.getContentResolver().takePersistableUriPermission(uri, flag);
 
-            MediaEntity video = MediaManager.getInstance().getVideo(uri, context);
+            MediaEntity video = MediaManager.getInstance().getImg(uri, context);
             if (video == null) {
                 continue;
             }
