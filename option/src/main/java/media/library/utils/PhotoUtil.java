@@ -108,7 +108,7 @@ public class PhotoUtil {
         return takeResFile;
     }
 
-    private static MediaEntity getTakePicture(Context context) {
+    public static MediaEntity getTakePicture(Context context) {
         if (imgUrl == null) {
             return null;
         }
