@@ -32,8 +32,7 @@ public class MediaManager {
         return manager;
     }
 
-    private final String[] IMAGE_PROJECTION = {
-            MediaStore.Images.Media.DATA,                  //图片路径
+    private final String[] IMAGE_PROJECTION = {MediaStore.Images.Media.DATA,                  //图片路径
             MediaStore.Images.Media.DISPLAY_NAME,          //图片名称
             MediaStore.Images.Media.DATE_ADDED,            //创建时间
             MediaStore.Images.Media._ID,                   //图片id
@@ -48,8 +47,7 @@ public class MediaManager {
 
     };
     //阉割版 红米 android 13 api 33  它只能读取到这些数据
-    private final String[] IMAGE_PROJECTION_2 = {
-            MediaStore.Images.Media.DATA,                  //图片路径
+    private final String[] IMAGE_PROJECTION_2 = {MediaStore.Images.Media.DATA,                  //图片路径
             MediaStore.Images.Media.DISPLAY_NAME,          //图片名称
             // MediaStore.Images.Media.DATE_ADDED,            //创建时间
             //MediaStore.Images.Media._ID,                   //图片id
@@ -63,8 +61,7 @@ public class MediaManager {
             MediaStore.Images.Media.DATE_TAKEN,         // 拍摄日期
 
     };
-    private final String[] VIDEO_PROJECTION = {
-            MediaStore.Video.Media.DATA, //视频路径
+    private final String[] VIDEO_PROJECTION = {MediaStore.Video.Media.DATA, //视频路径
             MediaStore.Video.Media.DISPLAY_NAME,          //视频名称
             MediaStore.Video.Media.DATE_ADDED,            //视频创建时间
             MediaStore.Video.Media._ID,                   //视频id
@@ -88,8 +85,17 @@ public class MediaManager {
         if (cursor == null) {
             return null;
         }
-        //cursor.moveToFirst();
-        ImageLog.d("google图片选择器", "地址---》" + " cursor isLast:" + cursor.isLast() + " isFirst" + cursor.isFirst());
+        int count = cursor.getCount();
+        boolean isFirst = cursor.moveToFirst();
+        ImageLog.d(
+                "google图片选择器", "地址---》"
+                        + " cursor isLast:" + cursor.isLast()
+                        + " 数量:" + count + " isFirst"
+                        + " 移动到第一个:" + isFirst
+                        + cursor.isFirst());
+        if (count == 0) {
+            return null;
+        }
         MediaEntity image = null;
         try {
             image = readCursor2(cursor);
@@ -108,14 +114,13 @@ public class MediaManager {
         //ImageLog.d("google图片选择器", "path 重新获取：" + path);
         Cursor cursor = null;
         if (isMediaDocument(uri)) {
-
             //Android从4.4版本(API_19)开始多了个DocumentsProvider
             //uri 是 com.android.providers.media.documents 开头才行
             // content://com.android.providers.media.documents/document/image%3A18323
             String docId = DocumentsContract.getDocumentId(uri);
             String[] split = docId.split(":");
             String type = split[0];
-            ImageLog.d("google图片选择器", "获取游标 type="+type+" docId="+docId);
+            ImageLog.d("google图片选择器", "获取游标 type=" + type + " docId=" + docId);
             String selection = "_id=?";
             String[] selectionArgs = new String[]{split[1]};
             Uri contentUri = null;
@@ -157,58 +162,6 @@ public class MediaManager {
             video.mediaDateTaken = data.getLong(index);
         }
         return video;
-    }
-
-    //不需要权限 废弃
-    public MediaEntity getVideo(Uri uri, Context context) {
-
-        //Build.VERSION.SDK_INT > Build.VERSION_CODES.S_V2  32 不要权限
-        // Android 14（UpsideDownCake, API 34）上则新增了 READ_MEDIA_VISUAL_USER_SELECTED 权限，用户可以选择性地让应用访问部分图片或视频。
-
-        //ContentResolver contentResolver = context.getContentResolver();
-        //Cursor cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
-        Cursor cursor = getCursorVideo(uri, context);
-        if (cursor == null) {
-            return null;
-        }
-        cursor.moveToFirst();
-        MediaEntity image = readCursorVideo(cursor);
-        ImageLog.d("google图片选择器", "地址---》" + " cursor isLast:" + cursor.isLast() + " isFirst" + cursor.isFirst());
-        ImageLog.d("google图片选择器", image.toString());
-        cursor.close();
-        //String path = image.mediaPathSource;
-        /*if (TextUtils.isEmpty(path)) {
-            path = FileUriPath.getPath(context, uri);
-            ImageLog.d("google图片选择器", "path 重新获取：" + path);
-            image.mediaPathSource = path;
-        }*/
-        return image;
-
-    }
-
-
-    private Cursor getCursorVideo(Uri uri, Context context) {
-        //String path = FileUriPath.getPath(context, uri);
-        //ImageLog.d("google图片选择器", "path 重新获取：" + path);
-        Cursor cursor = null;
-        if (isMediaDocument(uri) || isMediaPhotopicker(uri)) {
-            //Android从4.4版本(API_19)开始多了个DocumentsProvider
-            //uri 是 com.android.providers.media.documents 开头才行
-            // content://com.android.providers.media.documents/document/image%3A18323
-            String docId = DocumentsContract.getDocumentId(uri);
-            String[] split = docId.split(":");
-            String type = split[0];
-            String selection = "_id=?";
-            String[] selectionArgs = new String[]{split[1]};
-            Uri contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-            cursor = context.getContentResolver().query(contentUri, VIDEO_PROJECTION, selection, selectionArgs, null);
-        } else {
-            //content://media/picker/0/com.android.providers.media.photopicker/media/1000000501
-            //content://media/picker/0/com.android.providers.media.photopicker/media/1000014639
-            ContentResolver contentResolver = context.getContentResolver();
-            cursor = contentResolver.query(uri, VIDEO_PROJECTION, null, null, null);
-        }
-        return cursor;
     }
 
     private boolean isMediaDocument(Uri uri) {
