@@ -9,12 +9,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+
 import media.library.images.config.entity.MediaEntity;
 import media.library.images.manager.MediaPlayerManager;
 import media.library.images.manager.VideoDataBean;
 import media.library.utils.PhotoUtil;
 
 import com.media.option.R;
+
 import media.library.images.unmix.ImageLog;
 
 import java.io.File;
@@ -128,6 +130,24 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        test();
+    }
+
+    private void test() {
+        String path = "/storage/emulated/0/Pictures/hn_earn/1755674951788_27053.jpg";
+        File file = new File(path);
+        boolean exists = file.exists();
+        boolean isFile = file.isFile();
+        ImageLog.d("拍照成功", "isFile:" + isFile + " exists:" + exists);
+        Glide.with(this).load(path)
+                .placeholder(com.images.imageselect.R.mipmap.image_select_default)
+                //.centerCrop()
+                .into(ivVideo);
+    }
+
     private String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
     private String video2 = "https://nbc.vtnbo.com/nbc-file/file/video/beta/17484063665794360.mp4";
     private String video3 = "http://10.168.3.102:5233/chfs/shared/nbc-apk/test1.mp4";
@@ -137,10 +157,11 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
         super.onActivityResult(requestCode, resultCode, data);
         if (PhotoUtil.isTakeOK(requestCode, resultCode)) {
             //拍照成功
-            File file = PhotoUtil.getTakeResFile();
-            if (file != null && file.exists()) {
+            File file = PhotoUtil.getTakeResFile(this);
+            if (file != null && file.exists() && file.isFile()) {
                 ImageLog.d("拍照成功", file.getPath());
-                Glide.with(this).load(file.getPath()).placeholder(com.images.imageselect.R.mipmap.image_select_default)
+                Glide.with(this).load(file.getPath())
+                        .placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(ivVideo);
             }
