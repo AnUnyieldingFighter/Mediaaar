@@ -78,12 +78,12 @@ public class PhotoUtil {
                 String pck = con.getPackageName();
                 uri = FileProvider.getUriForFile(con, pck, takeResFile);
                 ImageLog.d("pck", pck);
-                cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             } else {
                 uri = Uri.fromFile(takeResFile);
             }
             imgUrl = uri;
             ImageLog.d("url", uri.toString());
+            cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
             cameraIntent.putExtra(MediaStore.Images.Media.ORIENTATION, 0);
             //
@@ -114,8 +114,8 @@ public class PhotoUtil {
             return entity;
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
-            context.getContentResolver().takePersistableUriPermission(imgUrl, flag);
+            //int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            //context.getContentResolver().takePersistableUriPermission(imgUrl, flag);
             entity = MediaManager.getInstance().getImg(imgUrl, context);
             if (entity == null) {
                 return null;
