@@ -24,3 +24,30 @@ TextureView SurfaceView SphericalGLSurfaceView VideoDecoderGLSurfaceView 优缺�
 3.GLSurfaceView：需要OpenGL ES 2.0+/3.0+
 
 
+
+
+关于权限问题：
+https://developer.aliyun.com/article/633305
+https://blog.csdn.net/c6E5UlI1N/article/details/123515886
+https://cloud.tencent.com/developer/article/2412719
+
+android 6  (api  23) 开始远行时需要授权
+android 7  (api  24) 提出使用ileProvider来获取文件（同时也要相应的权限）
+android 10 (api 29)  引入了分区存储，但不是强制的
+                     通过清单配置android:requestLegacyExternalStorage="true"关闭分区存储
+android 11 (api 30） 定义 MANAGE_EXTERNAL_STORAGE 权限,强制开启分区存储，应用以 Android 11 为目标版本
+                     系统会忽略requestLegacyExternalStorage标记， 访问共享存储空间都需要使用MediaStore进行访问。
+
+android 13 (api 33)  开始 权限细分 READ_MEDIA_IMAGES，READ_MEDIA_VIDEO ,READ_MEDIA_AUDIO但是使用系统或者谷歌的照片选择器 不需要权限
+                     废弃 READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE 权限
+android 14 (api 34)  新增了READ_MEDIA_VISUAL_USER_SELECTED权限，用于对照片和视频进行选择性授权，
+                     如果要全部 仍然要 READ_MEDIA_IMAGES，READ_MEDIA_VIDEO ,READ_MEDIA_AUDIO 权限
+
+获取照片/视频
+> android 14  (api 34)  不使用google的图片选择器，就要申请权限（READ_MEDIA_IMAGES，READ_MEDIA_VIDEO，READ_MEDIA_AUDIO,READ_MEDIA_VISUAL_USER_SELECTED）
+> android 13  (api 33)  不使用google的图片选择器，就要申请权限（READ_MEDIA_IMAGES，READ_MEDIA_VIDEO，READ_MEDIA_AUDIO）
+<= android 12 (api 32)  不使用google的图片选择器，就要申请权限（READ_EXTERNAL_STORAGE，WRITE_EXTERNAL_STORAGE）
+拍照 
+ >= android 13 （api 33） 拍照/写入读取照片 使用MediaStore 写入图片不需要权限
+ >= android 11 （api 30） 拍照/写入读取照片 使用MediaStore 写入图片不需要权限，不使用MediaStorede，仍然要申请权限 READ_EXTERNAL_STORAGE，WRITE_EXTERNAL_STORAGE 权限
+<=android 10   （api 29） 拍照/写入读取图片 无MediaStore 写入图片不需要权限，仍然要 READ_EXTERNAL_STORAGE，WRITE_EXTERNAL_STORAGE 权限
