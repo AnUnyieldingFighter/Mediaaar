@@ -9,6 +9,13 @@ import android.view.SurfaceView;
 
 import androidx.media3.exoplayer.ExoPlayer;
 
+import media.library.player.view.CustomExoPlayer;
+// exoPlayerManager = new ExoPlayerManager();
+// String videoUrl = ImageLoadingUtile.getUrl(postBean.videoPath);
+// exoPlayerManager.initExoPlayer().setPlayUrl(act, videoUrl);
+// exoPlayerManager.setPlayerView(playerView);
+// exoPlayerManager.setPlay(1);
+// exoPlayerManager.setMute(isMute);
 //单例播放器
 public class ExoPlayerManager extends BasePlayerManager {
     private static ExoPlayerManager exoPlayerManager;
@@ -24,7 +31,12 @@ public class ExoPlayerManager extends BasePlayerManager {
 
     public ExoPlayerManager initExoPlayer(Activity act) {
         super.initExoPlayers(act);
-        return exoPlayerManager;
+        return this;
+    }
+
+    public ExoPlayerManager initExoPlayer() {
+        super.initExoPlayers();
+        return this;
     }
 
     //step 2:设置播放url
@@ -38,10 +50,13 @@ public class ExoPlayerManager extends BasePlayerManager {
         super.setPlayUrl(context, url);
     }
 
-    @Override
-    public void setPlayUrl2(Context context, String url) {
-        super.setPlayUrl2(context, url);
+    public void setMute(boolean isMute) {
+        if (exoPlayer == null) {
+            return;
+        }
+        exoPlayer.setMute(isMute);
     }
+
 
     //step 3:开始播放
     @Override
@@ -61,9 +76,17 @@ public class ExoPlayerManager extends BasePlayerManager {
         super.setPlayContinue();
     }
 
-    public ExoPlayer getExoPlayer() {
+    public CustomExoPlayer getExoPlayer() {
         return exoPlayer;
     }
+    public void seekTo(long positionMs) {
+        if (exoPlayer == null) {
+            return;
+        }
+        exoPlayer.seekTo(positionMs);
+    }
+
+
 
     public Surface getSurface() {
         return surface;

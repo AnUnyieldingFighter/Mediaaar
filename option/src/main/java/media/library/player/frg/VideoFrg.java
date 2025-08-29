@@ -1,45 +1,21 @@
 package media.library.player.frg;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.OptIn;
-import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.database.StandaloneDatabaseProvider;
-import androidx.media3.datasource.DataSource;
-import androidx.media3.datasource.DefaultDataSource;
-import androidx.media3.datasource.cache.CacheDataSource;
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
-import androidx.media3.datasource.cache.NoOpCacheEvictor;
-import androidx.media3.datasource.cache.SimpleCache;
-import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.exoplayer.drm.DrmSessionManager;
-import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.ProgressiveMediaSource;
-import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.PlayerView;
 
 import com.images.imageselect.R;
 
-import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-import media.library.db.MediaRoom;
-import media.library.images.config.entity.MediaEntity;
 import media.library.player.able.OnVideoOperate;
-import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
-import media.library.utils.FileUtil;
-import media.library.utils.Md5Media;
+import media.library.player.view.CustomExoPlayer;
 
 
 public class VideoFrg extends VideoBaseFrg {
@@ -49,11 +25,11 @@ public class VideoFrg extends VideoBaseFrg {
     }
 
     @Override
-    public ExoPlayer getExoPlayer() {
+    public CustomExoPlayer getExoPlayer() {
         return exoPlayer;
     }
 
-    protected ExoPlayer exoPlayer;
+    protected CustomExoPlayer exoPlayer;
     protected PlayerView playerView;
     protected TextView tvIndex;
 
@@ -67,19 +43,30 @@ public class VideoFrg extends VideoBaseFrg {
     @Override
     protected void setViewInit(View view, Bundle savedInstanceState) {
         viewInit(view, savedInstanceState);
+        PlayerLog.d("frg_", "setViewInit  " + pageIndex + " video:" + videoUrl);
     }
 
     private void viewInit(View view, Bundle savedInstanceState) {
-        Bundle bundle = getArguments();
+        //Bundle bundle = getArguments();
         tvIndex = view.findViewById(R.id.tv_index);
-        int tempPageIndex = bundle.getInt("index", -1);
-        String tempVideoUrl = bundle.getString("url", "");
-        PlayerLog.d("视频播放", "初始化时设置播放地址 pageIndex：" + pageIndex + " videoUrl:" + videoUrl);
+        //int tempPageIndex = bundle.getInt("index", -1);
+        //String tempVideoUrl = bundle.getString("url", "");
+        //PlayerLog.d("视频播放", "初始化时设置播放地址 pageIndex：" + tempPageIndex
+        //        + " videoUrl:" + tempVideoUrl);
         PlayerView tempPlayerView = view.findViewById(R.id.player_view);
         //
-        initData(tempPageIndex, tempVideoUrl);
         initPlayerView(tempPlayerView);
 
+    }
+
+    protected void initPlayerView(PlayerView playerView) {
+        this.playerView = playerView;
+        //setPlayerViewParameter();
+        if (act instanceof OnVideoOperate) {
+            videoOperate = (OnVideoOperate) act;
+        }
+        setClick();
+        //initExoPlayer();
     }
 
     public int getPageIndex() {
@@ -90,23 +77,8 @@ public class VideoFrg extends VideoBaseFrg {
         return playerView;
     }
 
-    //step 2
-    protected void initData(int pageIndex, String videoUrl) {
-        this.pageIndex = pageIndex;
-        this.videoUrl = videoUrl;
-    }
-
     //step 3
-    protected void initPlayerView(PlayerView playerView) {
-        this.playerView = playerView;
-        //setPlayerViewParameter();
-        if (act instanceof OnVideoOperate) {
-            videoOperate = (OnVideoOperate) act;
-        }
-        PlayerLog.d("初始化", "------- index=" + pageIndex);
-        setClick();
-        initExoPlayer();
-    }
+
 
     @OptIn(markerClass = UnstableApi.class)
     private void setPlayerViewParameter() {
@@ -141,140 +113,16 @@ public class VideoFrg extends VideoBaseFrg {
         }
     }
 
-    //更新播放源
-    public void updateVideoUrl(int pageIndex, String url) {
-        PlayerLog.d("视频播放Url", "计划播放 pageIndex：" + pageIndex + " url:" + url);
-        if (playerView == null) {
-            PlayerLog.d("未初始化", "------- index=" + pageIndex + "  " + this.pageIndex);
-            return;
-        }
-        Player temp = playerView.getPlayer();
-        if (temp != null) {
-            MediaItem mediaItem = temp.getCurrentMediaItem();
-            String mediaId = "";
-            if (mediaItem != null) {
-                mediaId = mediaItem.mediaId;
-                MediaItem.RequestMetadata requestMetadata = mediaItem.requestMetadata;
-                Uri mediaUri = requestMetadata.mediaUri;
-                PlayerLog.d("视频播放Url", "计划播放地址 mediaId：" + mediaId + " mediaUri:" + mediaUri + " pageIndex:" + pageIndex);
-            }
-            if (url.equals(videoUrl) && pageIndex == this.pageIndex && url.equals(mediaId)) {
-                PlayerLog.d("视频播放Url", "计划播放地址相同");
-                return;
-            }
-        }
-
-        this.videoUrl = url;
-        //更换 播放url
-        PlayerLog.d("更换新", "------- index=" + this.pageIndex + " 更新 " + pageIndex);
-        this.pageIndex = pageIndex;
-        initExoPlayer();
-    }
-
-    protected long maxBytes = 100 * 1024 * 1024;//100M
-    @UnstableApi
-    protected SimpleCache simpleCache;
-    @UnstableApi
-    private static HashMap<String, SimpleCache> map = new HashMap<>();
-
-    //构建缓存
+    //初始化 播放器/更换播放器地址
     @OptIn(markerClass = UnstableApi.class)
-    protected SimpleCache createCache(File file) {
-        //setCacheRelease();
-        SimpleCache cache = map.get(file.getPath());
-        if (cache != null) {
-            cache.release();
-            map.remove(file.getPath());
-        }
-        if (maxBytes == 0) {
-            cache = new SimpleCache(file, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(getContext()));
-        } else {
-            cache = new SimpleCache(file, new LeastRecentlyUsedCacheEvictor(maxBytes),
-                    new StandaloneDatabaseProvider(getContext()));
-        }
-        map.put(file.getPath(), cache);
-        return cache;
-    }
-
-    //释放缓存
-    @OptIn(markerClass = UnstableApi.class)
-    protected void setCacheRelease() {
-        if (simpleCache != null) {
-            simpleCache.release();
-        }
-        simpleCache = null;
-    }
-
-    //获取缓存文件
-    protected File getCacheFile(int pageIndex, String videoUrl) {
-        File file = null;
-        List<VideoEntity> datas = MediaRoom.geVideoDb(getContext())
-                .queryVideoCache(videoUrl);
-        if (datas == null || datas.size() == 0) {
-            String dir = FileUtil.getVideoCacheDir(getContext());
-            String md5 = Md5Media.encode(videoUrl);
-            file = new File(dir, md5);
-            VideoEntity videoEntity = new VideoEntity();
-            videoEntity.videoUrl = videoUrl;
-            videoEntity.videoCachePath = file.getPath();
-            long time = new Date().getTime();
-            videoEntity.recordTime = time;
-            MediaRoom.geVideoDb(getContext()).put(videoEntity);
-            PlayerLog.d("缓存地址", "新建 url:" + videoUrl + "\npath:" + file.getPath());
-        } else {
-            VideoEntity bean = datas.get(0);
-            file = new File(bean.videoCachePath);
-            PlayerLog.d("缓存地址", "取得 url:" + videoUrl + "\npath:" + file.getPath());
-        }
-        return file;
-    }
-
-    //true 使用缓存
-    protected boolean isUseCache;
-
-    @OptIn(markerClass = UnstableApi.class)
-    protected MediaSource getMediaSource(boolean isDef) {
-        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-        MediaItem videoItem = new MediaItem.Builder()
-                .setUri(videoUrl)
-                .setMediaId(videoUrl).build();
-        MediaSource mediaSource;
-        if (isDef) {
-            isUseCache = false;
-            //默认的
-            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(getContext());
-            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                    .createMediaSource(videoItem);
-        } else {
-            isUseCache = true;
-            //有缓存的
-            File file = getCacheFile(pageIndex, videoUrl);
-            //构建缓存
-            simpleCache = createCache(file);
-            DataSource.Factory dataSourceFactory = new CacheDataSource.Factory().setCache(simpleCache)
-                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(getContext()));
-
-            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                    .createMediaSource(videoItem);
-        }
-        return mediaSource;
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    protected void initExoPlayer() {
+    private void initExoPlayer() {
+        //
         isVideoHorizontalScreen = false;
         //
         exoPlayer = videoOperate.getExoPlayer(pageIndex, videoUrl);
-        //方式一
-        MediaSource mediaSource = getMediaSource(false);
-        exoPlayer.setMediaSource(mediaSource);
-        //方式二
-        /*MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
-        exoPlayer.setMediaItem(videoItem);*/
+        exoPlayer.setPlayerVideo(act, videoUrl, true);
         //
-        playerView.setPlayer(exoPlayer);
+        exoPlayer.setPlayerView(playerView);
         exoPlayer.prepare();
         exoPlayer.setPlayWhenReady(false);
         //设置循环播放
@@ -291,7 +139,7 @@ public class VideoFrg extends VideoBaseFrg {
     //设置播放
     public void setVideoPlay() {
         if (exoPlayer != null) {
-            exoPlayer.setPlayWhenReady(true);
+            exoPlayer.setPlayContinue();
             //player.play();
         }
 
@@ -300,26 +148,41 @@ public class VideoFrg extends VideoBaseFrg {
     //设置暂停
     public void setVideoPause() {
         if (exoPlayer != null) {
-            if (exoPlayer.isPlaying()) {
-                exoPlayer.pause();
-            } else {
-                exoPlayer.setPlayWhenReady(false);
-            }
-
+            exoPlayer.setPause();
         }
     }
 
-    //释放播放器
-    public void setExoPlayerRelease() {
-        if (playerView != null) {
-            playerView.setPlayer(null);
+    //更新播放源
+    public void updateVideoUrl(int pageIndex, String url) {
+        PlayerLog.d("视频播放Url", "计划播放 pageIndex：" + pageIndex + " url:" + url);
+        if (playerView == null) {
+            PlayerLog.d("未初始化", "------- index=" + pageIndex + "  " + this.pageIndex);
+            return;
         }
-        setCacheRelease();
+        if (exoPlayer != null) {
+            boolean isSame = exoPlayer.isEqualVideoPaly(url);
+            if (isSame) {
+                this.pageIndex = pageIndex;
+                exoPlayer.setPlayerView(playerView);
+                return;
+            }
+        }
+        this.videoUrl = url;
+        this.pageIndex = pageIndex;
+        //更换 播放url
+        PlayerLog.d("去初始化/更新播放源 ",
+                "------- index=" + this.pageIndex + " 更新 pageIndex=" + pageIndex + " videoUrl:" + videoUrl);
+        initExoPlayer();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        //拉取播放地址
+        int tempIndex = videoOperate.getResumeIndex();
+        String tempVideoUrl = videoOperate.getResumeVideoUrl();
+        updateVideoUrl(tempIndex, tempVideoUrl);
+        //
         updatePlay();
         if (exoPlayer != null) {
             exoPlayer.addListener(playerListener);
@@ -334,39 +197,26 @@ public class VideoFrg extends VideoBaseFrg {
         if (videoOperate == null) {
             return;
         }
-        int tempIndex = videoOperate.getIndex();
-        setShowIndex(tempIndex);
-        pageIndex = tempIndex;
+        setShowIndex();
         if (playerView == null) {
             return;
         }
-        //重新设置播放器
-        //playerView.setPlayer(null);
-        //playerView.setPlayer(exoPlayer);
+        exoPlayer.setPlayerView(playerView);
+        onVideoSize(exoPlayer);
         //
-        var tempPlay = playerView.getPlayer();
-        if (tempPlay == null) {
-            //清理这个播放器 出窝以外的持有者
-            videoOperate.setClearFrgHoldPlayer(exoPlayer);
-            playerView.setPlayer(exoPlayer);
-            onVideoSize(exoPlayer);
-        } else {
-            onVideoSize(tempPlay);
-        }
-        ExoPlayer temp = exoPlayer;
         int height = playerView.getHeight();
         int width = playerView.getWidth();
-        videoOperate.onCheck(pageIndex, exoPlayer);
-        PlayerLog.d("播放器", "temp==null " + (temp == null) + " 相同:" + (temp == tempPlay) + " height:" + height + " width:" + width);
-        int playbackState = temp.getPlaybackState();
-        PlayerLog.d("视频播放", "正在播放：pageIndex" + pageIndex + " playbackState:" + playbackState + " url:" + videoUrl);
 
+        videoOperate.onCheck(pageIndex, exoPlayer);
+        int playbackState = exoPlayer.getPlaybackState();
+        PlayerLog.d("视频播放", "正在播放：pageIndex" + pageIndex +
+                " playbackState:" + playbackState + " height:" + height + " width:" + width + " url:" + videoUrl);
     }
 
-    private void setShowIndex(int tempIndex) {
+    private void setShowIndex() {
         if (tvIndex != null) {
             var tempPlay = playerView.getPlayer();
-            tvIndex.setText("页面：" + tempIndex + "  内置：" + pageIndex + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
+            tvIndex.setText("页面：" + pageIndex + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
         }
 
     }
@@ -378,36 +228,30 @@ public class VideoFrg extends VideoBaseFrg {
         if (exoPlayer != null) {
             exoPlayer.removeListener(playerListener);
         }
-        if (isUseCache) {
-            Player player = playerView.getPlayer();
-            if (player != null) {
-                long currentPosition = exoPlayer.getCurrentPosition();
-                long duration = exoPlayer.getDuration();
-                long time = new Date().getTime();
-                MediaRoom.geVideoDb(getContext()).updateVideoLookHis(videoUrl, currentPosition, duration, time);
-            }
-        }
-        PlayerLog.d("frg_", "onPause  " + pageIndex);
+        PlayerLog.d("frg_", "onPause  " + pageIndex + " video:" + videoUrl);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        PlayerLog.d("frg_", "onStop " + pageIndex);
+        PlayerLog.d("frg_", "onStop " + pageIndex + " video:" + videoUrl);
     }
 
     @Override
     public void onDestroy() {
-        setExoPlayerRelease();
+        if (exoPlayer != null) {
+            exoPlayer.setPlayerViewRelease();
+            exoPlayer = null;
+        }
         super.onDestroy();
-        PlayerLog.d("frg_", "onDestroy " + pageIndex);
+        PlayerLog.d("frg_", "onDestroy " + pageIndex + " video:" + videoUrl);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         //视图不可见  Fragment实例还在
-        PlayerLog.d("frg_", "onDestroyView " + pageIndex);
+        PlayerLog.d("frg_", "onDestroyView " + pageIndex + " video:" + videoUrl);
     }
 
     //设置进度 毫秒
@@ -463,7 +307,7 @@ public class VideoFrg extends VideoBaseFrg {
     }
 
     //视频大小
-    protected void onVideoSize(Player player) {
+    protected void onVideoSize(CustomExoPlayer player) {
         VideoSize video = player.getVideoSize();
         if (video != null) {
             onVideoSize(video);
@@ -600,10 +444,10 @@ public class VideoFrg extends VideoBaseFrg {
 
     public static VideoFrg newInstance(int index, String url) {
         VideoFrg frg = new VideoFrg();
-        Bundle bundle = new Bundle();
-        bundle.putInt("index", index);
-        bundle.putString("url", url);
-        frg.setArguments(bundle);
+        //Bundle bundle = new Bundle();
+        //bundle.putInt("index", index);
+        //bundle.putString("url", url);
+        //frg.setArguments(bundle);
         return frg;
     }
 

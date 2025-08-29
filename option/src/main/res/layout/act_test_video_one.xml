@@ -41,9 +41,26 @@
         app:player_layout_id="@layout/layout_video_loading"
         app:repeat_toggle_modes="all|one"
         app:show_buffering="always"
+
+        app:buffered_color="#ff0"
+        app:played_color="#ff00"
+        app:scrubber_color="#333"
+        app:unplayed_color="#3300"
+
         app:show_shuffle_button="true"
         tools:ignore="ResourceCycle" />
+    <!--controller_layout_id 控制器-->
+    <!--player_layout_id 加载视图-->
     <!--repeat_toggle_modes 全部或者 单曲循环 开关-->
+    <!--app:resize_mode="fill" 设置满屏，  默认是 fit 等比播放-->
     <!--show_shuffle_button 随机播放功能按钮-->
+    <!--show_subtitle_button 字幕/辅助内容 -->
 
+    <!--进度条颜色-->
+    <!--
+     app:buffered_color="#ff0"  进度条缓冲色
+        app:played_color="#ff00" 进度条颜色
+        app:scrubber_color="#333" 进度条按钮颜色
+        app:unplayed_color="#3300" 进度条底层色
+        -->
 </FrameLayout>

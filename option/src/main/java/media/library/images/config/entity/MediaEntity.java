@@ -30,6 +30,8 @@ public class MediaEntity implements Serializable {
     public String mediaType;
     //图片/视频大小
     public long mediaSize;//字节为单位
+    public double mediaSizeMb;//MB为单位
+
     //相册id
     public String mediaFileId;
     // 经度

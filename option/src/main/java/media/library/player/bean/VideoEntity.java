@@ -14,6 +14,8 @@ public class VideoEntity {
     public String videoDescribe;//视频描述
 
     public String videoCachePath;//缓存地址
+    public int videoCacheType;//0 无引用 1  正在缓存中
+    public long videoCacheTime;//去缓存时间
 
     public long pro;//视频进度
     public long total;//视频总长度
@@ -22,12 +24,13 @@ public class VideoEntity {
     public String sizeStr;//	文件大小
     public int videoWidth;//	视频宽度
     public int videoHeight;//	视频高度
+    public int videoType;//1 视频  2 短视频  3 短剧
 
     public String other1;//其它1
     public String other2;//其它2
     public String other3;//其它3
 
     public boolean isLook;//true 看过
-    public long lookTime;//观看记录时间
+    public long lookTime;//最后观看记录时间
 
 }

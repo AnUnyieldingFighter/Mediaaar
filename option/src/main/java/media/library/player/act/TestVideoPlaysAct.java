@@ -19,12 +19,12 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.media3.exoplayer.ExoPlayer;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.images.imageselect.R;
 import media.library.player.able.OnVideoOperate;
-import media.library.player.manager.VideoPlaysManager;
+import media.library.player.manager.ShortVideoManager;
+import media.library.player.view.CustomExoPlayer;
 
 //短视频播放
 public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOperate {
@@ -38,11 +38,11 @@ public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOpera
 
     }
 
-    private VideoPlaysManager videoPlaysManager;
+    private ShortVideoManager videoPlaysManager;
 
     private void initView() {
         ViewPager2 viewPagerView = findViewById(R.id.viewPager);
-        videoPlaysManager = new VideoPlaysManager();
+        videoPlaysManager = new ShortVideoManager();
         videoPlaysManager.setView(this, viewPagerView);
     }
 
@@ -68,14 +68,12 @@ public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOpera
 
     //给Fragment调用
     @Override
-    public ExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
+    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
         return videoPlaysManager.getExoPlayer(pageIndex, videoUrl);
     }
 
-    @Override
-    public void setClearFrgHoldPlayer(ExoPlayer player) {
-        videoPlaysManager.setClearFrgHoldPlayer(player);
-    }
+
+
 
     @Override
     public void setViewPageSlide(boolean isSlide) {
@@ -87,12 +85,7 @@ public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOpera
     public void recordDuration(String id, int pageIndex, long pro, long total) {
 
     }
-    //横屏播放时 获取播放进度
 
-    @Override
-    public void updateVideoPro() {
-
-    }
 
     @Override
     public void onCheck(Object str, Object obj) {
@@ -100,7 +93,13 @@ public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOpera
     }
 
     @Override
-    public int getIndex() {
-        return videoPlaysManager.getIndex();
+    public int getResumeIndex() {
+        return videoPlaysManager.getResumeIndex();
     }
+
+    @Override
+    public String getResumeVideoUrl() {
+        return videoPlaysManager.getResumeVideoUrl();
+    }
+
 }

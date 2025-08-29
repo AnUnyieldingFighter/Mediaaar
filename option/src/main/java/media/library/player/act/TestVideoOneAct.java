@@ -54,7 +54,7 @@ public final class TestVideoOneAct extends Activity {
                     .setPlayUrl(this, url);
             ExoPlayerManager.getInstance().setPlay();
         }
-        ExoPlayerManager.getInstance().setPlayerControlView(playerView);
+        ExoPlayerManager.getInstance().setPlayerView(playerView);
     }
 
     @Override

@@ -40,9 +40,11 @@ public class VideoDb {
     public int updateVideoLookHis(String videoUrl, long pro, long total, long lookTime) {
         return getDao().updateVideoLookHis(videoUrl, pro, total, lookTime);
     }
+
     public int updateVideoSize(String videoUrl, int videoWidth, int videoHeight) {
         return getDao().updateVideoSize(videoUrl, videoWidth, videoHeight);
     }
+
     public void delete(VideoEntity data) {
         getDao().delete(data);
     }
@@ -56,9 +58,6 @@ public class VideoDb {
         getDao().queryAll();
     }
 
-    public void deleteAll() {
-        getDao().deleteAll();
-    }
 
     public List<VideoEntity> queryLookHisAll(boolean isLook) {
         return getDao().queryLookHisAll(isLook);
@@ -67,12 +66,29 @@ public class VideoDb {
     public List<VideoEntity> queryVideoCache(String videoUrl) {
         return getDao().queryVideoCache(videoUrl);
     }
+    public int queryLookHisCount(boolean isLook) {
+        return getDao().queryLookHisCount(isLook);
+    }
 
+    //设置缓存文件被使用
+    public int setCacheFileUse(String cacheFilePath) {
+        return getDao().updateCacheFile(1, cacheFilePath,System.currentTimeMillis());
+    }
+
+    //设置缓存文件被释放
+    public int setCacheFileRelease(String cacheFilePath) {
+        return getDao().updateCacheFile(0, cacheFilePath,System.currentTimeMillis());
+    }
+    //设置缓存文件全部被释放
+    public int setCacheFileReleaseAll() {
+        return getDao().updateCacheFile(0);
+    }
+    public void deleteAll() {
+        getDao().deleteAll();
+    }
     public void deleteVideo(String videoUrl) {
         getDao().deleteVideo(videoUrl);
     }
 
-    public int queryLookHisCount(boolean isLook) {
-        return getDao().queryLookHisCount(isLook);
-    }
+
 }

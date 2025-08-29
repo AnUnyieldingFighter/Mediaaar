@@ -3,8 +3,6 @@ package media.library.db;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
 
-
-;
 import media.library.db.video.VideoDao;
 import media.library.db.video.VideoDb;
 import media.library.images.config.entity.MediaEntity;
@@ -15,7 +13,7 @@ import media.library.player.bean.VideoEntity;
 /**
  * @author 86134
  */
-@Database(entities = {MediaEntity.class, VideoEntity.class}, version = 4, exportSchema = false)
+@Database(entities = {MediaEntity.class, VideoEntity.class}, version = 8, exportSchema = false)
 public abstract class BaseDatabase extends RoomDatabase {
     public abstract MediaDao mediaDao();
 

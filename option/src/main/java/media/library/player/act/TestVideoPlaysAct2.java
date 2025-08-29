@@ -31,12 +31,14 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.images.imageselect.R;
+
 import media.library.player.able.OnVideoOperate;
 import media.library.player.adapter.VideoPagerAdapter2;
 import media.library.player.bean.TestVideoUrl;
 import media.library.player.frg.VideoBaseFrg;
 import media.library.player.frg.VideoFrg;
 import media.library.player.manager.PlayerLog;
+import media.library.player.view.CustomExoPlayer;
 
 //短视频播放  是 TestVideoPlaysAct 的另外一种写法
 public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOperate {
@@ -98,31 +100,19 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
 
     @Override
     protected void onDestroy() {
-        setFrgRelease();
         setExoPlayerRelease();
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
         super.onDestroy();
     }
 
-    //释放资源
-    private void setFrgRelease() {
-        if (videoFrgs == null) {
-            return;
-        }
-        for (int i = 0; i < videoFrgs.size(); i++) {
-            ((VideoFrg) videoFrgs.get(i)).setExoPlayerRelease();
-        }
-
-    }
 
     //释放资源
     private void setExoPlayerRelease() {
         Set<Integer> keys = players.keySet();
         for (Integer key : keys) {
-            ExoPlayer player = players.get(key);
+            CustomExoPlayer player = players.get(key);
             if (player != null) {
                 player.release();
-                player = null;
             }
         }
         players.clear();
@@ -153,13 +143,13 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
     //播放器个数
     private int playersMax = 7;
     //缓存数量等于 frgs 的数量
-    private HashMap<Integer, ExoPlayer> players = new HashMap<>();
+    private HashMap<Integer, CustomExoPlayer> players = new HashMap<>();
     //缓存数量等于 frgs 的数量
     private HashMap<Integer, String> urlIndexs = new HashMap<>();
 
     //给Fragment调用
     @Override
-    public ExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
+    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
         //它是0至 playersMax
         Integer urlIndex = getUrlIndex(videoUrl);
         if (urlIndex != null) {
@@ -173,23 +163,6 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
     }
 
     @Override
-    public void setClearFrgHoldPlayer(ExoPlayer player) {
-        for (int i = 0; i < videoFrgs.size(); i++) {
-            VideoFrg frg = (VideoFrg) videoFrgs.get(i);
-            if (frg == cursorVideoFrg) {
-                continue;
-            }
-            ExoPlayer tempPlayer = frg.getExoPlayer();
-            if (tempPlayer == null) {
-                continue;
-            }
-            if (tempPlayer == player) {
-                frg.setExoPlayerRelease();
-            }
-        }
-    }
-
-    @Override
     public void setViewPageSlide(boolean isSlide) {
         viewPagerView.setUserInputEnabled(isSlide);
     }
@@ -200,11 +173,6 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
 
     }
 
-    //横屏播放时 获取播放进度
-    @Override
-    public void updateVideoPro() {
-
-    }
 
     @Override
     public void onCheck(Object str, Object obj) {
@@ -212,9 +180,16 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
     }
 
     @Override
-    public int getIndex() {
+    public int getResumeIndex() {
         int index = viewPagerView.getCurrentItem();
         return index;
+    }
+
+    @Override
+    public String getResumeVideoUrl() {
+        int index = viewPagerView.getCurrentItem();
+        String videoUrl = getVideoUrl(index);
+        return videoUrl;
     }
 
     private Integer getUrlIndex(String videoUrl) {
@@ -228,10 +203,10 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
         return null;
     }
 
-    public ExoPlayer getExoPlayer(Integer frgsIndex) {
-        ExoPlayer player = players.get(frgsIndex);
+    public CustomExoPlayer getExoPlayer(Integer frgsIndex) {
+        CustomExoPlayer player = players.get(frgsIndex);
         if (player == null) {
-            player = new ExoPlayer.Builder(this).build();
+            player = new CustomExoPlayer();
             players.put(frgsIndex, player);
             PlayerLog.d("播放视频", "取ExoPlayer  新增加 frgsIndex=" + frgsIndex);
         } else {
@@ -260,6 +235,7 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
             // 当页面滑动结束时调用，即页面完全改变时
             int indexPage = viewPagerView.getCurrentItem();
             cursorVideoFrg = getCursorFrg(indexPage);
+            //
             PlayerLog.d("页面滑动 最后结果", "index=" + indexPage);
             if (indexPage > startPage) {
                 //上划 要预加载下一页

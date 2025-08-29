@@ -52,7 +52,13 @@ public interface VideoDao {
     @Query("select * from tab_video where videoUrl=:videoUrl  ORDER BY recordTime DESC")
     List<VideoEntity> queryVideoCache(String videoUrl);
 
+    //根据缓存地址 设置设置文件的引用情况
+    @Query("UPDATE tab_video SET videoCacheType = :useType ,videoCacheTime=:time where videoCachePath=:cacheFilePath ")
+    int updateCacheFile(int useType,String cacheFilePath,long time);
 
+
+    @Query("UPDATE tab_video SET videoCacheType = :useType")
+    int updateCacheFile(int useType);
     @Query("SELECT COUNT(*) FROM tab_video")
     int queryCount();
 

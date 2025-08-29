@@ -50,12 +50,14 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
+import media.library.player.view.CustomExoPlayer;
+
 
 class BasePlayerManager {
 
     //true  强制调用other方法
     protected boolean isOther = true;
-    protected ExoPlayer exoPlayer;//播放器
+    protected CustomExoPlayer exoPlayer;//播放器
     @UnstableApi
     private PlayerListener playerListener;//播放器
 
@@ -66,12 +68,21 @@ class BasePlayerManager {
             return;
         }
         Application application = act.getApplication();
-        ExoPlayer player = new ExoPlayer.Builder(application).build();
-        exoPlayer = player;
+        //
+        exoPlayer = new CustomExoPlayer();
+        //ExoPlayer player = new ExoPlayer.Builder(application).build();
+        //exoPlayer = player;
         initSurface();
         exoPlayer.setVideoSurface(surface);
         playerListener = new PlayerListener();
         exoPlayer.addListener(playerListener);
+    }
+
+    public void initExoPlayers() {
+        if (exoPlayer != null) {
+            return;
+        }
+        exoPlayer = new CustomExoPlayer();
     }
 
     //step 2:初始化画布
@@ -113,9 +124,18 @@ class BasePlayerManager {
     }
 
     //step 3:设置播放url
+    @OptIn(markerClass = UnstableApi.class)
     public void setPlayUrl(Context context, String url) {
-        Uri uri = Uri.parse(url);
-        setPlayUri(context, uri);
+        if (exoPlayer == null) {
+            return;
+        }
+         /*MediaItem mediaItem = MediaItem.fromUri(url);
+        MediaSource mediaSource = new ProgressiveMediaSource.
+                Factory(new DefaultDataSourceFactory(context,
+                Util.getUserAgent(context, context.getPackageName())))
+                .createMediaSource(mediaItem);
+        exoPlayer.setMediaSource(mediaSource);*/
+        exoPlayer.setPlayerVideo(context, url, true);
     }
 
     @OptIn(markerClass = UnstableApi.class)
@@ -123,45 +143,39 @@ class BasePlayerManager {
         if (exoPlayer == null) {
             return;
         }
-        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-        DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
-        MediaSource mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(MediaItem.fromUri(uri));
-        exoPlayer.setMediaSource(mediaSource);
+        exoPlayer.setPlayerVideo(context, uri.toString(), true);
     }
 
-    //step 3:设置播放url
-    @OptIn(markerClass = UnstableApi.class)
-    public void setPlayUrl2(Context context, String url) {
-        MediaItem mediaItem = MediaItem.fromUri(url);
-        MediaSource mediaSource = new ProgressiveMediaSource.Factory(new DefaultDataSourceFactory(context, Util.getUserAgent(context, context.getPackageName()))).createMediaSource(mediaItem);
-        exoPlayer.setMediaSource(mediaSource);
-
-    }
 
     //step 4:开始播放
     public void setPlay() {
-        if (exoPlayer == null) {
-            return;
-        }
-        exoPlayer.prepare();
-        exoPlayer.play();
-        exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+        setPlay(1);
     }
 
     //step 4:开始播放
-    public void setPlay(boolean isLoop) {
+    public void setPlay(int playType) {
         if (exoPlayer == null) {
             return;
         }
-        exoPlayer.prepare();
-        //用于控制播放器的"准备就绪时自动播放"行为
-        //true：当播放器准备好媒体资源（调用prepare()完成）后自动开始播放  自动播放 默认playWhenReady=true
-        //false：即使播放器准备完成，也不会自动播放，需手动调用play()
-        // exoPlayer.setPlayWhenReady(true);
-        exoPlayer.play();
-        // 循环播放
-        if (isLoop) {
-            exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+        switch (playType) {
+            case 1:
+                exoPlayer.prepare();
+                exoPlayer.setPlayWhenReady(true);
+                exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+                break;
+            case 2:
+                exoPlayer.prepare();
+                exoPlayer.setPlayWhenReady(false);
+                exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+                break;
+            case 3:
+                exoPlayer.prepare();
+                exoPlayer.setPlayWhenReady(true);
+                break;
+            case 4:
+                exoPlayer.prepare();
+                exoPlayer.setPlayWhenReady(false);
+                break;
         }
     }
 
@@ -171,16 +185,15 @@ class BasePlayerManager {
         if (exoPlayer == null) {
             return;
         }
-        playerControlView.setPlayer(exoPlayer);
+        exoPlayer.setPlayerControlView(playerControlView);
     }
 
     //设置播放view（它集成了控制器，SurfaceView（默认）），可以跳过 step 2:初始化画布
-    public void setPlayerControlView(PlayerView playerView) {
+    public void setPlayerView(PlayerView playerView) {
         if (exoPlayer == null) {
             return;
         }
-        playerView.setPlayer(exoPlayer);
-
+        exoPlayer.setPlayerView(playerView);
     }
 
     //设置暂停
@@ -188,11 +201,7 @@ class BasePlayerManager {
         if (exoPlayer == null) {
             return;
         }
-        if (exoPlayer.isPlaying()) {
-            exoPlayer.pause();
-        } else {
-            exoPlayer.setPlayWhenReady(false);
-        }
+        exoPlayer.setPause();
     }
 
     //设置持续播放/继续播放
@@ -202,7 +211,7 @@ class BasePlayerManager {
         }
         // if(exoPlayer.isReleased()){}
         //exoPlayer.play();
-        exoPlayer.setPlayWhenReady(true);
+        exoPlayer.setPlayContinue();
     }
 
 

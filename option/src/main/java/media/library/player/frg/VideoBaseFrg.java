@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.media3.exoplayer.ExoPlayer;
 
+import media.library.player.view.CustomExoPlayer;
+
 public class VideoBaseFrg extends Fragment {
     protected FragmentActivity act;
     private long id = 0;
@@ -53,7 +55,7 @@ public class VideoBaseFrg extends Fragment {
     protected void setViewInit(View view, Bundle savedInstanceState) {
     }
 
-    public ExoPlayer getExoPlayer() {
+    public CustomExoPlayer getExoPlayer() {
         return null;
     }
 

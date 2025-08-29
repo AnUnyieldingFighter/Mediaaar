@@ -13,16 +13,15 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
-import media.library.player.able.OnVideoOperate;
 import media.library.player.adapter.VideoPagerAdapter2;
 import media.library.player.bean.TestVideoUrl;
 import media.library.player.frg.VideoBaseFrg;
 import media.library.player.frg.VideoFrg;
+import media.library.player.view.CustomExoPlayer;
 
-//播放管理类
-public class VideoPlaysManager {
+//短视频播放管理类
+public class ShortVideoManager {
     private AppCompatActivity activity;
 
     public void setData(ArrayList<VideoBaseFrg> videoFrgs, ArrayList<String> urls) {
@@ -51,8 +50,8 @@ public class VideoPlaysManager {
     private ArrayList<String> urls;
     private VideoFrg cursorVideoFrg;
     private OnPageChange onPageChange;
-    //播放器个数
-    private int playersMax = 7;
+
+
     //page页数量0阈值，超过这个值 将显示无限
     private int pageMax = 5;
     //初始化时跳转的页面
@@ -129,41 +128,20 @@ public class VideoPlaysManager {
     }
 
     public void onDestroy() {
-        setFrgRelease();
-        setExoPlayerRelease();
+        getPlayerManager().setExoPlayerRelease();
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
-
     }
 
-    //释放资源
-    private void setFrgRelease() {
-        if (videoFrgs == null) {
-            return;
-        }
-        for (int i = 0; i < videoFrgs.size(); i++) {
-            ((VideoFrg) videoFrgs.get(i)).setExoPlayerRelease();
-        }
-
-    }
-
-    //释放资源
-    private void setExoPlayerRelease() {
-        Set<Integer> keys = players.keySet();
-        for (Integer key : keys) {
-            ExoPlayer player = players.get(key);
-            if (player != null) {
-                player.release();
-                player = null;
-            }
-        }
-        players.clear();
-    }
-
-    public int getIndex() {
+    public int getResumeIndex() {
         int index = viewPagerView.getCurrentItem();
         return index;
     }
 
+    public String getResumeVideoUrl() {
+        int index = viewPagerView.getCurrentItem();
+        String videoUrl = getVideoUrl(index);
+        return videoUrl;
+    }
 
     private VideoFrg getCursorFrg() {
         int index = viewPagerView.getCurrentItem();
@@ -178,58 +156,32 @@ public class VideoPlaysManager {
 
 
     //缓存数量等于 frgs 的数量
-    private HashMap<Integer, ExoPlayer> players = new HashMap<>();
-    //缓存数量等于 frgs 的数量
     private HashMap<Integer, String> urlIndexs = new HashMap<>();
 
-    public ExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        //它是  0至 playersMax
-        /*Integer urlIndex = getUrlIndex(videoUrl);
-        if (urlIndex != null) {
-            PlayerLog.d("播放视频", "计划通过url取ExoPlayer urlIndex=" + urlIndex + " videoUrl:" + videoUrl);
-            return getExoPlayer(urlIndex);
-        }*/
+    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
+        int playersMax = getPlayerManager().getPlayersMax();
         int index = pageIndex % playersMax;
         urlIndexs.put(index, videoUrl);
         PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index + " videoUrl:" + videoUrl);
-        ExoPlayer exoPlayer = getExoPlayer(index);
+        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(index);
         return exoPlayer;
     }
 
-    //存在问题（相邻的2个页面之间，播放器释放不及时，有同时持有的情况）
-    private Integer getUrlIndex(String videoUrl) {
-        Set<Integer> keys = urlIndexs.keySet();
-        for (Integer key : keys) {
-            String url = urlIndexs.get(key);
-            if (videoUrl.equals(url)) {
-                return key;
-            }
+    private MorePlayerManager playerManager;
+
+    private MorePlayerManager getPlayerManager() {
+        if (playerManager == null) {
+            playerManager = new MorePlayerManager();
         }
-        return null;
+        return playerManager;
     }
 
-    //清理这个播放器的持有者
-    public void setClearFrgHoldPlayer(ExoPlayer player) {
-        for (int i = 0; i < videoFrgs.size(); i++) {
-            VideoFrg frg = (VideoFrg) videoFrgs.get(i);
-            if (frg == cursorVideoFrg) {
-                continue;
-            }
-            ExoPlayer tempPlayer = frg.getExoPlayer();
-            if (tempPlayer == null) {
-                continue;
-            }
-            if (tempPlayer == player) {
-                frg.setExoPlayerRelease();
-            }
-        }
-    }
 
     //计算持有者数量（排除问题用）
     private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {
         for (int i = 0; i < videoFrgs.size(); i++) {
             VideoFrg frg = (VideoFrg) videoFrgs.get(i);
-            ExoPlayer tempPlayer = frg.getExoPlayer();
+            CustomExoPlayer tempPlayer = frg.getExoPlayer();
             if (tempPlayer == null) {
                 continue;
             }
@@ -251,19 +203,6 @@ public class VideoPlaysManager {
         }
     }
 
-    private ExoPlayer getExoPlayer(Integer frgsIndex) {
-        ExoPlayer player = players.get(frgsIndex);
-        if (player == null) {
-            player = new ExoPlayer.Builder(activity).build();
-            players.put(frgsIndex, player);
-            PlayerLog.d("播放视频", "取ExoPlayer  新增加 frgsIndex=" + frgsIndex);
-        } else {
-            setClearFrgHoldPlayer(player);
-            PlayerLog.d("播放视频", "取ExoPlayer  取缓存：" + frgsIndex);
-        }
-        PlayerLog.d("播放视频", "当前缓存数量 players=" + players.size() + " urlIndexs=" + urlIndexs.size());
-        return player;
-    }
 
     public void onResume() {
         handlerUi.start();
@@ -339,12 +278,6 @@ public class VideoPlaysManager {
         }
     }
 
-    //true 不使用Frg 播放时
-    private boolean isFrgHide = false;
-
-    public void setFrgHide(boolean isFrgHide) {
-        this.isFrgHide = isFrgHide;
-    }
 
     private HandlerUi handlerUi = new HandlerUi();
 
@@ -363,14 +296,8 @@ public class VideoPlaysManager {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    if (!isFrgHide) {
-                        if (cursorVideoFrg != null) {
-                            cursorVideoFrg.setUpdatePlayProgress();
-                        }
-                    } else {
-                        if (activity instanceof OnVideoOperate) {
-                            ((OnVideoOperate) activity).updateVideoPro();
-                        }
+                    if (cursorVideoFrg != null) {
+                        cursorVideoFrg.setUpdatePlayProgress();
                     }
                     sendEmptyMessageDelayed(1, 1 * 1000);
                     break;
