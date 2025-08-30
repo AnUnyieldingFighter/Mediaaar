@@ -9,6 +9,7 @@ import android.view.SurfaceView;
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
+import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
@@ -20,7 +21,10 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
 import androidx.media3.datasource.cache.SimpleCache;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
+import androidx.media3.exoplayer.source.LoadEventInfo;
+import androidx.media3.exoplayer.source.MediaLoadData;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.PlayerControlView;
@@ -61,8 +65,10 @@ public class CustomExoPlayer {
             player = new ExoPlayer.Builder(context).build();
             playerContext = context;
             player.addListener(new ExoPlayerListener());
+            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
             setVideoSurface(surface);
             addListener(listener);
+            addAnalyticsListener(analyticsListener);
         }
     }
 
@@ -84,7 +90,13 @@ public class CustomExoPlayer {
             cachePlayerControlView.setPlayer(null);
         }
         playerView.setPlayer(player);
+
         this.cachePlayerView = playerView;
+    }
+
+    //设置倍数
+    public void setPlaybackSpeed(float speed) {
+        player.setPlaybackSpeed(speed);
     }
 
     @OptIn(markerClass = UnstableApi.class)
@@ -115,10 +127,7 @@ public class CustomExoPlayer {
             return false;
         }
         boolean isPlayReady = player.getPlayWhenReady();
-        if (player.getPlaybackState() == Player.STATE_READY && !isPlayReady) {
-            return true;
-        }
-        return false;
+        return player.getPlaybackState() == Player.STATE_READY && !isPlayReady;
     }
 
     public boolean getPlayWhenReady() {
@@ -191,8 +200,33 @@ public class CustomExoPlayer {
         this.listener = null;
     }
 
+
     public void removeListener(Player.Listener listener) {
+        if (player == null) {
+            return;
+        }
         player.removeListener(listener);
+    }
+
+    AnalyticsListener analyticsListener;
+
+    public void addAnalyticsListener(AnalyticsListener listener) {
+        if (listener == null) {
+            return;
+        }
+        if (player == null) {
+            this.analyticsListener = listener;
+            return;
+        }
+        player.addAnalyticsListener(listener);
+        this.analyticsListener = null;
+    }
+
+    public void removeAnalyticsListener(AnalyticsListener listener) {
+        if (player == null) {
+            return;
+        }
+        player.removeAnalyticsListener(listener);
     }
 
     //当前播放进度
@@ -311,6 +345,7 @@ public class CustomExoPlayer {
         initExoPlayer(context);
         //方式一
         MediaSource mediaSource = getMediaSource();
+        //
         player.setMediaSource(mediaSource);
         //方式二
         /*MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
@@ -319,8 +354,10 @@ public class CustomExoPlayer {
 
     @UnstableApi
     private MediaSource getMediaSource() {
+        //ProgressiveMediaSource 处理数据源 并异步加载
         DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-        MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
+        MediaItem.Builder builder = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl);
+        MediaItem videoItem = builder.build();
         MediaSource mediaSource;
         if (!isUseCache) {
             //默认的  无缓存
@@ -334,8 +371,8 @@ public class CustomExoPlayer {
             CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
                     .setCache(simpleCache)
                     .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(context))
-
-                    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);//缓存出错时自动回退到原始源
+                    //缓存出错时自动回退到原始源
+                    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
             // 高级缓存策略
             //val cacheDataSourceFactory = CacheDataSource.Factory()
             //    .setCache(cache)
@@ -352,6 +389,10 @@ public class CustomExoPlayer {
         return mediaSource;
     }
 
+    //设置字幕
+    private void setSubtitle(MediaItem.Builder builder) {
+        //builder.setSubtitleConfigurations();
+    }
 
     protected long maxBytes = 100 * 1024 * 1024;//100M
     @UnstableApi
@@ -366,12 +407,9 @@ public class CustomExoPlayer {
         simpleCacheFile = getCacheFile();
         SimpleCache simpleCache;
         if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(),
-                    new StandaloneDatabaseProvider(context));
+            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(context));
         } else {
-            simpleCache = new SimpleCache(simpleCacheFile,
-                    new LeastRecentlyUsedCacheEvictor(maxBytes),
-                    new StandaloneDatabaseProvider(context));
+            simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(context));
 
         }
         return simpleCache;
@@ -491,7 +529,7 @@ public class CustomExoPlayer {
     }
 
     //
-    private String tag = "播放器_CustomExoPlayer_";
+    private final String tag = "播放器_CustomExoPlayer_";
 
     class ExoPlayerListener implements Player.Listener {
 
@@ -578,6 +616,29 @@ public class CustomExoPlayer {
                     break;
             }
         }
-
     }
+
+    @UnstableApi
+    class ExoPlayerAnalyticsListener implements AnalyticsListener {
+        @Override
+        public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo,
+                                    MediaLoadData mediaLoadData) {
+            AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
+            // 记录下载速度
+            long speedKbps = loadEventInfo.bytesLoaded * 8 / (loadEventInfo.loadDurationMs * 1000);
+            PlayerLog.d(tag, "下载速度:  " + speedKbps + "kbps");
+
+        }
+
+        @Override
+        public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
+            AnalyticsListener.super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate);
+        }
+
+        @Override
+        public void onPlaybackStateChanged(EventTime eventTime, int state) {
+            // PlayerLog.d(tag, "playbackState： " + state + "kbps");
+        }
+    }
+
 }
