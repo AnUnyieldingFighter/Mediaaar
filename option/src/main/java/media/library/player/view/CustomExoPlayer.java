@@ -20,9 +20,12 @@ import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
 import androidx.media3.datasource.cache.SimpleCache;
+import androidx.media3.datasource.rtmp.RtmpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.LoadEventInfo;
 import androidx.media3.exoplayer.source.MediaLoadData;
 import androidx.media3.exoplayer.source.MediaSource;
@@ -94,7 +97,7 @@ public class CustomExoPlayer {
         this.cachePlayerView = playerView;
     }
 
-    //设置倍数
+    //设置倍数 大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
     public void setPlaybackSpeed(float speed) {
         player.setPlaybackSpeed(speed);
     }
@@ -354,37 +357,68 @@ public class CustomExoPlayer {
 
     @UnstableApi
     private MediaSource getMediaSource() {
+       /* if (videoUrl.endsWith("m3u8")) {
+            // hls链接
+        } else if (videoUrl.startsWith("rtsp")) {
+            // rtsp链接
+        } else if (videoUrl.startsWith("rtmp")) {
+            // rtmp链接
+        } else {
+        }*/
+        return getMediaSource("");
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    private MediaSource getMediaSource(String type) {
         //ProgressiveMediaSource 处理数据源 并异步加载
-        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-        MediaItem.Builder builder = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl);
+        MediaItem.Builder builder = new MediaItem.Builder()
+                .setUri(videoUrl)
+                .setMediaId(videoUrl);
+        //字幕
+        //setSubtitle(builder);
         MediaItem videoItem = builder.build();
         MediaSource mediaSource;
-        if (!isUseCache) {
-            //默认的  无缓存
-            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
-            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                    .createMediaSource(videoItem);
-        } else {
-            //构建缓存
-            simpleCache = createSimpleCache();
-            CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
-                    .setCache(simpleCache)
-                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(context))
-                    //缓存出错时自动回退到原始源
-                    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-            // 高级缓存策略
-            //val cacheDataSourceFactory = CacheDataSource.Factory()
-            //    .setCache(cache)
-            //    .setUpstreamDataSourceFactory(httpDataSourceFactory)
-            //    .setCacheWriteDataSinkFactory(
-            //        CacheDataSink.Factory()
-            //            .setFragmentSize(8 * 1024 * 1024) // 8MB分片
-            //    )
-            //    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE or CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                    .createMediaSource(videoItem);
+        switch (type) {
+            case "m3u8":
+                // hls链接
+                DataSource.Factory factory = new DefaultDataSource.Factory(context);
+                mediaSource = new HlsMediaSource.Factory(factory)
+                        .createMediaSource(videoItem);
+                break;
+            case "rtsp":
+                // rtsp链接
+                mediaSource = new RtspMediaSource.Factory()
+                        .createMediaSource(videoItem);
+                break;
+            case "rtmp":
+                // rtmp链接
+                mediaSource = new ProgressiveMediaSource
+                        .Factory(new RtmpDataSource.Factory())
+                        .createMediaSource(videoItem);
+                break;
+            default:
+                DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
+                // 其他链接（http开头或https开头的普通视频链接）
+                if (!isUseCache) {
+                    //默认的  无缓存
+                    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
+                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                            .createMediaSource(videoItem);
+                } else {
+                    //构建缓存
+                    simpleCache = createSimpleCache();
+                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
+                            .setCache(simpleCache)
+                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(context))
+                            //缓存出错时自动回退到原始源
+                            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+                    //
+                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                            .createMediaSource(videoItem);
+                }
+                break;
         }
         return mediaSource;
     }

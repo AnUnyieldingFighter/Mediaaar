@@ -51,10 +51,15 @@ dependencies {
     //
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     //视频
-    api("androidx.media3:media3-exoplayer:1.7.1")
-    api("androidx.media3:media3-exoplayer-dash:1.7.1")
-    api("androidx.media3:media3-ui:1.7.1")
-    api("androidx.media3:media3-ui-compose:1.7.1")
+    api("androidx.media3:media3-exoplayer:1.8.0")
+    api("androidx.media3:media3-exoplayer-dash:1.8.0")
+    api("androidx.media3:media3-ui:1.8.0")
+    api("androidx.media3:media3-ui-compose:1.8.0")
+    //视频解码
+    implementation 'androidx.media3:media3-exoplayer-hls:1.8.0'
+    implementation 'androidx.media3:media3-exoplayer-rtsp:1.8.0'
+    implementation 'androidx.media3:media3-datasource-rtmp:1.8.0'
+
 }
 afterEvaluate {
     publishing {
