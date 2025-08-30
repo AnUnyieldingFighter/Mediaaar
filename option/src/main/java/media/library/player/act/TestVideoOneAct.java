@@ -18,6 +18,8 @@ package media.library.player.act;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
@@ -25,8 +27,10 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.ui.PlayerView;
 
 import com.images.imageselect.R;
+
 import media.library.player.bean.TestVideoUrl;
 import media.library.player.manager.ExoPlayerManager;
+import media.library.player.view.CustomExoPlayer;
 
 
 public final class TestVideoOneAct extends Activity {
@@ -34,6 +38,8 @@ public final class TestVideoOneAct extends Activity {
     private static final String TAG = "MainActivity";
 
     private PlayerView playerView;
+    private TextView tvRed;
+
 
     @OptIn(markerClass = UnstableApi.class)
     @Override
@@ -41,6 +47,14 @@ public final class TestVideoOneAct extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_test_video_one);
         playerView = findViewById(R.id.play_view);
+        tvRed = findViewById(R.id.tv_red);
+        tvRed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CustomExoPlayer exoPlayer = ExoPlayerManager.getInstance().getExoPlayer();
+                exoPlayer.readData();
+            }
+        });
     }
 
     @Override

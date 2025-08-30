@@ -37,17 +37,17 @@
         android:id="@+id/play_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:controller_layout_id="@layout/exo_player_control_view"
-        app:player_layout_id="@layout/layout_video_loading"
-        app:repeat_toggle_modes="all|one"
-        app:show_buffering="always"
-
         app:buffered_color="#ff0"
+        app:controller_layout_id="@layout/exo_player_control_view"
         app:played_color="#ff00"
-        app:scrubber_color="#333"
-        app:unplayed_color="#3300"
+        app:player_layout_id="@layout/layout_video_loading"
 
+        app:repeat_toggle_modes="all|one"
+        app:scrubber_color="#333"
+        app:show_buffering="always"
         app:show_shuffle_button="true"
+
+        app:unplayed_color="#3300"
         tools:ignore="ResourceCycle" />
     <!--controller_layout_id 控制器-->
     <!--player_layout_id 加载视图-->
@@ -63,4 +63,13 @@
         app:scrubber_color="#333" 进度条按钮颜色
         app:unplayed_color="#3300" 进度条底层色
         -->
+    <TextView
+        android:id="@+id/tv_red"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="50dp"
+        android:background="#9999"
+        android:gravity="center"
+        android:text="读取信息"
+        android:textColor="#333" />
 </FrameLayout>

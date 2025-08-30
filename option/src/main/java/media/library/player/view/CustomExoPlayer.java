@@ -10,9 +10,7 @@ import android.view.SurfaceView;
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
-import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
@@ -60,6 +58,7 @@ public class CustomExoPlayer {
     private Context playerContext;
     private boolean isInit = false;
 
+    @OptIn(markerClass = UnstableApi.class)
     public void initExoPlayer(Context context) {
         isInit = true;
         if (player != null && playerContext != null && playerContext != context) {
@@ -375,16 +374,17 @@ public class CustomExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     private MediaSource getMediaSource(String type) {
-        //媒体元数据描述
-        MediaMetadata mediaMetadata = new MediaMetadata.Builder()
-                .setTitle("设置标题")
+        //媒体元数据描述 不知道用法
+        /*MediaMetadata mediaMetadata = new MediaMetadata.Builder()
                 .setTitle("示例标题")
                 .setArtist("示例艺术家")
+                .setSubtitle("小标题")
+                .setDescription("描述")
                 .setAlbumTitle("示例专辑")
                 .setArtworkUri(Uri.parse(img1))
-                .build();
+                .build();*/
         MediaItem.Builder builder = new MediaItem.Builder()
-                .setMediaMetadata(mediaMetadata)
+                //.setMediaMetadata(mediaMetadata)
                 //.setMimeType(MimeTypes.VIDEO_MP4)
                 .setUri(videoUrl)
                 .setMediaId(videoUrl);
@@ -566,6 +566,30 @@ public class CustomExoPlayer {
             cachePlayerView.setPlayer(null);
             cachePlayerView = null;
         }
+    }
+
+    //读取信息 test
+    @OptIn(markerClass = UnstableApi.class)
+    public void readData() {
+        if (player == null) {
+            return;
+        }
+        MediaItem mediaItem = player.getCurrentMediaItem();
+        String mediaId = "";
+        if (mediaItem != null) {
+            mediaId = mediaItem.mediaId;
+            MediaMetadata mediaMetadata = mediaItem.mediaMetadata;
+            String str = "";
+            if (mediaMetadata != null) {
+
+                str = mediaMetadata.title + "-" + mediaMetadata.albumTitle + "-" +
+                        mediaMetadata.subtitle+"-"+mediaMetadata.description+"-"
+                        +mediaMetadata.artworkUri;
+            }
+            PlayerLog.d("视频播放Url", "当前播放地址 mediaId："
+                    + mediaId + " str:" + str);
+        }
+
     }
 
     //=====================更新数据库数据==============================================
