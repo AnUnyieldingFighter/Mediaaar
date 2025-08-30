@@ -3,7 +3,7 @@ package media.library.player.bean;
 import java.util.ArrayList;
 
 public class TestVideoUrl {
-    public String video1 = "https://st.92kk.com/2021/%E8%BD%A6%E8%BD%BD%E8%A7%86%E9%A2%91/202110/20210916/[Mp4]%E4%B8%A4%E4%B8%AA%E4%B8%96%E7%95%8C-%E8%BD%A6%E8%BD%BD%E5%A4%9C%E5%BA%97%E9%9F%B3%E4%B9%90DJ%E8%A7%86%E9%A2%91[%E7%8B%AC].mp4";
+    public String video1="https://vdept3.bdstatic.com/mda-pjh4avrz2rge3vy8/360p/h264/1697598240278802920/mda-pjh4avrz2rge3vy8.mp4?v_from_s=hkapp-haokan-nanjing&auth_key=1756548002-0-0-c030e626b2ed6d131d5d036593a87f76&bcevod_channel=searchbox_feed&pd=1&cr=0&cd=0&pt=3&logid=0002906616&vid=9164001368238016104&klogid=0002906616&abtest=";
     public String video2 = "https://nbc.vtnbo.com/nbc-file/file/video/beta/17484063665794360.mp4";
     public String video3 = "http://10.168.3.102:5233/chfs/shared/nbc-apk/test1.mp4";
 

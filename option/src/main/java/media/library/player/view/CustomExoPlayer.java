@@ -2,12 +2,15 @@ package media.library.player.view;
 
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceView;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
@@ -368,10 +371,21 @@ public class CustomExoPlayer {
         return getMediaSource("");
     }
 
+    private String img1 = "https://img0.baidu.com/it/u=3404601552,3434841255&fm=253&app=138&f=JPEG?w=800&h=1200";
+
     @OptIn(markerClass = UnstableApi.class)
     private MediaSource getMediaSource(String type) {
-        //ProgressiveMediaSource 处理数据源 并异步加载
+        //媒体元数据描述
+        MediaMetadata mediaMetadata = new MediaMetadata.Builder()
+                .setTitle("设置标题")
+                .setTitle("示例标题")
+                .setArtist("示例艺术家")
+                .setAlbumTitle("示例专辑")
+                .setArtworkUri(Uri.parse(img1))
+                .build();
         MediaItem.Builder builder = new MediaItem.Builder()
+                .setMediaMetadata(mediaMetadata)
+                //.setMimeType(MimeTypes.VIDEO_MP4)
                 .setUri(videoUrl)
                 .setMediaId(videoUrl);
         //字幕
@@ -397,6 +411,8 @@ public class CustomExoPlayer {
                         .createMediaSource(videoItem);
                 break;
             default:
+                //ProgressiveMediaSource 处理数据源 并异步加载
+
                 DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
                 // 其他链接（http开头或https开头的普通视频链接）
                 if (!isUseCache) {
