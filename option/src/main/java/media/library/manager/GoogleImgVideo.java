@@ -19,6 +19,8 @@ import media.library.images.config.entity.MediaEntity;
 import media.library.images.manager.MediaManager;
 import media.library.images.unmix.ImageLog;
 
+//android 10 (api 29) 以下（含）要授权（储存卡权限 READ_EXTERNAL_STORAGE）
+//11,12 没有测试，13不用
 public class GoogleImgVideo {
     private static GoogleImgVideo manager;
 

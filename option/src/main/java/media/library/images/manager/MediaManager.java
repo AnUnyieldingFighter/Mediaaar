@@ -89,9 +89,9 @@ public class MediaManager {
         boolean isFirst = cursor.moveToFirst();
         ImageLog.d(
                 "google图片选择器", "地址---》"
-                        + " cursor isLast:" + cursor.isLast()
+                        + " 是最后一个:" + cursor.isLast()
                         + " 数量:" + count + " isFirst"
-                        + " 移动到第一个:" + isFirst
+                        + " 移动到第一个:" + isFirst+" 是第一个："
                         + cursor.isFirst());
         if (count == 0) {
             return null;
