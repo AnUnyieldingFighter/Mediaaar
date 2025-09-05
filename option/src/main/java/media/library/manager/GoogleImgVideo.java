@@ -85,9 +85,12 @@ public class GoogleImgVideo {
         ArrayList<MediaEntity> res = new ArrayList();
         for (int i = 0; i < uris.size(); i++) {
             Uri uri = uris.get(i);
-            //int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
-            //context.getContentResolver().takePersistableUriPermission(uri, flag);
-
+            try {
+                int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                context.getContentResolver().takePersistableUriPermission(uri, flag);
+            } catch (Exception e) {
+                ImageLog.d("google图片选择器", "延长授权时间失败");
+            }
             MediaEntity video = MediaManager.getInstance().getImg(uri, context);
             if (video == null) {
                 continue;

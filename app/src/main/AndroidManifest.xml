@@ -61,10 +61,12 @@
             android:name="com.images.ui.activity.PdfActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:theme="@style/DialogTheme"
             android:name="com.images.ui.activity.google.GoogleActivity"
             android:screenOrientation="portrait" />
-
+        <activity
+            android:theme="@style/DialogTheme"
+            android:name="com.images.ui.activity.google.GoogleOptActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
