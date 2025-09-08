@@ -2,6 +2,7 @@ package media.library.images.manager;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
@@ -78,7 +79,29 @@ public class MediaManager {
 
     };
 
-    //不需要权限
+    /**
+     * 通过 uri 获取到 MediaEntity （并且给 uri授临时读取权限）
+     *
+     * @param uri
+     * @param context
+     * @return
+     */
+    public MediaEntity getUriToMedia(Uri uri, Context context) {
+        try {
+            int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+            context.getContentResolver().takePersistableUriPermission(uri, flag);
+        } catch (Exception e) {
+            ImageLog.d("授权失败：" + e.getMessage());
+        }
+        return getImg(uri, context);
+    }
+
+    /**
+     * 通过 uri 获取到 MediaEntity
+     * @param uri
+     * @param context
+     * @return
+     */
     public MediaEntity getImg(Uri uri, Context context) {
         //
         Cursor cursor = getCursorImg(uri, context);
@@ -91,7 +114,7 @@ public class MediaManager {
                 "google图片选择器", "地址---》"
                         + " 是最后一个:" + cursor.isLast()
                         + " 数量:" + count + " isFirst"
-                        + " 移动到第一个:" + isFirst+" 是第一个："
+                        + " 移动到第一个:" + isFirst + " 是第一个："
                         + cursor.isFirst());
         if (count == 0) {
             return null;

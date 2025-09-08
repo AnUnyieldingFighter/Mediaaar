@@ -63,8 +63,12 @@
         <activity
             android:name="com.images.ui.activity.google.GoogleActivity"
             android:screenOrientation="portrait" />
-        <activity
+      <!--  <activity
             android:theme="@style/DialogTheme"
+            android:name="com.images.ui.activity.google.GoogleOptActivity"
+            android:screenOrientation="portrait" />-->
+        <activity
+            android:theme="@style/TransparentTheme"
             android:name="com.images.ui.activity.google.GoogleOptActivity"
             android:screenOrientation="portrait" />
     </application>
