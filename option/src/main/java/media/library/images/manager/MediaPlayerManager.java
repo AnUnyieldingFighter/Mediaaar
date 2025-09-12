@@ -125,8 +125,17 @@ public class MediaPlayerManager {
      * @return
      */
     public static VideoDataBean getVideoDataNS(int time, String videoPath) {
-        long timeUs = time * 1000000;
-        return getVideoData(timeUs, videoPath);
+        long timeUs = time * 1000;
+        return getVideoDataHS(timeUs, videoPath);
+    }
+
+    /**
+     * @param time      毫秒
+     * @param videoPath
+     * @return
+     */
+    public static VideoDataBean getVideoDataHS(long time, String videoPath) {
+        return getVideoData(time, videoPath);
     }
 
     /**
@@ -139,18 +148,30 @@ public class MediaPlayerManager {
     public static VideoDataBean getVideoData(long timeUs, String videoPath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
-            retriever.setDataSource(videoPath); // 设置数据源路径
-            // 获取第一帧图像，参数为时间微秒，这里设置为1秒处的帧
+            // 设置数据源路径
+            retriever.setDataSource(videoPath);
+
             Bitmap bitmap = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
             String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
             String width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
             String height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+            String rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+
             retriever.release(); // 释放资源
             VideoDataBean videoData = new VideoDataBean();
             videoData.videoBitmap = bitmap;
+            videoData.rotation = rotation;
             videoData.time = time;
             videoData.width = width;
             videoData.height = height;
+            // 根据旋转角度调整宽高（如果需要）
+            if ("90".equals(rotation) || "270".equals(rotation)) {
+                videoData.realWidth = height;
+                videoData.realHeight = width;
+            } else {
+                videoData.realWidth = width;
+                videoData.realHeight = height;
+            }
             return videoData;
         } catch (IllegalArgumentException ex) {
             // 处理异常，例如文件路径无效等。
