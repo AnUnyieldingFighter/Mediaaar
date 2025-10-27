@@ -21,7 +21,9 @@ import media.library.images.manager.MediaManager;
 import media.library.images.unmix.ImageLog;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Created by guom on 2016/10/18.
@@ -47,6 +49,22 @@ public class PhotoUtil {
         Intent cameraIntent = getCameraActionIntent(activity);
         if (cameraIntent == null) {
             return;
+        }
+        activity.startActivityForResult(cameraIntent, REQUEST_CAMERA);
+    }
+
+    public static void showCameraAction(Activity activity, HashMap<String, String> map) {
+        Intent cameraIntent = getCameraActionIntent(activity);
+        if (cameraIntent == null) {
+            return;
+        }
+        if (map != null && map.size() > 0) {
+            for (HashMap.Entry<String, String> entry : map.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                cameraIntent.putExtra(key, value);
+            }
+
         }
         activity.startActivityForResult(cameraIntent, REQUEST_CAMERA);
     }
@@ -85,7 +103,8 @@ public class PhotoUtil {
             ImageLog.d("url", uri.toString());
             cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
-            cameraIntent.putExtra(MediaStore.Images.Media.ORIENTATION, 0);
+            //设置拍摄角度
+            //cameraIntent.putExtra(MediaStore.Images.Media.ORIENTATION, 0);
             //
         } else {
             Toast.makeText(activity, "No system camera found", Toast.LENGTH_SHORT).show();

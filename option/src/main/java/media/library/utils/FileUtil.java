@@ -14,6 +14,13 @@ import java.util.Locale;
 import static android.os.Environment.getExternalStorageDirectory;
 
 /**
+ * Environment.getDataDirectory():      /data
+ * Context.getCacheDir():               /data/data/com.learn.test/cache
+ * Context.getFilesDir():               /data/data/com.learn.test/files
+ *
+ * Context.getExternalFilesDir()：SDCard/Android/data/你的应用的包名/files/
+ * Context.getExternalCacheDir()：SDCard/Android/data/你的应用包名/cache/
+
  * Created by guom on 2016/10/17.
  */
 public class FileUtil {
