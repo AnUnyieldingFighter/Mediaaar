@@ -37,7 +37,7 @@
         android:layout_marginTop="1dp"
         android:background="#fff"
         android:gravity="center"
-        android:text="视频播放测试"
+        android:text="视频播放测试(一个)"
         android:textColor="#181818"
         android:textSize="15dp" />
     <TextView

@@ -61,7 +61,7 @@ public final class TestVideoOneAct extends Activity {
     protected void onResume() {
         super.onResume();
         if (ExoPlayerManager.getInstance().getExoPlayer() == null) {
-            String url = new TestVideoUrl().video1;
+            String url = new TestVideoUrl().video4;
             //Uri uri = Uri.parse(new TestVideoUrl().video1);
             ExoPlayerManager.getInstance()
                     .initExoPlayer(this)
