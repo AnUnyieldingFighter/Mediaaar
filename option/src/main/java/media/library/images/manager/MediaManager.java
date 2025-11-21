@@ -98,6 +98,7 @@ public class MediaManager {
 
     /**
      * 通过 uri 获取到 MediaEntity
+     *
      * @param uri
      * @param context
      * @return
@@ -105,6 +106,9 @@ public class MediaManager {
     public MediaEntity getImg(Uri uri, Context context) {
         //
         Cursor cursor = getCursorImg(uri, context);
+        if (cursor == null || cursor.getCount() == 0) {
+            cursor = getCursorImgAgain(uri, context);
+        }
         if (cursor == null) {
             return null;
         }
@@ -124,12 +128,28 @@ public class MediaManager {
             image = readCursor2(cursor);
             ImageLog.d("google图片选择器", image.toString());
         } catch (Exception e) {
-            ImageLog.d("google图片选择器", e.getMessage());
+            ImageLog.d("google图片选择器", "错误：" + e.getMessage());
         } finally {
             cursor.close();
         }
         return image;
 
+    }
+
+    //content://com.android.providers.media.documents/document/image%3A1162
+    //再读取一遍(华为手机 ：非本应用排的照，上面的方法读取不到照片信息)
+    //这个方法只能读取到少量的信息
+    //column '_data' does not exist.  Available columns:
+    // [document_id, mime_type, _display_name, last_modified, flags, _size]
+    private Cursor getCursorImgAgain(Uri uri, Context context) {
+        Cursor cursor = context.getContentResolver().query(uri, null,
+                null, null, null);
+        int count = 0;
+        if (cursor != null) {
+            count = cursor.getCount();
+        }
+        ImageLog.d("google图片选择器", "再读取一遍：count=" + count);
+        return cursor;
     }
 
     private Cursor getCursorImg(Uri uri, Context context) {
