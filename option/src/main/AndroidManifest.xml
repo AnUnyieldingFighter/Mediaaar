@@ -25,24 +25,24 @@
 
         <!--视频相关-->
         <activity
-            android:name="media.library.player.act.TestVideoAct2"
+            android:name="media.library.player.vido1.act.TestVideoAct2"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
-            android:name="media.library.player.act.TestVideoAct"
+            android:name="media.library.player.vido1.act.TestVideoAct"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
-            android:name="media.library.player.act.TestVideoOneAct"
+            android:name="media.library.player.vido1.act.TestVideoOneAct"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
         <activity
-            android:name="media.library.player.act.TestVideoStartAct"
+            android:name="media.library.player.vido1.act.TestVideoStartAct"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi" />
 
         <activity
-            android:name="media.library.player.act.TestVideoPlaysAct"
+            android:name="media.library.player.vido1.act.TestVideoPlaysAct"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,MissingClass" />
         <!--视频相关结束-->

@@ -1,4 +1,4 @@
-package media.library.player.adapter;
+package media.library.player.vido1.adapter;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import java.util.ArrayList;
 
-import media.library.player.frg.VideoBaseFrg;
+import media.library.player.vido1.frg.VideoBaseFrg;
 
 public class VideoPagerAdapter2 extends FragmentStateAdapter {
     private ArrayList<VideoBaseFrg> frgs = new ArrayList<>();

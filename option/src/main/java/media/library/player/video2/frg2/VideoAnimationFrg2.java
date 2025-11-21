@@ -1,4 +1,4 @@
-package media.library.player.frg;
+package media.library.player.video2.frg2;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -11,11 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.ui.AspectRatioFrameLayout;
-
 import media.library.player.manager.PlayerLog;
 
 //动画
-public class VideoAnimationFrg extends VideoFrg {
+public class VideoAnimationFrg2 extends VideoFrg1 {
 
     //============================动画开始==========================================
     private int totaltHeight, totaltWidth;
@@ -28,6 +27,8 @@ public class VideoAnimationFrg extends VideoFrg {
         return isSmall;
     }
 
+    protected View rlVideoView;
+
     //修正为响应横屏动画UI
     protected void updateHorizontalView(View viewHorizontal, int tagHeight) {
         if (isVideoHorizontalScreen && viewTypeAnimation == 2) {
@@ -37,7 +38,7 @@ public class VideoAnimationFrg extends VideoFrg {
                 tagViewHeight = tagHeight;
             }
             this.tagView = viewHorizontal;
-            updateZoomVideoHorizontal(1, false);
+            updateZoomVideoHorizontal2(1, false);
 
         }
     }
@@ -71,7 +72,7 @@ public class VideoAnimationFrg extends VideoFrg {
 
     //横屏动画 要展开和收缩的view
     private View tagView;
-    private int tagViewHeight;
+    private int tagViewHeight, fixedViewHeight;
 
     //设置横屏动画 tagView：要变化的view
     protected void setHorizontalScreen(View view, View tagView) {
@@ -81,6 +82,17 @@ public class VideoAnimationFrg extends VideoFrg {
         }
         tagViewHeight = tagView.getHeight();
         this.tagView = tagView;
+        animationViewVisible(view);
+    }
+
+    protected void setHorizontalScreen(View view, int tagViewHeight, int fixedViewHeight) {
+        if (isSmall) {
+            animationViewInVisible(view);
+            return;
+        }
+        this.tagViewHeight = tagViewHeight;
+        this.fixedViewHeight = fixedViewHeight;
+        this.tagView = null;
         animationViewVisible(view);
     }
 
@@ -171,7 +183,7 @@ public class VideoAnimationFrg extends VideoFrg {
         }
         if (isVideoHorizontalScreen) {
             viewTypeAnimation = 1;
-            updateZoomVideoHorizontal(ratio, isExpand);
+            updateZoomVideoHorizontal2(ratio, isExpand);
         } else {
             viewTypeAnimation = 2;
             updateZoomVideoVertical(ratio, isExpand);
@@ -179,38 +191,34 @@ public class VideoAnimationFrg extends VideoFrg {
 
     }
 
+
     //横屏偏移 isExpand true 展开 false 收缩
     @OptIn(markerClass = UnstableApi.class)
-    private void updateZoomVideoHorizontal(float ratio, boolean isExpand) {
-        if (tagView == null) {
-            return;
-        }
-        if (tagView.getVisibility() != View.VISIBLE) {
-            return;
-        }
-        ViewGroup.LayoutParams params = tagView.getLayoutParams();
+    private void updateZoomVideoHorizontal2(float ratio, boolean isExpand) {
+        ViewGroup.LayoutParams params = rlVideoView.getLayoutParams();
+        RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) params;
         //高度总共缩小
-        int temp = tagViewHeight / 2;
-        float newHeight = temp * ratio;
+        int temp = tagViewHeight;
+        float newHeight = (temp * ratio);
         if (isExpand) {
-            int h = temp + (int) newHeight;
-            if (h > tagViewHeight) {
-                h = tagViewHeight;
+            int top = rlp.topMargin;
+            int h = top + (int) newHeight;
+            if (h > fixedViewHeight) {
+                h = fixedViewHeight;
             }
-            params.height = h;
+            rlp.topMargin = h;
         } else {
-            int h = tagViewHeight - (int) newHeight;
-            if (h < temp) {
-                h = temp;
+            int top = fixedViewHeight;
+            int h = top - (int) newHeight;
+            if (h < 0) {
+                h = 0;
             }
-            params.height = h;
+            rlp.topMargin = h;
         }
-        tagView.setLayoutParams(params);
+        rlVideoView.setLayoutParams(rlp);
     }
 
-
     //竖屏缩放 isExpand true 展开 false 收缩
-
     @OptIn(markerClass = UnstableApi.class)
     private void updateZoomVideoVertical(float ratio, boolean isExpand) {
         int tempHeight = tagHeight + deviateHeight;
@@ -264,14 +272,14 @@ public class VideoAnimationFrg extends VideoFrg {
             case 1:
                 //收缩动画
                 if (isStart) {
-                    videoOperate.setViewPageSlide(false);
+                    videoOperate2.setViewPageSlide(false);
                 }
                 break;
             case 2:
                 //展开动画
                 if (isEnd) {
                     viewTypeAnimation = 0;
-                    videoOperate.setViewPageSlide(true);
+                    videoOperate2.setViewPageSlide(true);
                 }
                 break;
         }

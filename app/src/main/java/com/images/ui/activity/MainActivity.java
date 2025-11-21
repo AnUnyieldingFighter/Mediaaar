@@ -15,7 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import media.library.images.config.entity.MediaEntity;
-import media.library.player.act.TestVideoStartAct;
+import media.library.player.vido1.act.TestVideoStartAct;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 

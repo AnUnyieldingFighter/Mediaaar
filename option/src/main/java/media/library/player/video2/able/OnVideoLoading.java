@@ -1,10 +1,10 @@
-package media.library.player.able;
+package media.library.player.video2.able;
 
 
 
 import java.util.ArrayList;
 
-import media.library.player.frg2.VideoBaseFrg0;
+import media.library.player.video2.frg2.VideoBaseFrg0;
 
 public interface OnVideoLoading {
 

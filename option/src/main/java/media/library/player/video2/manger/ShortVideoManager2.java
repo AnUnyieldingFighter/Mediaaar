@@ -1,42 +1,32 @@
-package media.library.player.manager;
+package media.library.player.video2.manger;
 
 import android.os.Handler;
 import android.os.Message;
 
+
+import java.util.ArrayList;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
 import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import media.library.player.adapter.VideoPagerAdapter2;
-import media.library.player.bean.TestVideoUrl;
-import media.library.player.frg.VideoBaseFrg;
-import media.library.player.frg.VideoFrg;
+import media.library.player.manager.MorePlayerManager;
+import media.library.player.manager.PlayerLog;
+import media.library.player.video2.able.OnVideoLoading;
+import media.library.player.video2.adapter.VideoPagerAdapter3;
+import media.library.player.video2.frg2.VideoBaseFrg0;
+import media.library.player.video2.frg2.VideoFrg1;
 import media.library.player.view.CustomExoPlayer;
 
 //短视频播放管理类
-public class ShortVideoManager {
+public class ShortVideoManager2 {
     private AppCompatActivity activity;
+    private Fragment fragment;
 
-    public void setData(ArrayList<VideoBaseFrg> videoFrgs, ArrayList<String> urls) {
-        this.videoFrgs = videoFrgs;
-        this.urls = urls;
-    }
-
-    public void setPageMax(int pageMax) {
-        this.pageMax = pageMax;
-    }
-
-    public void setPageCurrentItem(int pageCurrentItem) {
-        this.pageCurrentItem = pageCurrentItem;
-
-    }
 
     public void setView(AppCompatActivity activity, ViewPager2 viewPagerView) {
         this.activity = activity;
@@ -44,28 +34,34 @@ public class ShortVideoManager {
         setClick();
     }
 
+    public void setView(Fragment fragment, ViewPager2 viewPagerView) {
+        this.fragment = fragment;
+        initView(viewPagerView);
+        setClick();
+    }
+
     private ViewPager2 viewPagerView;
-    private VideoPagerAdapter2 adapter;
-    private ArrayList<VideoBaseFrg> videoFrgs;
-    private ArrayList<String> urls;
-    private VideoFrg cursorVideoFrg;
+    private VideoPagerAdapter3 adapter;
+    private VideoBaseFrg0 cursorVideoFrg;
     private OnPageChange onPageChange;
 
 
-    //page页数量0阈值，超过这个值 将显示无限
-    private int pageMax = 5;
     //初始化时跳转的页面
     private int pageCurrentItem = 0;
 
     protected void initView(ViewPager2 viewPagerView) {
         this.viewPagerView = viewPagerView;
-        adapter = new VideoPagerAdapter2(activity, pageMax);
-        viewPagerView.setAdapter(adapter);
-        //videoFrgs = getFrgs();
-        if (videoFrgs == null) {
-            videoFrgs = getFrgs2();
+        if (activity == null && fragment == null) {
+            return;
         }
-        adapter.setFrgs(videoFrgs);
+        ArrayList<VideoBaseFrg0> frgs = getFrgs();
+        if (activity != null) {
+            adapter = new VideoPagerAdapter3(activity, frgs.size());
+        } else if (fragment != null) {
+            adapter = new VideoPagerAdapter3(fragment, frgs.size());
+        }
+        viewPagerView.setAdapter(adapter);
+        adapter.setFrgs(frgs);
         //设置为1时 显示第五个页面时 才销毁第第一个
         viewPagerView.setOffscreenPageLimit(1);
         onPageChange = new OnPageChange();
@@ -73,11 +69,27 @@ public class ShortVideoManager {
             viewPagerView.setCurrentItem(pageCurrentItem, false);
         }
         if (pageCurrentItem >= 0) {
-            cursorVideoFrg = (VideoFrg) videoFrgs.get(pageCurrentItem);
+            cursorVideoFrg = adapter.getIndexAtFrg(pageCurrentItem);
         }
     }
 
-    public VideoFrg getCursorVideoFrg() {
+    //跳转指定页面，并且获取对象
+    public VideoBaseFrg0 setPageCurrentItem0() {
+        int currentItem = viewPagerView.getCurrentItem();
+        if (currentItem != 0) {
+            //调用暂停
+            getCursorFrg().setVideoPause();
+        }
+        viewPagerView.setCurrentItem(0, false);
+        VideoBaseFrg0 videoFrg = adapter.getIndexAtFrg(0);
+        return videoFrg;
+    }
+
+    public void setUpdateDataSize(int dataSzie) {
+        adapter.setDataSize(dataSzie);
+    }
+
+    public VideoBaseFrg0 getCursorVideoFrg() {
         return cursorVideoFrg;
     }
 
@@ -91,37 +103,22 @@ public class ShortVideoManager {
         }
     }
 
-    private ArrayList<VideoBaseFrg> getFrgs2() {
-        ArrayList<VideoBaseFrg> frgs = new ArrayList<>();
-        frgs.add(VideoFrg.newInstance(0, getVideoUrl(0)));
-        frgs.add(VideoFrg.newInstance(1, getVideoUrl(1)));
-        frgs.add(VideoFrg.newInstance(2, getVideoUrl(2)));
-        frgs.add(VideoFrg.newInstance(3, getVideoUrl(3)));
-        frgs.add(VideoFrg.newInstance(4, getVideoUrl(4)));
-        frgs.add(VideoFrg.newInstance(5, getVideoUrl(5)));
-        frgs.add(VideoFrg.newInstance(6, getVideoUrl(6)));
-        return frgs;
-    }
-
-    private ArrayList<VideoBaseFrg> getFrgs() {
-        ArrayList<VideoBaseFrg> frgs = new ArrayList<>();
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        frgs.add(new VideoFrg());
-        return frgs;
-    }
-
-    public String getVideoUrl(int index) {
-        if (urls == null) {
-            urls = new TestVideoUrl().buildTestVideoUrls();
+    //设置7个页面
+    private ArrayList<VideoBaseFrg0> getFrgs() {
+        if (onVideoLoading != null) {
+            return onVideoLoading.getPages();
         }
-        int pos = index % urls.size();
-        return urls.get(pos);
+        ArrayList<VideoBaseFrg0> frgs = new ArrayList<>();
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        frgs.add(new VideoFrg1());
+        return frgs;
     }
+
 
     protected void setClick() {
         viewPagerView.registerOnPageChangeCallback(onPageChange);
@@ -137,32 +134,21 @@ public class ShortVideoManager {
         return index;
     }
 
-    public String getResumeVideoUrl() {
-        int index = viewPagerView.getCurrentItem();
-        String videoUrl = getVideoUrl(index);
-        return videoUrl;
-    }
 
-    private VideoFrg getCursorFrg() {
+    private VideoBaseFrg0 getCursorFrg() {
         int index = viewPagerView.getCurrentItem();
         return getCursorFrg(index);
     }
 
-    private VideoFrg getCursorFrg(int index) {
-        int pos = index % videoFrgs.size();
-        PlayerLog.d("页面滑动 换取索引", "index=" + index + " pos=" + pos);
-        return (VideoFrg) videoFrgs.get(pos);
+    private VideoBaseFrg0 getCursorFrg(int index) {
+        return adapter.getIndexAtFrg(index);
     }
 
 
-    //缓存数量等于 frgs 的数量
-    private HashMap<Integer, String> urlIndexs = new HashMap<>();
-
-    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
+    public CustomExoPlayer getExoPlayer(Integer pageIndex) {
         int playersMax = getPlayerManager().getPlayersMax();
         int index = pageIndex % playersMax;
-        urlIndexs.put(index, videoUrl);
-        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index + " videoUrl:" + videoUrl);
+        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index);
         CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(index);
         return exoPlayer;
     }
@@ -179,8 +165,9 @@ public class ShortVideoManager {
 
     //计算持有者数量（排除问题用）
     private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {
-        for (int i = 0; i < videoFrgs.size(); i++) {
-            VideoFrg frg = (VideoFrg) videoFrgs.get(i);
+        int frgSize = adapter.getFrgSize();
+        for (int i = 0; i < frgSize; i++) {
+            VideoBaseFrg0 frg = adapter.getIndexAtFrg(i);
             CustomExoPlayer tempPlayer = frg.getExoPlayer();
             if (tempPlayer == null) {
                 continue;
@@ -227,19 +214,30 @@ public class ShortVideoManager {
                 int index = indexPage + 1;
                 if (isInfinite) {
                     //无穷页面
-                    getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                    if (onVideoLoading != null) {
+                        VideoBaseFrg0 videoFrgDow = getCursorFrg(index);
+                        VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
+                        onVideoLoading.onVideoLoadingDow(indexPage, index, videoFrgNow, videoFrgDow);
+                    }
                 } else {
                     //
-                    if (index >= videoFrgs.size()) {
+                    int dataSize = adapter.getDataSize();
+                    if (index >= dataSize) {
                         return;
                     }
-                    getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                    if (onVideoLoading != null) {
+                        VideoBaseFrg0 videoFrgDow = getCursorFrg(index);
+                        VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
+                        onVideoLoading.onVideoLoadingDow(indexPage, index, videoFrgNow, videoFrgDow);
+                    }
                 }
             } else {
                 //下划 要预加载上一页
                 int index = indexPage - 1;
-                if (index >= 0) {
-                    getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                if (index >= 0 && onVideoLoading != null) {
+                    VideoBaseFrg0 videoFrgUp = getCursorFrg(index);
+                    VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
+                    onVideoLoading.onVideoLoadingUp(indexPage, index, videoFrgNow, videoFrgUp);
                 }
             }
 
@@ -303,5 +301,11 @@ public class ShortVideoManager {
                     break;
             }
         }
+    }
+
+    private OnVideoLoading onVideoLoading;
+
+    public void setOnVideoLoading(OnVideoLoading onVideoLoading) {
+        this.onVideoLoading = onVideoLoading;
     }
 }

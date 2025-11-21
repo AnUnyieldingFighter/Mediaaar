@@ -1,8 +1,11 @@
-package media.library.player.frg;
+package media.library.player.video2.frg2;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
+
+import com.images.imageselect.R;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.PlaybackException;
@@ -10,15 +13,14 @@ import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.ui.PlayerView;
-
-import com.images.imageselect.R;
-
-import media.library.player.able.OnVideoOperate;
+import media.library.player.video2.able.OnVideoOperate2;
+import media.library.player.bean.VideoPlayVo;
+import media.library.player.vido1.frg.VideoFrg;
 import media.library.player.manager.PlayerLog;
 import media.library.player.view.CustomExoPlayer;
 
 
-public class VideoFrg extends VideoBaseFrg {
+public class VideoFrg1 extends VideoBaseFrg0 {
     @Override
     protected int getRootViewLayout() {
         return R.layout.frg_video_play;
@@ -33,11 +35,13 @@ public class VideoFrg extends VideoBaseFrg {
     protected PlayerView playerView;
     protected TextView tvIndex;
 
-    protected OnVideoOperate videoOperate = null;
+    protected OnVideoOperate2 videoOperate2 = null;
     protected int pageIndex = -1;
     private String videoUrl;
     //true 横屏
     protected Boolean isVideoHorizontalScreen = false;
+    //true 添加到缓存
+    protected boolean isUseCache = true;
 
     //step 1
     @Override
@@ -47,14 +51,8 @@ public class VideoFrg extends VideoBaseFrg {
     }
 
     private void viewInit(View view, Bundle savedInstanceState) {
-        //Bundle bundle = getArguments();
         tvIndex = view.findViewById(R.id.tv_index);
-        //int tempPageIndex = bundle.getInt("index", -1);
-        //String tempVideoUrl = bundle.getString("url", "");
-        //PlayerLog.d("视频播放", "初始化时设置播放地址 pageIndex：" + tempPageIndex
-        //        + " videoUrl:" + tempVideoUrl);
         PlayerView tempPlayerView = view.findViewById(R.id.player_view);
-        //
         initPlayerView(tempPlayerView);
 
     }
@@ -62,24 +60,27 @@ public class VideoFrg extends VideoBaseFrg {
     protected void initPlayerView(PlayerView playerView) {
         this.playerView = playerView;
         //setPlayerViewParameter();
-        if (act instanceof OnVideoOperate) {
-            videoOperate = (OnVideoOperate) act;
+        if (act instanceof OnVideoOperate2) {
+            videoOperate2 = (OnVideoOperate2) act;
+        }
+        if (relyFrg instanceof OnVideoOperate2) {
+            videoOperate2 = (OnVideoOperate2) relyFrg;
         }
         setClick();
         //initExoPlayer();
     }
 
+    @Override
     public int getPageIndex() {
         return pageIndex;
     }
 
+    @Override
     public PlayerView getPlayerView() {
         return playerView;
     }
 
     //step 3
-
-
     @OptIn(markerClass = UnstableApi.class)
     private void setPlayerViewParameter() {
         //禁止控制器在用户触摸时自动隐藏
@@ -119,33 +120,46 @@ public class VideoFrg extends VideoBaseFrg {
         //
         isVideoHorizontalScreen = false;
         //
-        exoPlayer = videoOperate.getExoPlayer(pageIndex, videoUrl);
-        exoPlayer.setPlayerVideo(act, videoUrl, true);
+        exoPlayer = videoOperate2.getExoPlayer(pageIndex, videoUrl);
+        exoPlayer.release();
+        exoPlayer.setPlayerVideo(act, videoUrl, isUseCache);
         //
         exoPlayer.setPlayerView(playerView);
         exoPlayer.prepare();
         exoPlayer.setPlayWhenReady(false);
-        //设置循环播放
-        exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
+        exoPlayer.setRepeatMode(getPlayMode());
         //立即显示控制器（需在setPlayer()之后调用）
         playerView.showController();
         onNewPlay();
+    }
+
+    //REPEAT_MODE_ALL：表示列表循环
+    //REPEAT_MODE_ONE：表示单曲循环
+    //REPEAT_MODE_OFF：不循环
+    protected int getPlayMode() {
+        //设置循环播放
+        return Player.REPEAT_MODE_ALL;
     }
 
     //一个新的播放
     protected void onNewPlay() {
     }
 
+
     //设置播放
+    @Override
     public void setVideoPlay() {
         if (exoPlayer != null) {
             exoPlayer.setPlayContinue();
+            /*if (exoPlayer.isPlaying()) {
+                onIsPlaying(true, -100);
+            }*/
             //player.play();
         }
-
     }
 
     //设置暂停
+    @Override
     public void setVideoPause() {
         if (exoPlayer != null) {
             exoPlayer.setPause();
@@ -175,26 +189,58 @@ public class VideoFrg extends VideoBaseFrg {
         initExoPlayer();
     }
 
+
     @Override
     public void onResume() {
         super.onResume();
+        setVideoDataPlay(-1);
+        PlayerLog.d("frg_", "onResume " + pageIndex);
+    }
+
+    //设置拉取播放数据   pageIndex-1:拉当前的数据（播放） 否则就拉指定页的数据（预加载）
+    @Override
+    public void setVideoDataPlay(int pageIndex) {
+        VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex);
+        setVideoStart(videoPlayVo, pageIndex != -1);
+    }
+
+    //isPreloading true  是预加载
+    private void setVideoStart(VideoPlayVo videoPlayVo, boolean isPreloading) {
+        if (videoPlayVo == null || videoPlayVo.pageIndex < 0 ||
+                TextUtils.isEmpty(videoPlayVo.url)) {
+            String tempPage = "";
+            String tempUrl = "";
+            String tempId = "";
+            if (videoPlayVo != null) {
+                tempPage = "" + videoPlayVo.pageIndex;
+                tempId = videoPlayVo.id;
+                tempUrl = videoPlayVo.url;
+            }
+            PlayerLog.d("视频播放 数据异常", "pageIndex=" + tempPage
+                    + " id=" + tempId
+                    + " url=" + tempUrl);
+            return;
+        }
+        int tempIndex = videoPlayVo.pageIndex;
+        String tempUrl = videoPlayVo.url;
         //拉取播放地址
-        int tempIndex = videoOperate.getResumeIndex();
-        String tempVideoUrl = videoOperate.getResumeVideoUrl();
-        updateVideoUrl(tempIndex, tempVideoUrl);
+        updateVideoUrl(tempIndex, tempUrl);
         //
+
         updatePlay();
+        if (isPreloading) {
+            return;
+        }
         if (exoPlayer != null) {
             exoPlayer.addListener(playerListener);
         }
         setVideoPlay();
-        PlayerLog.d("frg_", "onResume " + pageIndex);
 
     }
 
     //更新播放器 和视频大小
     private void updatePlay() {
-        if (videoOperate == null) {
+        if (videoOperate2 == null) {
             return;
         }
         setShowIndex();
@@ -207,7 +253,7 @@ public class VideoFrg extends VideoBaseFrg {
         int height = playerView.getHeight();
         int width = playerView.getWidth();
 
-        videoOperate.onCheck(pageIndex, exoPlayer);
+        videoOperate2.onCheck(pageIndex, exoPlayer);
         int playbackState = exoPlayer.getPlaybackState();
         PlayerLog.d("视频播放", "正在播放：pageIndex" + pageIndex +
                 " playbackState:" + playbackState + " height:" + height + " width:" + width + " url:" + videoUrl);
@@ -267,6 +313,8 @@ public class VideoFrg extends VideoBaseFrg {
     }
 
     //更新播放进度
+
+    @Override
     public void setUpdatePlayProgress() {
         Player temp = playerView.getPlayer();
         if (temp == null) {
@@ -281,6 +329,9 @@ public class VideoFrg extends VideoBaseFrg {
 
     //计算播放进度 isPlayEnd true:播放结束
     private void updatePlaybackStatus(boolean isPlayEnd) {
+        if (exoPlayer == null) {
+            return;
+        }
         long currentPosition = exoPlayer.getCurrentPosition();
         long duration = exoPlayer.getDuration();
         if (isPlayEnd) {
@@ -350,6 +401,10 @@ public class VideoFrg extends VideoBaseFrg {
 
     }
 
+    //播放完成 isLoop：true 是循环
+    protected void onPlayCompleted(boolean isLoop) {
+    }
+
     @OptIn(markerClass = UnstableApi.class)
     protected void onPlayError(PlaybackException error) {
         playerView.setCustomErrorMessage(error.getMessage());
@@ -377,6 +432,7 @@ public class VideoFrg extends VideoBaseFrg {
                     break;
                 case Player.STATE_ENDED:
                     updatePlaybackStatus(true);
+                    onPlayCompleted(false);
                     PlayerLog.d("视频播放", "播放状态 播放结束 state=" + playbackState);
                     break;
                 default:
@@ -400,6 +456,7 @@ public class VideoFrg extends VideoBaseFrg {
                 case Player.DISCONTINUITY_REASON_AUTO_TRANSITION:
                     // 循环播放
                     updatePlaybackStatus(true);
+                    onPlayCompleted(true);
                     break;
                 case Player.DISCONTINUITY_REASON_SEEK:
                     // 用户进行了快进或快退操作

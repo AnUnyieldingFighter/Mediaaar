@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package media.library.player.act;
+package media.library.player.vido1.act;
 
 import android.app.Activity;
 import android.content.Intent;

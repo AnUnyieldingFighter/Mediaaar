@@ -1,73 +1,96 @@
-/*
- * Copyright (C) 2019 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package media.library.player.act;
+package media.library.player.vido1.manager;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
 import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
-import com.images.imageselect.R;
-
-import media.library.player.able.OnVideoOperate;
-import media.library.player.adapter.VideoPagerAdapter2;
-import media.library.player.bean.TestVideoUrl;
-import media.library.player.frg.VideoBaseFrg;
-import media.library.player.frg.VideoFrg;
+import media.library.player.manager.MorePlayerManager;
 import media.library.player.manager.PlayerLog;
+import media.library.player.vido1.adapter.VideoPagerAdapter2;
+import media.library.player.bean.TestVideoUrl;
+import media.library.player.vido1.frg.VideoBaseFrg;
+import media.library.player.vido1.frg.VideoFrg;
 import media.library.player.view.CustomExoPlayer;
 
-//短视频播放  是 TestVideoPlaysAct 的另外一种写法
-public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOperate {
+//短视频播放管理类
+public class ShortVideoManager {
+    private AppCompatActivity activity;
 
+    public void setData(ArrayList<VideoBaseFrg> videoFrgs, ArrayList<String> urls) {
+        this.videoFrgs = videoFrgs;
+        this.urls = urls;
+    }
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.act_test_video_page);
-        initView();
+    public void setPageMax(int pageMax) {
+        this.pageMax = pageMax;
+    }
+
+    public void setPageCurrentItem(int pageCurrentItem) {
+        this.pageCurrentItem = pageCurrentItem;
+
+    }
+
+    public void setView(AppCompatActivity activity, ViewPager2 viewPagerView) {
+        this.activity = activity;
+        initView(viewPagerView);
         setClick();
     }
 
     private ViewPager2 viewPagerView;
     private VideoPagerAdapter2 adapter;
     private ArrayList<VideoBaseFrg> videoFrgs;
+    private ArrayList<String> urls;
     private VideoFrg cursorVideoFrg;
     private OnPageChange onPageChange;
 
-    protected void initView() {
-        viewPagerView = findViewById(R.id.viewPager);
-        adapter = new VideoPagerAdapter2(this);
+
+    //page页数量0阈值，超过这个值 将显示无限
+    private int pageMax = 5;
+    //初始化时跳转的页面
+    private int pageCurrentItem = 0;
+
+    protected void initView(ViewPager2 viewPagerView) {
+        this.viewPagerView = viewPagerView;
+        adapter = new VideoPagerAdapter2(activity, pageMax);
         viewPagerView.setAdapter(adapter);
         //videoFrgs = getFrgs();
-        videoFrgs = getFrgs2();
+        if (videoFrgs == null) {
+            videoFrgs = getFrgs2();
+        }
         adapter.setFrgs(videoFrgs);
         //设置为1时 显示第五个页面时 才销毁第第一个
         viewPagerView.setOffscreenPageLimit(1);
         onPageChange = new OnPageChange();
+        if (pageCurrentItem > 0) {
+            viewPagerView.setCurrentItem(pageCurrentItem, false);
+        }
+        if (pageCurrentItem >= 0) {
+            cursorVideoFrg = (VideoFrg) videoFrgs.get(pageCurrentItem);
+        }
+    }
+
+    public VideoFrg getCursorVideoFrg() {
+        return cursorVideoFrg;
+    }
+
+    public void setViewPageSlide(boolean isSlide) {
+        viewPagerView.setUserInputEnabled(isSlide);
+    }
+
+    public void onCheck(Object str, Object obj) {
+        if (obj instanceof ExoPlayer) {
+            calculateFrgHoldPlayer(str.toString(), (ExoPlayer) obj);
+        }
     }
 
     private ArrayList<VideoBaseFrg> getFrgs2() {
@@ -94,39 +117,32 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
         return frgs;
     }
 
-    protected void setClick() {
-        viewPagerView.registerOnPageChangeCallback(onPageChange);
-    }
-
-    @Override
-    protected void onDestroy() {
-        setExoPlayerRelease();
-        viewPagerView.unregisterOnPageChangeCallback(onPageChange);
-        super.onDestroy();
-    }
-
-
-    //释放资源
-    private void setExoPlayerRelease() {
-        Set<Integer> keys = players.keySet();
-        for (Integer key : keys) {
-            CustomExoPlayer player = players.get(key);
-            if (player != null) {
-                player.release();
-            }
-        }
-        players.clear();
-    }
-
-
-    private ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls();
-
     public String getVideoUrl(int index) {
         if (urls == null) {
             urls = new TestVideoUrl().buildTestVideoUrls();
         }
         int pos = index % urls.size();
         return urls.get(pos);
+    }
+
+    protected void setClick() {
+        viewPagerView.registerOnPageChangeCallback(onPageChange);
+    }
+
+    public void onDestroy() {
+        getPlayerManager().setExoPlayerRelease();
+        viewPagerView.unregisterOnPageChangeCallback(onPageChange);
+    }
+
+    public int getResumeIndex() {
+        int index = viewPagerView.getCurrentItem();
+        return index;
+    }
+
+    public String getResumeVideoUrl() {
+        int index = viewPagerView.getCurrentItem();
+        String videoUrl = getVideoUrl(index);
+        return videoUrl;
     }
 
     private VideoFrg getCursorFrg() {
@@ -140,91 +156,62 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
         return (VideoFrg) videoFrgs.get(pos);
     }
 
-    //播放器个数
-    private int playersMax = 7;
-    //缓存数量等于 frgs 的数量
-    private HashMap<Integer, CustomExoPlayer> players = new HashMap<>();
+
     //缓存数量等于 frgs 的数量
     private HashMap<Integer, String> urlIndexs = new HashMap<>();
 
-    //给Fragment调用
-    @Override
     public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        //它是0至 playersMax
-        Integer urlIndex = getUrlIndex(videoUrl);
-        if (urlIndex != null) {
-            PlayerLog.d("播放视频", "计划通过url取ExoPlayer urlIndex=" + urlIndex + " videoUrl:" + videoUrl);
-            return getExoPlayer(urlIndex);
-        }
+        int playersMax = getPlayerManager().getPlayersMax();
         int index = pageIndex % playersMax;
         urlIndexs.put(index, videoUrl);
         PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index + " videoUrl:" + videoUrl);
-        return getExoPlayer(index);
+        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(index);
+        return exoPlayer;
     }
 
-    @Override
-    public void setViewPageSlide(boolean isSlide) {
-        viewPagerView.setUserInputEnabled(isSlide);
+    private MorePlayerManager playerManager;
+
+    private MorePlayerManager getPlayerManager() {
+        if (playerManager == null) {
+            playerManager = new MorePlayerManager();
+        }
+        return playerManager;
     }
 
-    //记录观看时长
-    @Override
-    public void recordDuration(String id, int pageIndex, long pro, long total) {
 
-    }
+    //计算持有者数量（排除问题用）
+    private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {
+        for (int i = 0; i < videoFrgs.size(); i++) {
+            VideoFrg frg = (VideoFrg) videoFrgs.get(i);
+            CustomExoPlayer tempPlayer = frg.getExoPlayer();
+            if (tempPlayer == null) {
+                continue;
+            }
+            if (tempPlayer == player) {
+                int tempIndex = frg.getPageIndex();
+                PlayerView playerView = frg.getPlayerView();
+                if (playerView == null) {
+                    PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有，但是播放视图未初始化");
+                } else {
+                    Player tempPlayer2 = playerView.getPlayer();
+                    if (tempPlayer2 == null) {
+                        PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有,但是播放视图未设置播放器");
+                    } else {
+                        PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有");
+                    }
+                }
 
-
-    @Override
-    public void onCheck(Object str, Object obj) {
-
-    }
-
-    @Override
-    public int getResumeIndex() {
-        int index = viewPagerView.getCurrentItem();
-        return index;
-    }
-
-    @Override
-    public String getResumeVideoUrl() {
-        int index = viewPagerView.getCurrentItem();
-        String videoUrl = getVideoUrl(index);
-        return videoUrl;
-    }
-
-    private Integer getUrlIndex(String videoUrl) {
-        Set<Integer> keys = urlIndexs.keySet();
-        for (Integer key : keys) {
-            String url = urlIndexs.get(key);
-            if (videoUrl.equals(url)) {
-                return key;
             }
         }
-        return null;
     }
 
-    public CustomExoPlayer getExoPlayer(Integer frgsIndex) {
-        CustomExoPlayer player = players.get(frgsIndex);
-        if (player == null) {
-            player = new CustomExoPlayer();
-            players.put(frgsIndex, player);
-            PlayerLog.d("播放视频", "取ExoPlayer  新增加 frgsIndex=" + frgsIndex);
-        } else {
-            PlayerLog.d("播放视频", "取ExoPlayer  取缓存：" + frgsIndex);
-        }
-        PlayerLog.d("播放视频", "当前缓存数量 players=" + players.size() + " urlIndexs=" + urlIndexs.size());
-        return player;
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    public void onResume() {
         handlerUi.start();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
+
+    public void onPause() {
         handlerUi.stop();
     }
 
@@ -235,12 +222,21 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
             // 当页面滑动结束时调用，即页面完全改变时
             int indexPage = viewPagerView.getCurrentItem();
             cursorVideoFrg = getCursorFrg(indexPage);
-            //
             PlayerLog.d("页面滑动 最后结果", "index=" + indexPage);
             if (indexPage > startPage) {
                 //上划 要预加载下一页
+                var isInfinite = adapter.isInfinite();
                 int index = indexPage + 1;
-                getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                if (isInfinite) {
+                    //无穷页面
+                    getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                } else {
+                    //
+                    if (index >= videoFrgs.size()) {
+                        return;
+                    }
+                    getCursorFrg(index).updateVideoUrl(index, getVideoUrl(index));
+                }
             } else {
                 //下划 要预加载上一页
                 int index = indexPage - 1;
@@ -283,6 +279,7 @@ public class TestVideoPlaysAct2 extends AppCompatActivity implements OnVideoOper
 
         }
     }
+
 
     private HandlerUi handlerUi = new HandlerUi();
 

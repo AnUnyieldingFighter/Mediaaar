@@ -1,4 +1,4 @@
-package media.library.player.able;
+package media.library.player.video2.able;
 
 import media.library.player.bean.VideoPlayVo;
 import media.library.player.view.CustomExoPlayer;

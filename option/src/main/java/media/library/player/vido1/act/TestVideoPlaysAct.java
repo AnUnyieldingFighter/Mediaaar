@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package media.library.player.act;
+package media.library.player.vido1.act;
 
 import android.os.Bundle;
 
@@ -22,8 +22,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.images.imageselect.R;
-import media.library.player.able.OnVideoOperate;
-import media.library.player.manager.ShortVideoManager;
+import media.library.player.vido1.able.OnVideoOperate;
+import media.library.player.vido1.manager.ShortVideoManager;
 import media.library.player.view.CustomExoPlayer;
 
 //短视频播放

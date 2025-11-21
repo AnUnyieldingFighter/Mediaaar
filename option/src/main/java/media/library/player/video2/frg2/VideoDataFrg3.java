@@ -1,4 +1,4 @@
-package media.library.player.frg2;
+package media.library.player.video2.frg2;
 
 import android.text.TextUtils;
 
