@@ -137,7 +137,7 @@ public class MediaManager {
     }
 
     //content://com.android.providers.media.documents/document/image%3A1162
-    //再读取一遍(华为手机 ：非本应用排的照，上面的方法读取不到照片信息)
+    //再读取一遍(华为手机 鸿蒙系统 4.2.0：非本应用排的照，上面的方法读取不到照片信息)
     //这个方法只能读取到少量的信息
     //column '_data' does not exist.  Available columns:
     // [document_id, mime_type, _display_name, last_modified, flags, _size]
