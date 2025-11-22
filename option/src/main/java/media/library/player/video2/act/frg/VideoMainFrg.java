@@ -6,6 +6,7 @@ import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.images.imageselect.R;
 
@@ -37,7 +38,6 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View view = inflater.inflate(R.layout.media_frg_main_video, container, false);
         return view;
 
@@ -56,11 +56,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     private ViewPager2 viewPager2;
     private VideoPageRl2 videoPageRl;
     private View viewDataLoading;
+    private TextView tvLoadingData;
     private ShortVideoManager2 videoPlaysManager;
 
     private void setViewInit(@NonNull View view, @Nullable Bundle savedInstanceState) {
+
         viewPager2 = view.findViewById(R.id.view_pager);
         viewDataLoading = view.findViewById(R.id.view_data_loading);
+        tvLoadingData = view.findViewById(R.id.tv_loading_data);
         videoPageRl = view.findViewById(R.id.view_root);
 
         videoPlaysManager = new ShortVideoManager2();
@@ -103,10 +106,23 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 if (videos.size() == 0) {
                     return;
                 }
-                if (videoPlaysManager.getResumeIndex() != (videos.size() - 1)) {
+                int resumeIndex = videoPlaysManager.getResumeIndex();
+                int dataNum = (videos.size() - 1);
+                if (resumeIndex != dataNum) {
                     return;
                 }
                 setDataMore(true);
+            }
+        });
+        tvLoadingData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isDataReq) {
+                    return;
+                }
+                isDataReq = true;
+                tvLoadingData.setText("加载中...");
+                handlerData.sendEmptyMessageDelayed(0, 1 * 1000);
             }
         });
     }
@@ -121,7 +137,6 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     public void onPause() {
         super.onPause();
         videoPlaysManager.onPause();
-        handlerData.sendEmptyMessageDelayed(0, 1 * 1000);
     }
 
     @Override
@@ -150,9 +165,9 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     //
     //设置页面
-    private void setPageData(String url) {
+    private void setPageData(ArrayList<String> urls) {
         videos.clear();
-        videos.add(url);
+        videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
         VideoBaseFrg0 videoFrg = videoPlaysManager.setPageCurrentItem0();
         videoFrg.setVideoDataPlay(-1);
@@ -160,11 +175,12 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
 
     //设置页面
-    private void setPageDataMore(String url) {
-        if (videos.contains(url)) {
+    private void setPageDataMore(ArrayList<String> urls) {
+        /*if (videos.contains(url)) {
+        //不去重
             return;
-        }
-        videos.add(url);
+        }*/
+        videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
     }
 
@@ -173,24 +189,27 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     private HandlerData handlerData = new HandlerData();
     //true 没有更多了
     private boolean isMoreNot;
-
+    private boolean isDataReq;
 
     class HandlerData extends Handler {
         @Override
         public void handleMessage(@NonNull Message msg) {
             switch (msg.what) {
                 case 0:
-                    String url = new TestVideoUrl().video1;
+                    //初始化加载数据
+                    ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls2();
                     isMoreNot = false;
-                    setPageData(url);
+                    isDataReq = false;
+                    setPageData(urls);
+                    tvLoadingData.setText("重新加载数据");
                     break;
                 case 1:
                     //加载一条数据
                     isMoreReq = false;
                     isMoreNot = true;
                     viewDataLoading.setVisibility(View.GONE);
-                    url = new TestVideoUrl().video4;
-                    setPageDataMore(url);
+                    urls = new TestVideoUrl().buildTestVideoUrls();
+                    setPageDataMore(urls);
                     break;
             }
         }

@@ -61,13 +61,25 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     public void initExoPlayer(Context context) {
         isInit = true;
-        if (player != null) {
-            player.release();
-        }
         if (player != null && playerContext != null && playerContext != context) {
+            player.release();
             player = null;
             PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
         }
+        if (player != null && isError) {
+            player.release();
+            player = null;
+            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
+        }
+        isError = false;
+        /*if (player != null) {
+            //因为释放了 release 所以要重新设置
+            player.addListener(new ExoPlayerListener());
+            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
+            setVideoSurface(surface);
+            addListener(listener);
+            addAnalyticsListener(analyticsListener);
+        }*/
         if (player == null) {
             player = new ExoPlayer.Builder(context).build();
             playerContext = context;
@@ -606,6 +618,8 @@ public class CustomExoPlayer {
 
     //
     private final String tag = "播放器_CustomExoPlayer_";
+    //true 发生错误
+    private boolean isError;
 
     class ExoPlayerListener implements Player.Listener {
 
@@ -678,14 +692,19 @@ public class CustomExoPlayer {
         @OptIn(markerClass = UnstableApi.class)
         @Override
         public void onPlayerError(PlaybackException error) {
+
             //发生错误：
             //Source error code:2007 codeName:ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED  不允许明文传输
             //Source error code:2002 codeName:ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT 网络连接失败
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
-            //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK
+            //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
             PlayerLog.d(tag, "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
             switch (error.errorCode) {
+                case PlaybackException.ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED:
+                case PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT:
+                case PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS:
                 case PlaybackException.ERROR_CODE_FAILED_RUNTIME_CHECK:
+                    isError = true;
                     //player.release();
                     //player.set
                     //player.prepare();

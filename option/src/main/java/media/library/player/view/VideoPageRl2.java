@@ -25,7 +25,7 @@ public class VideoPageRl2 extends RelativeLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-
+        handleInterceptTouchEvent(ev);
         return super.onInterceptTouchEvent(ev);
     }
 

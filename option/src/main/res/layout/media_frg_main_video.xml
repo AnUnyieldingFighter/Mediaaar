@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<media.library.player.view.VideoPageRl2
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<media.library.player.view.VideoPageRl2 xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/view_root"
@@ -27,8 +26,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="正在加载" />
+            android:text="正在加载"
+            android:textColor="#fff" />
     </RelativeLayout>
 
+    <TextView
+        android:id="@+id/tv_loading_data"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:background="#fff"
+        android:textColor="#181818"
+        android:gravity="center"
+        android:text="重新加载数据" />
 
 </media.library.player.view.VideoPageRl2>

@@ -24,6 +24,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.media3.common.util.UnstableApi;
+import media.library.player.video2.act.TestVideoPlaysActNew;
 
 import com.images.imageselect.R;
 
@@ -70,7 +71,14 @@ public final class TestVideoStartAct extends Activity {
 
             }
         });
+        findViewById(R.id.tv_5).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //我的短视频 2
+                startAct(TestVideoPlaysActNew.class);
 
+            }
+        });
     }
 
     private void startAct(Class<?> activity) {

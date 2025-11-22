@@ -21,4 +21,9 @@ public class TestVideoUrl {
         return urls;
     }
 
+    public ArrayList<String> buildTestVideoUrls2() {
+        ArrayList<String> urls = new ArrayList<>();
+        urls.add(video4);
+        return urls;
+    }
 }
