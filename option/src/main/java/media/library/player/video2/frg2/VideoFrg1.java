@@ -5,18 +5,18 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
-import com.images.imageselect.R;
-
 import androidx.annotation.OptIn;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.ui.PlayerView;
-import media.library.player.video2.able.OnVideoOperate2;
+
+import com.images.imageselect.R;
+
 import media.library.player.bean.VideoPlayVo;
-import media.library.player.vido1.frg.VideoFrg;
 import media.library.player.manager.PlayerLog;
+import media.library.player.video2.able.OnVideoOperate2;
 import media.library.player.view.CustomExoPlayer;
 
 
@@ -121,7 +121,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         isVideoHorizontalScreen = false;
         //
         exoPlayer = videoOperate2.getExoPlayer(pageIndex, videoUrl);
-        exoPlayer.release();
         exoPlayer.setPlayerVideo(act, videoUrl, isUseCache);
         //
         exoPlayer.setPlayerView(playerView);
@@ -229,6 +228,9 @@ public class VideoFrg1 extends VideoBaseFrg0 {
 
         updatePlay();
         if (isPreloading) {
+            return;
+        }
+        if (!isResume) {
             return;
         }
         if (exoPlayer != null) {
@@ -497,15 +499,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
 
         }
 
-    }
-
-    public static VideoFrg newInstance(int index, String url) {
-        VideoFrg frg = new VideoFrg();
-        //Bundle bundle = new Bundle();
-        //bundle.putInt("index", index);
-        //bundle.putString("url", url);
-        //frg.setArguments(bundle);
-        return frg;
     }
 
 

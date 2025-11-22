@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.media3.ui.PlayerView;
+
 import media.library.player.view.CustomExoPlayer;
 
 public class VideoBaseFrg0 extends Fragment {
@@ -48,6 +49,20 @@ public class VideoBaseFrg0 extends Fragment {
     protected void setViewInit(View view, Bundle savedInstanceState) {
     }
 
+    protected boolean isResume;
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isResume = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isResume = false;
+    }
+
     public CustomExoPlayer getExoPlayer() {
         return null;
     }
@@ -81,6 +96,7 @@ public class VideoBaseFrg0 extends Fragment {
     public void setVideoDataPlay(int pageIndex) {
     }
 
+    //设置拉取其它数据（用户头像，昵称，点赞，收藏等）
     public void setDataUpdate(int pageIndex) {
 
     }

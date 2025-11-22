@@ -23,6 +23,7 @@ import media.library.player.video2.able.OnVideoData2;
 import media.library.player.video2.able.OnVideoLoading;
 import media.library.player.video2.able.OnVideoOperate2;
 import media.library.player.video2.frg2.VideoBaseFrg0;
+import media.library.player.video2.frg2.VideoFrg1;
 import media.library.player.video2.manger.ShortVideoManager2;
 import media.library.player.view.CustomExoPlayer;
 import media.library.player.view.VideoPageRl2;
@@ -79,13 +80,13 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             @Override
             public ArrayList<VideoBaseFrg0> getPages() {
                 ArrayList pages = new ArrayList<VideoBaseFrg0>();
-               /* pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());
-                pages.add(VideoTabMainFrg5());*/
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
+                pages.add(new VideoFrg1());
                 return pages;
             }
         });
@@ -168,7 +169,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
 
     //
-    private ArrayList videos = new ArrayList<String>();
+    private ArrayList<String> videos = new ArrayList();
     private HandlerData handlerData = new HandlerData();
     //true 没有更多了
     private boolean isMoreNot;
@@ -194,8 +195,8 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             }
         }
     }
+    //=====================视频数据，播放 操作接口======================================
 
-    //
     @Override
     public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
         return videoPlaysManager.getExoPlayer(pageIndex);
@@ -214,22 +215,40 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     @Override
     public void onCheck(Object str, Object obj) {
-
+        //一些检查
     }
 
+    //获取播放数据 重要的是视频路径  可以为空 vo可以为null
     @Override
     public VideoPlayVo getVideoPlayData(int pageIndex) {
-        return null;
-    }
+        var index = pageIndex;
+        if (index == -1) {
+            //当前页面
+            index = videoPlaysManager.getResumeIndex();
+        }
+        String videoUrl = "";
+        if (videos != null && videos.size() > 0) {
+            videoUrl = videos.get(index);
+        }
+        VideoPlayVo vo = new VideoPlayVo();
+        vo.pageIndex = index;
+        vo.url = videoUrl;
+        vo.id = "-1";
+        return vo;
 
+    }
+    //=====================其它数据操作接口======================================
+
+    //获取视频详情 发布者头像，昵称，点赞，收藏 等
     @Override
     public Object getVideoDetailsData(int pageIndex) {
         return null;
     }
 
+    //1 旋转到横屏 2 旋转到竖屏
     @Override
-    public void isDataReq(boolean isRefresh) {
+    public void onScreenRotation(int typeScreen) {
 
     }
-    //
+
 }

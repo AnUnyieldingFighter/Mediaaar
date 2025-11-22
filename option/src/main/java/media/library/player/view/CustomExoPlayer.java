@@ -61,8 +61,10 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     public void initExoPlayer(Context context) {
         isInit = true;
-        if (player != null && playerContext != null && playerContext != context) {
+        if (player != null) {
             player.release();
+        }
+        if (player != null && playerContext != null && playerContext != context) {
             player = null;
             PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
         }
@@ -583,8 +585,8 @@ public class CustomExoPlayer {
             if (mediaMetadata != null) {
 
                 str = mediaMetadata.title + "-" + mediaMetadata.albumTitle + "-" +
-                        mediaMetadata.subtitle+"-"+mediaMetadata.description+"-"
-                        +mediaMetadata.artworkUri;
+                        mediaMetadata.subtitle + "-" + mediaMetadata.description + "-"
+                        + mediaMetadata.artworkUri;
             }
             PlayerLog.d("视频播放Url", "当前播放地址 mediaId："
                     + mediaId + " str:" + str);
