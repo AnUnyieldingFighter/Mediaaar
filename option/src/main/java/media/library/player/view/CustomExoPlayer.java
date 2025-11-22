@@ -64,11 +64,13 @@ public class CustomExoPlayer {
         if (player != null && playerContext != null && playerContext != context) {
             player.release();
             player = null;
+            setCacheRelease();
             PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
         }
         if (player != null && isError) {
             player.release();
             player = null;
+            setCacheRelease();
             PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
         }
         isError = false;
@@ -335,6 +337,9 @@ public class CustomExoPlayer {
 
     public boolean isEqualVideoPaly(String url) {
         if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+        if (isError) {
             return false;
         }
         return url.equals(videoUrl);
