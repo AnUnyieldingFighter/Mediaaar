@@ -39,7 +39,6 @@ import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-import androidx.media3.exoplayer.trackselection.TrackSelection;
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
@@ -101,7 +100,7 @@ public class CustomExoPlayer {
             //设置缓存
             builder.setLoadControl(getDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-            builder.setTrackSelector(getDefARB());
+            //builder.setTrackSelector(getDefARB());
             //
             player = builder.build();
             playerContext = context;
@@ -147,7 +146,7 @@ public class CustomExoPlayer {
     }
 
     @OptIn(markerClass = UnstableApi.class)
-    private DefaultBandwidthMeter bandwidthMeter;
+    private DefaultBandwidthMeter bandwidthMeter;//提供实时带宽数据
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
