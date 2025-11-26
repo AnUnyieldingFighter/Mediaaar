@@ -26,4 +26,32 @@ public class TestVideoUrl {
         urls.add(video4);
         return urls;
     }
+
+    public ArrayList<String> buildTestVideoUrls3() {
+        String url1 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url2 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url3 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url4 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url5 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url6 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+        String url7 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640557059809084.mp4";
+        String url8 = "https://nbc.vtnbo.com/nbc/msg/video/beta/17639497655908966.mp4";
+        String url9 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc/msg/video/beta/17641403556024451.mp4";
+        String url10 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17637842236693823.mp4";
+        String url11 = "https://nbc-file-bk1.oss-ap-southeast-1.aliyuncs.com/nbc-file/file/video/beta/17640633560019719.mp4";
+
+        ArrayList<String> urls = new ArrayList<>();
+        urls.add(url1);
+        urls.add(url2);
+        urls.add(url3);
+        urls.add(url4);
+        urls.add(url5);
+        urls.add(url6);
+        urls.add(url7);
+        urls.add(url8);
+        urls.add(url9);
+        urls.add(url10);
+        urls.add(url11);
+        return urls;
+    }
 }

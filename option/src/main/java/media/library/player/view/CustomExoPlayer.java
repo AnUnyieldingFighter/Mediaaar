@@ -40,6 +40,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.TrackSelection;
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
@@ -113,7 +114,8 @@ public class CustomExoPlayer {
     }
 
     @OptIn(markerClass = UnstableApi.class)
-    private DefaultLoadControl buff;
+    private DefaultLoadControl buff;// 负责控制缓冲区大小和加载时机
+
 
     @OptIn(markerClass = UnstableApi.class)
     public void setBuffer(DefaultLoadControl buff) {
@@ -122,6 +124,9 @@ public class CustomExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultLoadControl getDefBuffer() {
+        if (bandwidthMeter == null) {
+            bandwidthMeter =  new DefaultBandwidthMeter.Builder(context).build();
+        }
         if (buff == null) {
             //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
             DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
@@ -141,12 +146,17 @@ public class CustomExoPlayer {
         return buff;
     }
 
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultBandwidthMeter bandwidthMeter;
 
     @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector trackSelector;
+    private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getDefARB() {
+        if (bandwidthMeter == null) {
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
+        }
         // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
         if (trackSelector == null) {
             //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+

@@ -196,7 +196,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             switch (msg.what) {
                 case 0:
                     //初始化加载数据
-                    ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls2();
+                    ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls3();
                     isMoreNot = false;
                     isDataReq = false;
                     setPageData(urls);
