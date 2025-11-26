@@ -1,6 +1,7 @@
 package media.library.player.view;
 
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
@@ -10,8 +11,11 @@ import android.view.SurfaceView;
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.common.TrackSelectionParameters;
+import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
@@ -22,6 +26,8 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
 import androidx.media3.datasource.cache.SimpleCache;
 import androidx.media3.datasource.rtmp.RtmpDataSource;
+import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
@@ -31,6 +37,9 @@ import androidx.media3.exoplayer.source.LoadEventInfo;
 import androidx.media3.exoplayer.source.MediaLoadData;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.exoplayer.trackselection.TrackSelection;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
@@ -83,7 +92,17 @@ public class CustomExoPlayer {
             addAnalyticsListener(analyticsListener);
         }*/
         if (player == null) {
-            player = new ExoPlayer.Builder(context).build();
+            //启用异步缓冲
+            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+            //‌启用异步缓冲区排队
+            renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
+            ExoPlayer.Builder builder = new ExoPlayer.Builder(context, renderersFactory);
+            //设置缓存
+            builder.setLoadControl(getDefBuffer());
+            // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+            builder.setTrackSelector(getDefARB());
+            //
+            player = builder.build();
             playerContext = context;
             player.addListener(new ExoPlayerListener());
             player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
@@ -91,6 +110,79 @@ public class CustomExoPlayer {
             addListener(listener);
             addAnalyticsListener(analyticsListener);
         }
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultLoadControl buff;
+
+    @OptIn(markerClass = UnstableApi.class)
+    public void setBuffer(DefaultLoadControl buff) {
+        this.buff = buff;
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultLoadControl getDefBuffer() {
+        if (buff == null) {
+            //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
+            DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
+            build.setBufferDurationsMs(
+                    15000,  // 最小缓冲时间（触发加载的阈值
+                    30000,  // 最大缓冲时间（停止加载的阈值）
+                    2500,  // 播放开始前预缓冲时间
+                    5000  // 重新缓冲后预缓冲时间
+            );
+            build.setTargetBufferBytes(getTargetBufferBytes());
+            build.setPrioritizeTimeOverSizeThresholds(true); //优先时间阈值而非数据量阈值
+            //禁止回退缓存 一般直播用
+            //build.setBackBuffer(0, false);
+            DefaultLoadControl loadControl = build.build();
+            buff = loadControl;
+        }
+        return buff;
+    }
+
+
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultTrackSelector trackSelector;
+
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultTrackSelector getDefARB() {
+        // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+        if (trackSelector == null) {
+            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
+            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
+            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
+            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
+            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
+            // 自定义Factory实现差异化配置
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(
+                    8000,  // 质量提升阈值
+                    20000, // 质量降低阈值
+                    25000, // 保留缓冲
+                    0.8f  // 带宽利用率
+            );
+            trackSelector = new DefaultTrackSelector(context, factoryTemp);
+        }
+        return trackSelector;
+    }
+
+    private int getTargetBufferBytes() {
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        int memoryClass = am.getMemoryClass(); // 获取设备内存等级（MB）
+        int targetBufferBytes;
+        String str = "";
+        if (memoryClass <= 128) { // 低内存设备
+            str = "低内存设备 缓存3MB";
+            targetBufferBytes = 3 * 1024 * 1024; // 3MB
+        } else if (memoryClass <= 256) { // 中等内存设备
+            str = "中等内存设备 缓存6MB";
+            targetBufferBytes = 6 * 1024 * 1024; // 6MB
+        } else { // 高内存设备
+            str = "高内存设备 缓存10MB";
+            targetBufferBytes = 10 * 1024 * 1024; // 10MB
+        }
+        PlayerLog.d(tag, "内存等级：" + str + " memoryClass=" + memoryClass);
+        return targetBufferBytes;
     }
 
     public boolean isInit() {
@@ -404,7 +496,7 @@ public class CustomExoPlayer {
                 .build();*/
         MediaItem.Builder builder = new MediaItem.Builder()
                 //.setMediaMetadata(mediaMetadata)
-                //.setMimeType(MimeTypes.VIDEO_MP4)
+                //.setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
                 .setUri(videoUrl)
                 .setMediaId(videoUrl);
         //字幕
@@ -479,7 +571,6 @@ public class CustomExoPlayer {
             simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(context));
         } else {
             simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(context));
-
         }
         return simpleCache;
     }
@@ -716,6 +807,11 @@ public class CustomExoPlayer {
                     break;
             }
         }
+
+        @Override
+        public void onTracksChanged(Tracks tracks) {
+
+        }
     }
 
     @UnstableApi
@@ -731,6 +827,12 @@ public class CustomExoPlayer {
         }
 
         @Override
+        public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
+            //long bufferedPosition = player.getBufferedPosition();
+            PlayerLog.d(tag, "缓冲:  ----");
+        }
+
+        @Override
         public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
             AnalyticsListener.super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate);
         }
@@ -739,6 +841,7 @@ public class CustomExoPlayer {
         public void onPlaybackStateChanged(EventTime eventTime, int state) {
             // PlayerLog.d(tag, "playbackState： " + state + "kbps");
         }
+
     }
 
 }

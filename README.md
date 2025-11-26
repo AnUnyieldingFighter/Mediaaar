@@ -59,3 +59,31 @@ android 14 (api 34)  新增了READ_MEDIA_VISUAL_USER_SELECTED权限，用于对�
  >= android 13 （api 33） 拍照/写入读取照片 使用MediaStore 写入图片不需要权限
  >= android 11 （api 30） 拍照/写入读取照片 使用MediaStore 写入图片不需要权限，不使用MediaStorede，仍然要申请权限 READ_EXTERNAL_STORAGE，WRITE_EXTERNAL_STORAGE 权限
 <=android 10   （api 29） 拍照/写入读取图片 无MediaStore 写入图片不需要权限，仍然要 READ_EXTERNAL_STORAGE，WRITE_EXTERNAL_STORAGE 权限
+
+
+
+
+视频播放 缓存
+ 
+移动设备（标清）	3MB-5MB	内存受限设备，优先保障流畅性
+移动设备（高清）	5MB-8MB	平衡内存占用与缓冲效率
+平板/电视（4K）	8MB-12MB	高分辨率视频需要更大缓冲空间
+直播流	3MB-6MB	需降低延迟，缓冲量较点播少
+
+
+关键影响因素
+视频分辨率：  
+480p视频：3-4MB足够
+1080p视频：建议6-8MB
+4K视频：需要10MB以上
+帧率：
+30fps视频：基础缓冲量
+60fps视频：建议增加20%-30%缓冲
+编码格式：
+H.264：标准缓冲量
+H.265/HEVC：可适当减少10%-15%
+AV1：需要更大缓冲空间
+
+
+最佳推荐 推荐初始配置 （适用于大多数高清场景）
+setTargetBufferBytes(6 * 1024 * 1024) // 6MB
