@@ -100,7 +100,8 @@ public class CustomExoPlayer {
             //设置缓存
             builder.setLoadControl(getDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-            //builder.setTrackSelector(getDefARB());
+            // 报错 不知道什么原因 DefaultTrackSelector is accessed on the wrong thread.
+             builder.setTrackSelector(getDefARB());
             //
             player = builder.build();
             playerContext = context;

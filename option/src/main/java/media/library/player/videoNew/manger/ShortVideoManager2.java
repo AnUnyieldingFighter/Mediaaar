@@ -1,6 +1,7 @@
 package media.library.player.videoNew.manger;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 
@@ -24,6 +25,7 @@ import media.library.player.view.CustomExoPlayer;
 
 //短视频播放管理类
 public class ShortVideoManager2 {
+
     private AppCompatActivity activity;
     private Fragment fragment;
 
