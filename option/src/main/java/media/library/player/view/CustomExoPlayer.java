@@ -67,6 +67,17 @@ public class CustomExoPlayer {
     private Context playerContext;
     private boolean isInit = false;
 
+    public CustomExoPlayer() {
+
+    }
+
+    //true 使用arb
+    private boolean isArb;
+
+    public void setARB(boolean isArb) {
+        this.isArb = isArb;
+    }
+
     @OptIn(markerClass = UnstableApi.class)
     public void initExoPlayer(Context context) {
         isInit = true;
@@ -101,7 +112,9 @@ public class CustomExoPlayer {
             builder.setLoadControl(getDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
             // 报错 不知道什么原因 DefaultTrackSelector is accessed on the wrong thread.
-             builder.setTrackSelector(getDefARB());
+            if (isArb) {
+                builder.setTrackSelector(getDefARB());
+            }
             //
             player = builder.build();
             playerContext = context;
@@ -125,7 +138,7 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private DefaultLoadControl getDefBuffer() {
         if (bandwidthMeter == null) {
-            bandwidthMeter =  new DefaultBandwidthMeter.Builder(context).build();
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
         }
         if (buff == null) {
             //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）

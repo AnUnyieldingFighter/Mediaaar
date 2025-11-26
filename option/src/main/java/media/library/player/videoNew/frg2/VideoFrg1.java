@@ -201,12 +201,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     @Override
     public void setVideoDataPlay(int pageIndex) {
         VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex);
-        HandlerMedia.runInMainThread(new Runnable() {
-            @Override
-            public void run() {
-                setVideoStart(videoPlayVo, pageIndex != -1);
-            }
-        });
+        setVideoStart(videoPlayVo, pageIndex != -1);
     }
 
     //isPreloading true  是预加载
