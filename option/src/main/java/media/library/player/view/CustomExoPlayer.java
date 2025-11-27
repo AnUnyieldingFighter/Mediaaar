@@ -128,7 +128,26 @@ public class CustomExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultLoadControl buff;// 负责控制缓冲区大小和加载时机
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultBandwidthMeter bandwidthMeter;//提供实时带宽数据
 
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
+
+    @OptIn(markerClass = UnstableApi.class)
+    private void setBuffRelease() {
+        if (trackSelector != null) {
+            trackSelector.release();
+            trackSelector = null;
+        }
+        if (buff != null) {
+            //buff.onReleased(player.is);
+            buff = null;
+        }
+        if (bandwidthMeter != null) {
+            bandwidthMeter = null;
+        }
+    }
 
     @OptIn(markerClass = UnstableApi.class)
     public void setBuffer(DefaultLoadControl buff) {
@@ -159,11 +178,6 @@ public class CustomExoPlayer {
         return buff;
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultBandwidthMeter bandwidthMeter;//提供实时带宽数据
-
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getDefARB() {
