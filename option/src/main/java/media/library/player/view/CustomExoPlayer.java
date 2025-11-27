@@ -84,12 +84,14 @@ public class CustomExoPlayer {
         if (player != null && playerContext != null && playerContext != context) {
             player.release();
             player = null;
+            setBuffRelease();
             setCacheRelease();
             PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
         }
         if (player != null && isError) {
             player.release();
             player = null;
+            setBuffRelease();
             setCacheRelease();
             PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
         }
@@ -134,20 +136,6 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
 
-    @OptIn(markerClass = UnstableApi.class)
-    private void setBuffRelease() {
-        if (trackSelector != null) {
-            trackSelector.release();
-            trackSelector = null;
-        }
-        if (buff != null) {
-            //buff.onReleased(player.is);
-            buff = null;
-        }
-        if (bandwidthMeter != null) {
-            bandwidthMeter = null;
-        }
-    }
 
     @OptIn(markerClass = UnstableApi.class)
     public void setBuffer(DefaultLoadControl buff) {
@@ -692,6 +680,22 @@ public class CustomExoPlayer {
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
 
+    @OptIn(markerClass = UnstableApi.class)
+    private void setBuffRelease() {
+        if (trackSelector != null) {
+            trackSelector.release();
+            trackSelector = null;
+        }
+        if (buff != null) {
+            //buff.onReleased();
+            //buff.onReleased(player.is);
+            buff = null;
+        }
+        if (bandwidthMeter != null) {
+            bandwidthMeter = null;
+        }
+    }
+
     //释放全部资源
     public void release() {
         if (cachePlayerView != null) {
@@ -701,6 +705,7 @@ public class CustomExoPlayer {
         if (player != null) {
             isInit = false;
             player.release();
+            setBuffRelease();
             player = null;
         }
         setCacheRelease();
