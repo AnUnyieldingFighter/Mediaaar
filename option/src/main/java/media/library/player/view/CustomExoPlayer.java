@@ -108,11 +108,15 @@ public class CustomExoPlayer {
             //启用异步缓冲
             DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
             //‌启用异步缓冲区排队
-            renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
+            if (!isArb) {
+                //ABR 不能在非主线程里加载
+                renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
+            }
             ExoPlayer.Builder builder = new ExoPlayer.Builder(context, renderersFactory);
             //设置缓存
             builder.setLoadControl(getDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+            // 已知 ABR 不能在非主线程里加载
             // 报错 不知道什么原因 DefaultTrackSelector is accessed on the wrong thread.
             if (isArb) {
                 builder.setTrackSelector(getDefARB());
@@ -864,19 +868,29 @@ public class CustomExoPlayer {
             AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
             // 记录下载速度
             long speedKbps = loadEventInfo.bytesLoaded * 8 / (loadEventInfo.loadDurationMs * 1000);
-            PlayerLog.d(tag, "下载速度:  " + speedKbps + "kbps");
-
+            PlayerLog.d(tag, "缓冲完成 下载速度:  " + speedKbps + "kbps");
+            /*PlayerLog.d(tag, "下载速度 loadTaskId:  " + loadEventInfo.loadTaskId + " Uri="+loadEventInfo.uri);
+            PlayerLog.d(tag, "下载速度 加载耗时:  " + loadEventInfo.loadDurationMs + " 已加载字节数："+loadEventInfo.bytesLoaded);
+*/
         }
 
         @Override
         public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
-            //long bufferedPosition = player.getBufferedPosition();
-            PlayerLog.d(tag, "缓冲:  ----");
+            long bufferedPosition = player.getBufferedPosition();
+            long currentPosition = player.getCurrentPosition();
+            PlayerLog.d(tag, "缓冲开始:  播放位置=" + currentPosition + " 缓存=" + bufferedPosition);
         }
 
         @Override
         public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
-            AnalyticsListener.super.onBandwidthEstimate(eventTime, totalLoadTimeMs, totalBytesLoaded, bitrateEstimate);
+            PlayerLog.d(tag, "缓冲 带宽:  总加载时长=" + totalLoadTimeMs + " 总加载字节=" + totalBytesLoaded + " 带宽估计值(dps)=" + bitrateEstimate);
+            if (trackSelector != null) {
+                // 根据带宽调整ABR策略
+                DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters()
+                        .setMaxVideoBitrate((int) (bitrateEstimate * 0.8)); // 保留20%余量
+                trackSelector.setParameters(builder);
+            }
+
         }
 
         @Override
