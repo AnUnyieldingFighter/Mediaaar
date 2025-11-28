@@ -4,10 +4,11 @@
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
-    <!--android api 33 分解此权限-->
+
+    <!-- 3. API 32-（Android 12及以下/鸿蒙2.0-）：兼容传统权限 -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -15,13 +16,11 @@
 
 
     <!--读取照片和视频 精细化媒体权限-->
-    <!-- Devices running Android 13 (API level 33) or higher -->
-    <!--
-     -->
+    <!-- 1. API 33+（Android 13+/鸿蒙3.1+）：照片专属权限 -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- 2. API 33+（Android 13+/鸿蒙3.1+）：视频专属权限 -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <!-- To handle the reselection within the app on Android 14 (API level 34) -->
-    <!--
+     <!--
         <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
     -->
     <application
