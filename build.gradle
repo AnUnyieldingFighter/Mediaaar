@@ -60,8 +60,8 @@ task clean(type: Delete) {
 ext {
     compileSdkVersion = 35
     buildToolsVersion = '35.0.0'
-    minSdkVersion = 21
-    targetSdkVersion = 28
+    minSdkVersion = 26
+    targetSdkVersion = 35
     //compose_version = '1.1.0-beta03'
     //对应kotlin-gradle-plugin:1.9.25 版本
     compose_version = '1.5.15'

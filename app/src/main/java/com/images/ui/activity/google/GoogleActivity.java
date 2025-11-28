@@ -11,11 +11,14 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.images.ui.Manger.OnPMCallback;
+import com.images.ui.Manger.PermissionUtile;
 import com.images.ui.activity.MainActivity;
 import com.media.option.R;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import media.library.images.config.entity.MediaEntity;
 
@@ -37,10 +40,35 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
         tvMsg = (TextView) findViewById(R.id.tv_msg);
     }
 
+    private int viewId = 0;
 
     @Override
     public void onClick(View view) {
-        int id = view.getId();
+        viewId = view.getId();
+        setCheckPermission();
+    }
+
+    private void setCheckPermission() {
+        PermissionUtile.setCheckPermission(this, 4, new OnPMCallback() {
+            @Override
+            public void onAcquiredAll() {
+                setClickView();
+            }
+
+            @Override
+            public void onError() {
+
+            }
+
+            @Override
+            public void onGranted(List<String> permissions, boolean all) {
+                setClickView();
+            }
+        });
+    }
+
+    private void setClickView() {
+        int id = viewId;
         if (id == R.id.image_1) {
             //选择一张图片
             GoogleOptActivity.start(this, true, 2);
@@ -61,7 +89,6 @@ public class GoogleActivity extends AppCompatActivity implements View.OnClickLis
             GoogleOptActivity.start(this, false, 3);
             return;
         }
-
     }
 
     public static ArrayList<MediaEntity> res;

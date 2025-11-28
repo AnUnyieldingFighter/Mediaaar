@@ -7,16 +7,19 @@
     <!--android api 33 分解此权限-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
 
-    <!--读取照片和视频-->
+    <!--读取照片和视频 精细化媒体权限-->
     <!-- Devices running Android 13 (API level 33) or higher -->
-    <!--<uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />-->
+    <!--
+     -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <!-- To handle the reselection within the app on Android 14 (API level 34) -->
     <!--
         <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
@@ -25,11 +28,18 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <!--第三方权限检查-->
+        <meta-data
+            android:name="ScopedStorage"
+            android:value="true" />
+
         <activity
             android:name="com.images.ui.activity.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -63,14 +73,14 @@
         <activity
             android:name="com.images.ui.activity.google.GoogleActivity"
             android:screenOrientation="portrait" />
-      <!--  <activity
-            android:theme="@style/DialogTheme"
-            android:name="com.images.ui.activity.google.GoogleOptActivity"
-            android:screenOrientation="portrait" />-->
+        <!--  <activity
+              android:theme="@style/DialogTheme"
+              android:name="com.images.ui.activity.google.GoogleOptActivity"
+              android:screenOrientation="portrait" />-->
         <activity
-            android:theme="@style/TransparentTheme"
             android:name="com.images.ui.activity.google.GoogleOptActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/TransparentTheme" />
     </application>
 
 </manifest>
