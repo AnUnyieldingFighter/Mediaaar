@@ -91,8 +91,8 @@ public class PermissionUtile {
                 }*/
 
                 permissions = getReadWrite();
-                ArrayList imgs = getImgAndVideo();
-                permissions.addAll(imgs);
+                //ArrayList imgs = getImgAndVideo();
+               // permissions.addAll(imgs);
                 Log.d("检查读取照片和视频 权限", "数量：" + permissions.size());
                 /*if (true) {
                     //现在用的是google 照片选择器 不需要权限
