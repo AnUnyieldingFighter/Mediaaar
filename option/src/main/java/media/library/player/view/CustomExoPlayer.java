@@ -126,6 +126,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             addListener(listener);
             addAnalyticsListener(analyticsListener);
         }*/
+        playerContext = context;
         if (player == null) {
             //启用异步缓冲
             DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
@@ -151,7 +152,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             addListener(listener);
             addAnalyticsListener(analyticsListener);
         }
-        playerContext = context;
+
     }
 
     @OptIn(markerClass = UnstableApi.class)
