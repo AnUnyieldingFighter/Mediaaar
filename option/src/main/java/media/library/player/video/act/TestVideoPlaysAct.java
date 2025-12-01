@@ -22,6 +22,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.images.imageselect.R;
+
+import media.library.player.manager.PlayerLog;
 import media.library.player.video.able.OnVideoOperate;
 import media.library.player.video.manager.ShortVideoManager;
 import media.library.player.view.CustomExoPlayer;
@@ -69,7 +71,7 @@ public class TestVideoPlaysAct extends AppCompatActivity implements OnVideoOpera
     //给Fragment调用
     @Override
     public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        return videoPlaysManager.getExoPlayer(pageIndex, videoUrl);
+        return videoPlaysManager.getExoPlayer(pageIndex);
     }
 
 

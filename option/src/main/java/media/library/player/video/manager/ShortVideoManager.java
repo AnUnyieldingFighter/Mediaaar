@@ -167,7 +167,12 @@ public class ShortVideoManager {
         }
         return playerManager;
     }
-
+    //获取播放器
+    public CustomExoPlayer getExoPlayer(Integer pageIndex) {
+        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + pageIndex);
+        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(pageIndex);
+        return exoPlayer;
+    }
 
     //计算持有者数量（排除问题用）
     private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {

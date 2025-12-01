@@ -270,6 +270,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         player.removeAnalyticsListener(listener);
     }
+
     @UnstableApi
     private MediaSource getMediaSource() {
        /* if (videoUrl.endsWith("m3u8")) {
@@ -350,6 +351,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         return mediaSource;
     }
+
     protected long maxBytes = 100 * 1024 * 1024;//100M
     @UnstableApi
     protected SimpleCache simpleCache;
@@ -428,6 +430,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         File file = new File(dir, fileName);
         return file;
     }
+
     //读取信息 test
     @OptIn(markerClass = UnstableApi.class)
     public void readData() {
@@ -469,6 +472,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         setCacheRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：" + videoUrl);
     }
+
     @OptIn(markerClass = UnstableApi.class)
     private void setBuffRelease() {
         if (trackSelector != null) {
@@ -484,6 +488,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             bandwidthMeter = null;
         }
     }
+
     //释放缓存
     @OptIn(markerClass = UnstableApi.class)
     private void setCacheRelease() {
@@ -500,6 +505,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
+
     //===================设置控制器=====================================================
     @OptIn(markerClass = UnstableApi.class)
     private PlayerControlView cachePlayerControlView;
@@ -509,10 +515,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
         if (cachePlayerControlView == playerControlView) {
             return;
         }
-        if (cachePlayerView != null) {
+        /*if (cachePlayerView != null) {
             //旧视图  清空播放器
             cachePlayerView.setPlayer(null);
-        }
+        }*/
         if (cachePlayerControlView != null) {
             //旧控制器  清空播放器
             cachePlayerControlView.setPlayer(null);
@@ -534,10 +540,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
             //旧视图  清空播放器
             cachePlayerView.setPlayer(null);
         }
-        if (cachePlayerControlView != null) {
+        /*if (cachePlayerControlView != null) {
             //旧控制器  清空播放器
             cachePlayerControlView.setPlayer(null);
-        }
+        }*/
         //新视图  设置播放器
         playerView.setPlayer(player);
         this.cachePlayerView = playerView;
@@ -576,7 +582,11 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         if (player.isPlaying()) {
             player.pause();
-            onUpdateVideoHis();
+            //
+            long currentPosition = player.getCurrentPosition();
+            long duration = player.getDuration();
+            dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
+            //
         } else {
             player.setPlayWhenReady(false);
         }
@@ -596,10 +606,12 @@ public class CustomExoPlayer extends BaseExoPlayer {
     public void setPlaybackSpeed(float speed) {
         player.setPlaybackSpeed(speed);
     }
+
     //设置字幕
     private void setSubtitle(MediaItem.Builder builder) {
         //builder.setSubtitleConfigurations();
     }
+
     public boolean isPlayerPaused() {
         if (player == null) {
             return false;
@@ -722,13 +734,5 @@ public class CustomExoPlayer extends BaseExoPlayer {
         return url.equals(videoUrl);
     }
 
-    //=====================更新数据库数据==============================================
-    public void onUpdateVideoHis() {
-        if (player != null) {
-            long currentPosition = player.getCurrentPosition();
-            long duration = player.getDuration();
-            dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
-        }
-    }
-    //
+
 }
