@@ -128,14 +128,17 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }*/
         playerContext = context;
         if (player == null) {
-            //启用异步缓冲
-            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-            //‌启用异步缓冲区排队
+            ExoPlayer.Builder builder = null;
+            //ABR 不能在非主线程里加载
             if (!isArb) {
-                //ABR 不能在非主线程里加载
+                //启用异步缓冲
+                DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+                //‌启用异步缓冲区排队
                 renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
+                builder = new ExoPlayer.Builder(context, renderersFactory);
+            } else {
+                builder = new ExoPlayer.Builder(context);
             }
-            ExoPlayer.Builder builder = new ExoPlayer.Builder(context, renderersFactory);
             //设置缓存
             builder.setLoadControl(getDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
