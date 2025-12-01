@@ -15,6 +15,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import media.library.images.config.entity.MediaEntity;
+import media.library.player.manager.DBManager;
 import media.library.player.video.act.TestVideoStartAct;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -29,7 +30,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.google_btn).setOnClickListener(this);
         findViewById(R.id.image_camera_btn).setOnClickListener(this);
         findViewById(R.id.video_btn).setOnClickListener(this);
-
+        //设置所有的缓存文件回到 可用状态
+        DBManager.setCacheFileReleaseAll(this);
 
     }
 
@@ -78,8 +80,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             boolean isExit = file.exists();
             boolean isFile = file.isFile();
             ///sdcard/.transforms/synthetic/picker/0/com.android.providers.media.photopicker/media/1000000489.png
-            Log.d("google图片选择器", "type：" + img.type + " path:"
-                    + img.mediaPathSource + " isExit:" + isExit + " isFile:" + isFile);
+            Log.d("google图片选择器", "type：" + img.type + " path:" + img.mediaPathSource + " isExit:" + isExit + " isFile:" + isFile);
         }
     }
 }

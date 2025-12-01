@@ -217,7 +217,9 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     @Override
     public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        return videoPlaysManager.getExoPlayer(pageIndex);
+        CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(pageIndex);
+        customExoPlayer.setARB(true);
+        return customExoPlayer;
     }
 
     @Override
