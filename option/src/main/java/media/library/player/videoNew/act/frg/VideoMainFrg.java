@@ -55,7 +55,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     private ViewPager2 viewPager2;
     private VideoPageRl2 videoPageRl;
     private View viewDataLoading;
-    private TextView tvLoadingData;
+    private TextView tvLoadingData, tvAudioPar;
     private ShortVideoManager2 videoPlaysManager;
 
     private void setViewInit(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -63,6 +63,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         viewPager2 = view.findViewById(R.id.view_pager);
         viewDataLoading = view.findViewById(R.id.view_data_loading);
         tvLoadingData = view.findViewById(R.id.tv_loading_data);
+        tvAudioPar = view.findViewById(R.id.tv_audio_par);
         videoPageRl = view.findViewById(R.id.view_root);
 
         videoPlaysManager = new ShortVideoManager2();
@@ -122,6 +123,12 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 isDataReq = true;
                 tvLoadingData.setText("加载中...");
                 handlerData.sendEmptyMessageDelayed(0, 1 * 1000);
+            }
+        });
+        tvAudioPar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                videoPlaysManager.getCursorVideoPlayer().testTrackSelector();
             }
         });
     }

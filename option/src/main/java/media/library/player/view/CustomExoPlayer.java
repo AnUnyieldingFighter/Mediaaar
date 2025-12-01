@@ -9,9 +9,11 @@ import android.view.Surface;
 import android.view.SurfaceView;
 
 import androidx.annotation.OptIn;
+import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
+import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
@@ -38,8 +40,10 @@ import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.HandlerMedia;
@@ -102,6 +106,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         this.isArb = isArb;
     }
 
+
     @OptIn(markerClass = UnstableApi.class)
     private void initExoPlayer(Context context) {
         if (player != null && playerContext != null && playerContext != context) {
@@ -160,6 +165,8 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     }
 
+
+    //=========================设置缓存策略====================================
     @OptIn(markerClass = UnstableApi.class)
     public void setBuffer(DefaultLoadControl buff) {
         this.buff = buff;
@@ -188,30 +195,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
         return buff;
     }
 
-
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector getDefARB() {
-        if (bandwidthMeter == null) {
-            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
-        }
-        // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-        if (trackSelector == null) {
-            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
-            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
-            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
-            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
-            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
-            // 自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8000,  // 质量提升阈值
-                    20000, // 质量降低阈值
-                    25000, // 保留缓冲
-                    0.8f  // 带宽利用率
-            );
-            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
-        }
-        return trackSelector;
-    }
-
     private int getTargetBufferBytes() {
         ActivityManager am = (ActivityManager) playerContext.getSystemService(Context.ACTIVITY_SERVICE);
         int memoryClass = am.getMemoryClass(); // 获取设备内存等级（MB）
@@ -231,7 +214,78 @@ public class CustomExoPlayer extends BaseExoPlayer {
         return targetBufferBytes;
     }
 
+    //===================设置 音频轨道========================
 
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultTrackSelector getDefARB() {
+        if (bandwidthMeter == null) {
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
+        }
+        // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+        if (trackSelector == null) {
+            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
+            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
+            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
+            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
+            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
+            // 自定义Factory实现差异化配置
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8000,  // 质量提升阈值
+                    20000, // 质量降低阈值
+                    25000, // 保留缓冲
+                    0.8f  // 带宽利用率
+            );
+            // 1. 初始化自适应轨道选择工厂（用于多码率场景）
+            AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
+            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp2);
+        }
+        return trackSelector;
+    }
+
+    public void testTrackSelector() {
+        setPreferredAudioLanguage("zh");
+        //setMaxVideoResolution(100, 100);
+        //
+        disableTrackType(C.TRACK_TYPE_VIDEO);// 禁用视频（纯音频播放）
+        disableTrackType(C.TRACK_TYPE_AUDIO);// 禁用音频（静音播放）
+        disableTrackType(C.TRACK_TYPE_TEXT);// 禁用字幕
+    }
+
+    // 主线程执行
+    @OptIn(markerClass = UnstableApi.class)
+    public void setPreferredAudioLanguage(String... language) {
+        // 语言码：中文=zh, 英文=en, 日文=ja
+        DefaultTrackSelector.Parameters.Builder paramsBuilder = trackSelector.buildUponParameters();
+        if (language.length == 1) {
+            paramsBuilder.setPreferredAudioLanguage(language[0]);
+        } else {
+            paramsBuilder.setPreferredAudioLanguages(language);
+        }
+        DefaultTrackSelector.Parameters params = paramsBuilder.build();
+        trackSelector.setParameters(params);
+    }
+
+    //设置视频分辨率限制（如最大 720p）setMaxVideoResolution(1280, 720)
+    @OptIn(markerClass = UnstableApi.class)
+    public void setMaxVideoResolution(int maxWidth, int maxHeight) {
+        TrackSelectionParameters params = trackSelector.buildUponParameters()
+                .setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
+                // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）
+                .build();
+        trackSelector.setParameters(params);
+    }
+
+    //禁用视频 / 音频 / 字幕轨道
+    @OptIn(markerClass = UnstableApi.class)
+    public void disableTrackType(int trackType) {
+        Set<Integer> set = new HashSet<>();
+        set.add(trackType);
+        TrackSelectionParameters params = trackSelector.buildUponParameters()
+                .setDisabledTrackTypes(set) // 禁用指定轨道类型
+                .build();
+        trackSelector.setParameters(params);
+    }
+
+    //==========================================================
     private Player.Listener listener;
 
     public void addListener(Player.Listener listener) {

@@ -89,34 +89,6 @@ public class ShortVideoManager2 {
         return frgs;
     }
 
-    //跳转指定页面，并且获取对象
-    public VideoBaseFrg0 setPageCurrentItem0() {
-        return setPageCurrentItem(0);
-    }
-
-    //跳转指定页面，并且获取对象
-    public VideoBaseFrg0 setPageCurrentItem(int pageIndex) {
-        int currentItem = viewPagerView.getCurrentItem();
-        VideoBaseFrg0 videoFrg = adapter.getIndexAtFrg(pageIndex);
-        if (currentItem == pageIndex) {
-            return videoFrg;
-        }
-        //调用暂停
-        getCursorFrg().setVideoPause();
-        viewPagerView.setCurrentItem(pageIndex, false);
-        return videoFrg;
-    }
-
-    //更新数据数量
-    public void setUpdateDataSize(int dataSzie) {
-        adapter.setDataSize(dataSzie);
-    }
-
-
-    //设置是否可以滑动页面 true：可以
-    public void setViewPageSlide(boolean isSlide) {
-        viewPagerView.setUserInputEnabled(isSlide);
-    }
 
     //无用
     public void onCheck(Object str, Object obj) {
@@ -125,6 +97,14 @@ public class ShortVideoManager2 {
         }
     }
 
+    private MorePlayerManager playerManager;
+
+    private MorePlayerManager getPlayerManager() {
+        if (playerManager == null) {
+            playerManager = new MorePlayerManager();
+        }
+        return playerManager;
+    }
 
     protected void setClick() {
         viewPagerView.registerOnPageChangeCallback(onPageChange);
@@ -141,12 +121,40 @@ public class ShortVideoManager2 {
         return index;
     }
 
+    //设置是否可以滑动页面 true：可以
+    public void setViewPageSlide(boolean isSlide) {
+        viewPagerView.setUserInputEnabled(isSlide);
+    }
+
+    //更新数据数量
+    public void setUpdateDataSize(int dataSzie) {
+        adapter.setDataSize(dataSzie);
+    }
+
+    //跳转指定页面，并且获取对象
+    public VideoBaseFrg0 setPageCurrentItem0() {
+        return setPageCurrentItem(0);
+    }
+
+    //跳转指定页面，并且获取对象
+    public VideoBaseFrg0 setPageCurrentItem(int pageIndex) {
+        int currentItem = viewPagerView.getCurrentItem();
+        VideoBaseFrg0 videoFrg = adapter.getIndexAtFrg(pageIndex);
+        if (currentItem == pageIndex) {
+            return videoFrg;
+        }
+        //调用暂停
+        getCursorVideoFrg().setVideoPause();
+        viewPagerView.setCurrentItem(pageIndex, false);
+        return videoFrg;
+    }
 
     //获取当前页面对象
     public VideoBaseFrg0 getCursorVideoFrg() {
         return cursorVideoFrg;
     }
 
+    //多余的
     private VideoBaseFrg0 getCursorFrg() {
         int index = viewPagerView.getCurrentItem();
         return getCursorFrg(index);
@@ -164,15 +172,10 @@ public class ShortVideoManager2 {
         return exoPlayer;
     }
 
-    private MorePlayerManager playerManager;
-
-    private MorePlayerManager getPlayerManager() {
-        if (playerManager == null) {
-            playerManager = new MorePlayerManager();
-        }
-        return playerManager;
+    //获取当前的播放器
+    public CustomExoPlayer getCursorVideoPlayer() {
+        return cursorVideoFrg.getExoPlayer();
     }
-
 
     //计算持有者数量（排除问题用）
     private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {
@@ -264,7 +267,7 @@ public class ShortVideoManager2 {
                     startPage = viewPagerView.getCurrentItem();
                     //开始滑动
                     PlayerLog.d("页面滑动开始", "index=" + viewPagerView.getCurrentItem());
-                    getCursorFrg().setVideoPause();
+                    getCursorVideoFrg().setVideoPause();
                     break;
                 case ViewPager.SCROLL_STATE_SETTLING:
                     // 仍在滑动但即将停止
@@ -272,7 +275,7 @@ public class ShortVideoManager2 {
                 case ViewPager.SCROLL_STATE_IDLE:
                     // 滑动结束
                     PlayerLog.d("页面滑动结束", "index=" + viewPagerView.getCurrentItem());
-                    getCursorFrg().setVideoPlay();
+                    getCursorVideoFrg().setVideoPlay();
                     break;
             }
 

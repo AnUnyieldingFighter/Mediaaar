@@ -36,8 +36,18 @@
         android:layout_height="60dp"
         android:layout_alignParentBottom="true"
         android:background="#fff"
-        android:textColor="#181818"
         android:gravity="center"
-        android:text="重新加载数据" />
+        android:text="重新加载数据"
+        android:textColor="#181818" />
 
+    <TextView
+        android:id="@+id/tv_audio_par"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:background="#fff"
+        android:gravity="center"
+        android:text="音频设置"
+        android:textColor="#181818" />
 </media.library.player.view.VideoPageRl2>
