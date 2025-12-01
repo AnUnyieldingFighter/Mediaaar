@@ -15,6 +15,7 @@ import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.VideoSize;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
@@ -27,14 +28,17 @@ import androidx.media3.datasource.rtmp.RtmpDataSource;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
+import androidx.media3.exoplayer.source.TrackGroupArray;
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
@@ -230,21 +234,23 @@ public class CustomExoPlayer extends BaseExoPlayer {
             //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
             //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
             // 自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8000,  // 质量提升阈值
-                    20000, // 质量降低阈值
-                    25000, // 保留缓冲
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(
+                    8 * 1000,  // 质量提升阈值
+                    20 * 1000, // 质量降低阈值
+                    25 * 1000, // 保留缓冲
                     0.8f  // 带宽利用率
             );
 
             // 1. 初始化自适应轨道选择工厂（用于多码率场景）
             AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
-
             trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
+
         }
         return trackSelector;
     }
 
     public void testTrackSelector() {
+        testTrackLog();
         setPreferredAudioLanguage("zh");
         //setMaxVideoResolution(100, 100);
         //
@@ -253,15 +259,32 @@ public class CustomExoPlayer extends BaseExoPlayer {
         disableTrackType(C.TRACK_TYPE_TEXT);// 禁用字幕
     }
 
+    @OptIn(markerClass = UnstableApi.class)
+    public void testTrackLog() {
+        DefaultTrackSelector.Parameters params = trackSelector.getParameters();
+        MappingTrackSelector.MappedTrackInfo infos = trackSelector.getCurrentMappedTrackInfo();
+        if (infos == null) {
+            return;
+        }
+        TrackGroupArray track = infos.getTrackGroups(0);
+        int length = track.length;
+        String str = params.toString();
+        PlayerLog.d(tag, "音频信息" + str);
+    }
+
     // 主线程执行
     @OptIn(markerClass = UnstableApi.class)
     public void setPreferredAudioLanguage(String... language) {
         // 语言码：中文=zh, 英文=en, 日文=ja
         DefaultTrackSelector.Parameters.Builder paramsBuilder = trackSelector.buildUponParameters();
         if (language.length == 1) {
+            // 启用音画同步（默认开启）
             paramsBuilder.setPreferredAudioLanguage(language[0]);
+            paramsBuilder.setPreferredVideoLanguage(language[0]);
         } else {
+            // 启用音画同步（默认开启）
             paramsBuilder.setPreferredAudioLanguages(language);
+            paramsBuilder.setPreferredVideoLanguages(language);
         }
         DefaultTrackSelector.Parameters params = paramsBuilder.build();
         trackSelector.setParameters(params);
@@ -270,8 +293,9 @@ public class CustomExoPlayer extends BaseExoPlayer {
     //设置视频分辨率限制（如最大 720p）setMaxVideoResolution(1280, 720)
     @OptIn(markerClass = UnstableApi.class)
     public void setMaxVideoResolution(int maxWidth, int maxHeight) {
-        TrackSelectionParameters params = trackSelector.buildUponParameters().setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
-                // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）
+        TrackSelectionParameters params = trackSelector.buildUponParameters()
+                .setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
+                // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）无此方法
                 .build();
         trackSelector.setParameters(params);
     }
@@ -299,6 +323,15 @@ public class CustomExoPlayer extends BaseExoPlayer {
                 .setForceDisabledTrackTypes(set)  // 是否显示字幕
                 .build();
         trackSelector.setParameters(params);*/
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    public void setPreferredTextTrack() {
+        // 自适应码率（ABR）配置（Media3 内置，无需额外 Factory）
+        DefaultTrackSelector.Parameters.Builder params = trackSelector.buildUponParameters();
+        /*params.setMinDurationForQualityDecreaseMs()
+        params.setBandwidthFraction(0.8f); // 带宽利用率 80%
+        params .setMinDurationForQualityIncreaseMs(8000); // 8秒后提升画质*/
     }
 
     //==========================================================
@@ -680,6 +713,11 @@ public class CustomExoPlayer extends BaseExoPlayer {
     //设置倍数 大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
     public void setPlaybackSpeed(float speed) {
         player.setPlaybackSpeed(speed);
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    public void setSeekParameters(SeekParameters seekParameters) {
+        player.setSeekParameters(seekParameters);
     }
 
     //设置字幕
