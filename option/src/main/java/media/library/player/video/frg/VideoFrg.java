@@ -160,7 +160,7 @@ public class VideoFrg extends VideoBaseFrg {
             return;
         }
         if (exoPlayer != null) {
-            boolean isSame = exoPlayer.isEqualVideoPaly(url);
+            boolean isSame = exoPlayer.isEqualVideoPlay(url);
             if (isSame) {
                 this.pageIndex = pageIndex;
                 exoPlayer.setPlayerView(playerView);

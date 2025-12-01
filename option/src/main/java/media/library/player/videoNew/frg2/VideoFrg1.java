@@ -15,7 +15,6 @@ import androidx.media3.ui.PlayerView;
 import com.images.imageselect.R;
 
 import media.library.player.bean.VideoPlayVo;
-import media.library.player.manager.HandlerMedia;
 import media.library.player.manager.PlayerLog;
 import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.view.CustomExoPlayer;
@@ -174,7 +173,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             return;
         }
         if (exoPlayer != null) {
-            boolean isSame = exoPlayer.isEqualVideoPaly(url);
+            boolean isSame = exoPlayer.isEqualVideoPlay(url);
             if (isSame) {
                 this.pageIndex = pageIndex;
                 exoPlayer.setPlayerView(playerView);
