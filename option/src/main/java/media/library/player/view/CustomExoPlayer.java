@@ -55,7 +55,6 @@ import media.library.utils.Md5Media;
 //        exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
 public class CustomExoPlayer extends BaseExoPlayer {
 
-    private boolean isInit = false;
 
     public CustomExoPlayer() {
 
@@ -70,7 +69,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     public void initExoPlayer(Context context) {
-        isInit = true;
         if (player != null && playerContext != null && playerContext != context) {
             player.release();
             player = null;
@@ -196,9 +194,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
         return targetBufferBytes;
     }
 
-    public boolean isInit() {
-        return isInit;
-    }
 
     private PlayerView cachePlayerView;
 
@@ -650,7 +645,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             simpleCache = null;
         }
         if (simpleCacheFile != null) {
-            dbSetVideoCacheUsable(playerContext,simpleCacheFile);
+            dbSetVideoCacheUsable(playerContext, simpleCacheFile);
             simpleCacheFile = null;
         }
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
@@ -679,7 +674,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
             cachePlayerView = null;
         }
         if (player != null) {
-            isInit = false;
             player.release();
             setBuffRelease();
             player = null;
