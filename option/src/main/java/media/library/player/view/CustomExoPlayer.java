@@ -3,7 +3,6 @@ package media.library.player.view;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.net.Uri;
 import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -11,11 +10,7 @@ import android.view.SurfaceView;
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.MimeTypes;
-import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackSelectionParameters;
-import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
@@ -33,8 +28,6 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
-import androidx.media3.exoplayer.source.LoadEventInfo;
-import androidx.media3.exoplayer.source.MediaLoadData;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
@@ -44,11 +37,9 @@ import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
 import java.io.File;
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import media.library.db.MediaRoom;
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
@@ -62,9 +53,8 @@ import media.library.utils.Md5Media;
 //        exoPlayer.setPlayWhenReady(false);
 //        //设置循环播放
 //        exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
-public class CustomExoPlayer {
-    private ExoPlayer player;
-    private Context playerContext;
+public class CustomExoPlayer extends BaseExoPlayer {
+
     private boolean isInit = false;
 
     public CustomExoPlayer() {
@@ -88,6 +78,7 @@ public class CustomExoPlayer {
             setCacheRelease();
             PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
         }
+
         if (player != null && isError) {
             player.release();
             player = null;
@@ -123,23 +114,14 @@ public class CustomExoPlayer {
             }
             //
             player = builder.build();
-            playerContext = context;
             player.addListener(new ExoPlayerListener());
             player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
             setVideoSurface(surface);
             addListener(listener);
             addAnalyticsListener(analyticsListener);
         }
+        playerContext = context;
     }
-
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultLoadControl buff;// 负责控制缓冲区大小和加载时机
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultBandwidthMeter bandwidthMeter;//提供实时带宽数据
-
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector trackSelector;//根据网络状况选择最佳码率轨道
-
 
     @OptIn(markerClass = UnstableApi.class)
     public void setBuffer(DefaultLoadControl buff) {
@@ -149,7 +131,7 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private DefaultLoadControl getDefBuffer() {
         if (bandwidthMeter == null) {
-            bandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
         }
         if (buff == null) {
             //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
@@ -174,7 +156,7 @@ public class CustomExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getDefARB() {
         if (bandwidthMeter == null) {
-            bandwidthMeter = new DefaultBandwidthMeter.Builder(context).build();
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
         }
         // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
         if (trackSelector == null) {
@@ -190,13 +172,13 @@ public class CustomExoPlayer {
                     25000, // 保留缓冲
                     0.8f  // 带宽利用率
             );
-            trackSelector = new DefaultTrackSelector(context, factoryTemp);
+            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
         }
         return trackSelector;
     }
 
     private int getTargetBufferBytes() {
-        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = (ActivityManager) playerContext.getSystemService(Context.ACTIVITY_SERVICE);
         int memoryClass = am.getMemoryClass(); // 获取设备内存等级（MB）
         int targetBufferBytes;
         String str = "";
@@ -388,14 +370,13 @@ public class CustomExoPlayer {
         int width = videoSize.width;
         int height = videoSize.height;
         if (width <= 0 && height <= 0) {
-            List<VideoEntity> datas = MediaRoom.geVideoDb(context).queryVideoCache(videoUrl);
+            List<VideoEntity> datas = getDBVideoSize(playerContext, videoUrl);
             if (datas != null && datas.size() > 0) {
                 VideoEntity entity = datas.get(0);
                 if (entity.videoWidth > 0 && entity.videoHeight > 0) {
                     videoSize = new VideoSize(entity.videoWidth, entity.videoHeight);
                 }
             }
-
         }
         return videoSize;
     }
@@ -428,8 +409,6 @@ public class CustomExoPlayer {
         player.setVideoSurfaceView(surfaceView);
     }
 
-    //true 静音
-    private boolean isMute;
 
     public void setMute(boolean isMute) {
         int playbackState = player.getPlaybackState();
@@ -453,8 +432,6 @@ public class CustomExoPlayer {
 
     //======================设置缓存===============================
     private boolean isUseCache;
-    private String videoUrl;
-    private Context context;
 
     public boolean isEqualVideoPaly(String url) {
         if (TextUtils.isEmpty(url)) {
@@ -485,7 +462,6 @@ public class CustomExoPlayer {
         //
         this.isUseCache = isCache;
         this.videoUrl = videoUrl;
-        this.context = context;
         //
         initExoPlayer(context);
         //方式一
@@ -535,7 +511,7 @@ public class CustomExoPlayer {
         switch (type) {
             case "m3u8":
                 // hls链接
-                DataSource.Factory factory = new DefaultDataSource.Factory(context);
+                DataSource.Factory factory = new DefaultDataSource.Factory(playerContext);
                 mediaSource = new HlsMediaSource.Factory(factory)
                         .createMediaSource(videoItem);
                 break;
@@ -557,7 +533,7 @@ public class CustomExoPlayer {
                 // 其他链接（http开头或https开头的普通视频链接）
                 if (!isUseCache) {
                     //默认的  无缓存
-                    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(context);
+                    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
                     mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                             .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
                             .createMediaSource(videoItem);
@@ -566,7 +542,7 @@ public class CustomExoPlayer {
                     simpleCache = createSimpleCache();
                     CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
                             .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(context))
+                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
                             //缓存出错时自动回退到原始源
                             .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
                     //
@@ -597,16 +573,18 @@ public class CustomExoPlayer {
         simpleCacheFile = getCacheFile();
         SimpleCache simpleCache;
         if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(context));
+            simpleCache = new SimpleCache(simpleCacheFile,
+                    new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
         } else {
-            simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(context));
+            simpleCache = new SimpleCache(simpleCacheFile,
+                    new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
         }
         return simpleCache;
     }
 
     //获取缓存文件
     private File getCacheFile() {
-        List<VideoEntity> datas = MediaRoom.geVideoDb(context).queryVideoCache(videoUrl);
+        List<VideoEntity> datas = getDBVideoCache(playerContext, videoUrl);
         int cacheSize = 0;
         File videoFile = null;
         if (datas != null && datas.size() > 0) {
@@ -641,16 +619,10 @@ public class CustomExoPlayer {
         }
         if (videoFile == null) {
             videoFile = createFile(cacheSize);
-            VideoEntity videoEntity = new VideoEntity();
-            videoEntity.videoUrl = videoUrl;
-            videoEntity.videoCachePath = videoFile.getPath();
-            videoEntity.videoCacheType = 1;
-            long time = new Date().getTime();
-            videoEntity.recordTime = time;
-            MediaRoom.geVideoDb(context).put(videoEntity);
+            dbVideoAdd(playerContext, videoUrl, videoFile);
             PlayerLog.d(tag + "缓存地址", "新建 url:" + videoUrl + "\npath:" + videoFile.getPath());
         } else {
-            MediaRoom.geVideoDb(context).setCacheFileUse(videoFile.getPath());
+            dbSetVideoCacheUse(playerContext, videoFile);
             PlayerLog.d(tag + "缓存地址", "取得 url:" + videoUrl + "\npath:" + videoFile.getPath());
         }
 
@@ -662,7 +634,7 @@ public class CustomExoPlayer {
         int randomNumber = random.nextInt(9999999);
         String md5 = Md5Media.encode(videoUrl);
         String fileName = md5 + "_" + index + "_" + randomNumber;
-        String dir = FileUtil.getVideoCacheDir(context);
+        String dir = FileUtil.getVideoCacheDir(playerContext);
         File file = new File(dir, fileName);
         return file;
     }
@@ -678,7 +650,7 @@ public class CustomExoPlayer {
             simpleCache = null;
         }
         if (simpleCacheFile != null) {
-            MediaRoom.geVideoDb(context).setCacheFileRelease(simpleCacheFile.getPath());
+            dbSetVideoCacheUsable(playerContext,simpleCacheFile);
             simpleCacheFile = null;
         }
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
@@ -753,151 +725,8 @@ public class CustomExoPlayer {
         if (player != null) {
             long currentPosition = player.getCurrentPosition();
             long duration = player.getDuration();
-            long time = new Date().getTime();
-            MediaRoom.geVideoDb(context).updateVideoLookHis(videoUrl, currentPosition, duration, time);
+            dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
         }
     }
-
     //
-    private final String tag = "播放器_CustomExoPlayer_";
-    //true 发生错误
-    private boolean isError;
-
-    class ExoPlayerListener implements Player.Listener {
-
-        @Override
-        public void onPlaybackStateChanged(int playbackState) {
-            Player.Listener.super.onPlaybackStateChanged(playbackState);
-            switch (playbackState) {
-                case Player.STATE_IDLE:
-                    //即播放器停止和播放失败时的状态。
-                    break;
-                case Player.STATE_BUFFERING:
-                    // 正在缓冲 state=
-
-                    break;
-                case Player.STATE_READY:
-                    // 准备就绪，可以播放
-                    if (isMute) {
-                        isMute = false;
-                        player.setVolume(0);
-                    }
-                    break;
-                case Player.STATE_ENDED:
-                    //播放结束
-                    break;
-                default:
-
-                    break;
-            }
-        }
-
-
-        @Override
-        public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
-            //接收播放意图改变
-        }
-
-        @Override
-        public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
-            Player.Listener.super.onPositionDiscontinuity(oldPosition, newPosition, reason);
-            // 位置跳跃，例如快进或快退
-            switch (reason) {
-                case Player.DISCONTINUITY_REASON_AUTO_TRANSITION:
-                    // 循环播放
-                    break;
-                case Player.DISCONTINUITY_REASON_SEEK:
-                    // 用户进行了快进或快退操作
-                    break;
-                case Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT:
-                    // 由于缓冲或其他原因，播放位置被自动调整
-                    break;
-                // 其他原因...
-            }
-
-        }
-
-        @Override
-        public void onIsPlayingChanged(boolean isPlaying) {
-            PlayerLog.d(tag, "播放中/播放停止   播放中：" + isPlaying);
-
-        }
-
-        @Override
-        public void onVideoSizeChanged(VideoSize videoSize) {
-            PlayerLog.d(tag, "视频大小  width：" + videoSize.width + " height:" + videoSize.height);
-            if (!TextUtils.isEmpty(videoUrl)) {
-                MediaRoom.geVideoDb(context).updateVideoSize(videoUrl, videoSize.width, videoSize.height);
-            }
-        }
-
-        @OptIn(markerClass = UnstableApi.class)
-        @Override
-        public void onPlayerError(PlaybackException error) {
-
-            //发生错误：
-            //Source error code:2007 codeName:ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED  不允许明文传输
-            //Source error code:2002 codeName:ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT 网络连接失败
-            //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
-            //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
-            PlayerLog.d(tag, "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
-            switch (error.errorCode) {
-                case PlaybackException.ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED:
-                case PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT:
-                case PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS:
-                case PlaybackException.ERROR_CODE_FAILED_RUNTIME_CHECK:
-                    isError = true;
-                    //player.release();
-                    //player.set
-                    //player.prepare();
-                    break;
-            }
-        }
-
-        @Override
-        public void onTracksChanged(Tracks tracks) {
-
-        }
-    }
-
-    @UnstableApi
-    class ExoPlayerAnalyticsListener implements AnalyticsListener {
-        @Override
-        public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo,
-                                    MediaLoadData mediaLoadData) {
-            AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
-            // 记录下载速度
-            long speedKbps = loadEventInfo.bytesLoaded * 8 / (loadEventInfo.loadDurationMs * 1000);
-            PlayerLog.d(tag, "缓冲完成 下载速度:  " + speedKbps + "kbps");
-            /*PlayerLog.d(tag, "下载速度 loadTaskId:  " + loadEventInfo.loadTaskId + " Uri="+loadEventInfo.uri);
-            PlayerLog.d(tag, "下载速度 加载耗时:  " + loadEventInfo.loadDurationMs + " 已加载字节数："+loadEventInfo.bytesLoaded);
-*/
-        }
-
-        @Override
-        public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
-            long bufferedPosition = player.getBufferedPosition();
-            long currentPosition = player.getCurrentPosition();
-            PlayerLog.d(tag, "缓冲开始:  播放位置=" + currentPosition + " 缓存=" + bufferedPosition);
-        }
-
-        @Override
-        public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
-            PlayerLog.d(tag, "缓冲 带宽:  总加载时长=" + totalLoadTimeMs + " 总加载字节=" + totalBytesLoaded + " 带宽估计值(dps)=" + bitrateEstimate);
-            if (trackSelector != null) {
-                // 根据带宽调整ABR策略
-                DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters()
-                        .setMaxVideoBitrate((int) (bitrateEstimate * 0.8)); // 保留20%余量
-                trackSelector.setParameters(builder);
-            }
-
-        }
-
-        @Override
-        public void onPlaybackStateChanged(EventTime eventTime, int state) {
-            // PlayerLog.d(tag, "playbackState： " + state + "kbps");
-        }
-
-    }
-
 }
