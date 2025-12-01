@@ -24,7 +24,7 @@ class BaseExoPlayer extends PlayerDB {
     // 负责控制缓冲区大小和加载时机
     @OptIn(markerClass = UnstableApi.class)
     protected DefaultLoadControl buff;
-    //提供实时带宽数据
+    //带宽检测器：监测网络带宽
     @OptIn(markerClass = UnstableApi.class)
     protected DefaultBandwidthMeter bandwidthMeter;
     //根据网络状况选择最佳码率轨道,音视频轨道选择组件

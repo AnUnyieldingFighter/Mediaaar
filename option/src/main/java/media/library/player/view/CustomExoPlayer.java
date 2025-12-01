@@ -219,6 +219,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getDefARB() {
         if (bandwidthMeter == null) {
+            // 带宽检测器：监测网络带宽
             bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
         }
         // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
@@ -234,9 +235,11 @@ public class CustomExoPlayer extends BaseExoPlayer {
                     25000, // 保留缓冲
                     0.8f  // 带宽利用率
             );
+
             // 1. 初始化自适应轨道选择工厂（用于多码率场景）
             AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
-            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp2);
+
+            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
         }
         return trackSelector;
     }
@@ -267,8 +270,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
     //设置视频分辨率限制（如最大 720p）setMaxVideoResolution(1280, 720)
     @OptIn(markerClass = UnstableApi.class)
     public void setMaxVideoResolution(int maxWidth, int maxHeight) {
-        TrackSelectionParameters params = trackSelector.buildUponParameters()
-                .setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
+        TrackSelectionParameters params = trackSelector.buildUponParameters().setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
                 // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）
                 .build();
         trackSelector.setParameters(params);
@@ -283,6 +285,20 @@ public class CustomExoPlayer extends BaseExoPlayer {
                 .setDisabledTrackTypes(set) // 禁用指定轨道类型
                 .build();
         trackSelector.setParameters(params);
+    }
+
+    // 主线程执行 无此方法 setForceDisabledTrackTypes
+    @OptIn(markerClass = UnstableApi.class)
+    public void setPreferredTextTrack(boolean showText, String preferredLanguage) {
+        Set<Integer> set = new HashSet<>();
+        if (!showText) {
+            set.add(C.TRACK_TYPE_TEXT);
+        }
+        /*TrackSelectionParameters params = trackSelector.buildUponParameters()
+                .setPreferredTextLanguage(preferredLanguage) // 字幕优先语言
+                .setForceDisabledTrackTypes(set)  // 是否显示字幕
+                .build();
+        trackSelector.setParameters(params);*/
     }
 
     //==========================================================
