@@ -69,39 +69,7 @@ public class ShortVideoManager2 {
         onPageChange = new OnPageChange();
         if (pageCurrentItem > 0) {
             viewPagerView.setCurrentItem(pageCurrentItem, false);
-        }
-        if (pageCurrentItem >= 0) {
             cursorVideoFrg = adapter.getIndexAtFrg(pageCurrentItem);
-        }
-    }
-
-    //跳转指定页面，并且获取对象
-    public VideoBaseFrg0 setPageCurrentItem0() {
-        int currentItem = viewPagerView.getCurrentItem();
-        if (currentItem != 0) {
-            //调用暂停
-            getCursorFrg().setVideoPause();
-        }
-        viewPagerView.setCurrentItem(0, false);
-        VideoBaseFrg0 videoFrg = adapter.getIndexAtFrg(0);
-        return videoFrg;
-    }
-
-    public void setUpdateDataSize(int dataSzie) {
-        adapter.setDataSize(dataSzie);
-    }
-
-    public VideoBaseFrg0 getCursorVideoFrg() {
-        return cursorVideoFrg;
-    }
-
-    public void setViewPageSlide(boolean isSlide) {
-        viewPagerView.setUserInputEnabled(isSlide);
-    }
-
-    public void onCheck(Object str, Object obj) {
-        if (obj instanceof ExoPlayer) {
-            calculateFrgHoldPlayer(str.toString(), (ExoPlayer) obj);
         }
     }
 
@@ -121,6 +89,42 @@ public class ShortVideoManager2 {
         return frgs;
     }
 
+    //跳转指定页面，并且获取对象
+    public VideoBaseFrg0 setPageCurrentItem0() {
+        return setPageCurrentItem(0);
+    }
+
+    //跳转指定页面，并且获取对象
+    public VideoBaseFrg0 setPageCurrentItem(int pageIndex) {
+        int currentItem = viewPagerView.getCurrentItem();
+        VideoBaseFrg0 videoFrg = adapter.getIndexAtFrg(pageIndex);
+        if (currentItem == pageIndex) {
+            return videoFrg;
+        }
+        //调用暂停
+        getCursorFrg().setVideoPause();
+        viewPagerView.setCurrentItem(pageIndex, false);
+        return videoFrg;
+    }
+
+    //更新数据数量
+    public void setUpdateDataSize(int dataSzie) {
+        adapter.setDataSize(dataSzie);
+    }
+
+
+    //设置是否可以滑动页面 true：可以
+    public void setViewPageSlide(boolean isSlide) {
+        viewPagerView.setUserInputEnabled(isSlide);
+    }
+
+    //无用
+    public void onCheck(Object str, Object obj) {
+        if (obj instanceof ExoPlayer) {
+            calculateFrgHoldPlayer(str.toString(), (ExoPlayer) obj);
+        }
+    }
+
 
     protected void setClick() {
         viewPagerView.registerOnPageChangeCallback(onPageChange);
@@ -131,27 +135,32 @@ public class ShortVideoManager2 {
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
     }
 
+    //获取当前页面索引
     public int getResumeIndex() {
         int index = viewPagerView.getCurrentItem();
         return index;
     }
 
 
+    //获取当前页面对象
+    public VideoBaseFrg0 getCursorVideoFrg() {
+        return cursorVideoFrg;
+    }
+
     private VideoBaseFrg0 getCursorFrg() {
         int index = viewPagerView.getCurrentItem();
         return getCursorFrg(index);
     }
 
+    //获取指定页面对象
     private VideoBaseFrg0 getCursorFrg(int index) {
         return adapter.getIndexAtFrg(index);
     }
 
-
+    //获取播放器
     public CustomExoPlayer getExoPlayer(Integer pageIndex) {
-        int playersMax = getPlayerManager().getPlayersMax();
-        int index = pageIndex % playersMax;
-        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index);
-        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(index);
+        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + pageIndex);
+        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(pageIndex);
         return exoPlayer;
     }
 
@@ -278,7 +287,7 @@ public class ShortVideoManager2 {
         }
     }
 
-
+    //获取 播放进度的Handler
     private HandlerUi handlerUi = new HandlerUi();
 
     class HandlerUi extends Handler {

@@ -8,16 +8,6 @@ import java.util.Set;
 import media.library.player.view.CustomExoPlayer;
 
 public class MorePlayerManager {
-    private static MorePlayerManager playerManager;
-
-    public static MorePlayerManager getInstance() {
-        if (playerManager == null) {
-            playerManager = new MorePlayerManager();
-        }
-        return playerManager;
-    }
-
-
     private HashMap<Integer, CustomExoPlayer> players = new HashMap<>();
     private int playersMax = 7;
 
@@ -25,7 +15,8 @@ public class MorePlayerManager {
         return playersMax;
     }
 
-    public CustomExoPlayer getCustomExoPlayer(Integer index) {
+    public CustomExoPlayer getCustomExoPlayer(Integer pageIndex) {
+        int index = pageIndex % playersMax;
         CustomExoPlayer temp = players.get(index);
         if (temp == null) {
             temp = new CustomExoPlayer();

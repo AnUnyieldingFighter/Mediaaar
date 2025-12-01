@@ -157,17 +157,7 @@ public class ShortVideoManager {
     }
 
 
-    //缓存数量等于 frgs 的数量
-    private HashMap<Integer, String> urlIndexs = new HashMap<>();
 
-    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        int playersMax = getPlayerManager().getPlayersMax();
-        int index = pageIndex % playersMax;
-        urlIndexs.put(index, videoUrl);
-        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + index + " videoUrl:" + videoUrl);
-        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(index);
-        return exoPlayer;
-    }
 
     private MorePlayerManager playerManager;
 
