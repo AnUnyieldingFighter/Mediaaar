@@ -3,6 +3,7 @@ package media.library.player.view;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Random;
 
 import media.library.player.bean.VideoEntity;
+import media.library.player.manager.HandlerMedia;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
 import media.library.utils.Md5Media;
@@ -171,8 +173,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         if (buff == null) {
             //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
             DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
-            build.setBufferDurationsMs(
-                    15000,  // 最小缓冲时间（触发加载的阈值
+            build.setBufferDurationsMs(15000,  // 最小缓冲时间（触发加载的阈值
                     30000,  // 最大缓冲时间（停止加载的阈值）
                     2500,  // 播放开始前预缓冲时间
                     5000  // 重新缓冲后预缓冲时间
@@ -201,8 +202,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
             //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
             // 自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(
-                    8000,  // 质量提升阈值
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8000,  // 质量提升阈值
                     20000, // 质量降低阈值
                     25000, // 保留缓冲
                     0.8f  // 带宽利用率
@@ -304,8 +304,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         MediaItem.Builder builder = new MediaItem.Builder()
                 //.setMediaMetadata(mediaMetadata)
                 //.setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
-                .setUri(videoUrl)
-                .setMediaId(videoUrl);
+                .setUri(videoUrl).setMediaId(videoUrl);
         //字幕
         //setSubtitle(builder);
         MediaItem videoItem = builder.build();
@@ -314,19 +313,15 @@ public class CustomExoPlayer extends BaseExoPlayer {
             case "m3u8":
                 // hls链接
                 DataSource.Factory factory = new DefaultDataSource.Factory(playerContext);
-                mediaSource = new HlsMediaSource.Factory(factory)
-                        .createMediaSource(videoItem);
+                mediaSource = new HlsMediaSource.Factory(factory).createMediaSource(videoItem);
                 break;
             case "rtsp":
                 // rtsp链接
-                mediaSource = new RtspMediaSource.Factory()
-                        .createMediaSource(videoItem);
+                mediaSource = new RtspMediaSource.Factory().createMediaSource(videoItem);
                 break;
             case "rtmp":
                 // rtmp链接
-                mediaSource = new ProgressiveMediaSource
-                        .Factory(new RtmpDataSource.Factory())
-                        .createMediaSource(videoItem);
+                mediaSource = new ProgressiveMediaSource.Factory(new RtmpDataSource.Factory()).createMediaSource(videoItem);
                 break;
             default:
                 //ProgressiveMediaSource 处理数据源 并异步加载
@@ -335,21 +330,15 @@ public class CustomExoPlayer extends BaseExoPlayer {
                 if (!isUseCache) {
                     //默认的  无缓存
                     DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                            .createMediaSource(videoItem);
+                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
                 } else {
                     //构建缓存
                     simpleCache = createSimpleCache();
-                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
-                            .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory().setCache(simpleCache).setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
                             //缓存出错时自动回退到原始源
                             .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
                     //
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                            .createMediaSource(videoItem);
+                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
                 }
                 break;
         }
@@ -369,11 +358,9 @@ public class CustomExoPlayer extends BaseExoPlayer {
         simpleCacheFile = getCacheFile();
         SimpleCache simpleCache;
         if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheFile,
-                    new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
+            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
         } else {
-            simpleCache = new SimpleCache(simpleCacheFile,
-                    new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
+            simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
         }
         return simpleCache;
     }
@@ -449,12 +436,9 @@ public class CustomExoPlayer extends BaseExoPlayer {
             String str = "";
             if (mediaMetadata != null) {
 
-                str = mediaMetadata.title + "-" + mediaMetadata.albumTitle + "-" +
-                        mediaMetadata.subtitle + "-" + mediaMetadata.description + "-"
-                        + mediaMetadata.artworkUri;
+                str = mediaMetadata.title + "-" + mediaMetadata.albumTitle + "-" + mediaMetadata.subtitle + "-" + mediaMetadata.description + "-" + mediaMetadata.artworkUri;
             }
-            PlayerLog.d("视频播放Url", "当前播放地址 mediaId："
-                    + mediaId + " str:" + str);
+            PlayerLog.d("视频播放Url", "当前播放地址 mediaId：" + mediaId + " str:" + str);
         }
 
     }
@@ -480,8 +464,25 @@ public class CustomExoPlayer extends BaseExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     private void setBuffRelease() {
         if (trackSelector != null) {
-            trackSelector.release();
+            //不要设置释放，会报错  DefaultTrackSelector is accessed on the wrong thread.
+            //trackSelector.release();
             trackSelector = null;
+         /*   if (Looper.myLooper() == Looper.getMainLooper()) {
+                //已在主线程，直接执行
+                trackSelector.release();
+                trackSelector = null;
+
+            } else {
+                HandlerMedia.runInMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 子线程，切换主线程
+                        trackSelector.release();
+                        trackSelector = null;
+                    }
+                });
+            }*/
+
         }
         if (buff != null) {
             //buff.onReleased();

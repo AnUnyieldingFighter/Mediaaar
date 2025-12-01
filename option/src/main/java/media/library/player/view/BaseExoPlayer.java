@@ -27,7 +27,7 @@ class BaseExoPlayer extends PlayerDB {
     //提供实时带宽数据
     @OptIn(markerClass = UnstableApi.class)
     protected DefaultBandwidthMeter bandwidthMeter;
-    //根据网络状况选择最佳码率轨道
+    //根据网络状况选择最佳码率轨道,音视频轨道选择组件
     @OptIn(markerClass = UnstableApi.class)
     protected DefaultTrackSelector trackSelector;
     //
