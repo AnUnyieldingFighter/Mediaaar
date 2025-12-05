@@ -64,10 +64,12 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
 
     public void setFrgs(ArrayList<VideoBaseFrg0> frgs) {
         this.frgs = frgs;
+        this.dataSize = frgs.size();
     }
 
     public void setData(ArrayList<VideoBaseFrg0> frgs) {
         this.frgs = frgs;
+        this.dataSize = frgs.size();
         notifyDataSetChanged();
     }
 
