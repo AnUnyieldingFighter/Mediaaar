@@ -43,7 +43,7 @@ public class ShortVideoManager2 {
     }
 
     private ViewPager2 viewPagerView;
-    private VideoPagerAdapter3 adapter;
+    protected VideoPagerAdapter3 adapter;
     private VideoBaseFrg0 cursorVideoFrg;
     private OnPageChange onPageChange;
 
@@ -56,6 +56,17 @@ public class ShortVideoManager2 {
         if (activity == null && fragment == null) {
             return;
         }
+        setAdapter();
+        //设置为1时 显示第五个页面时 才销毁第第一个
+        viewPagerView.setOffscreenPageLimit(1);
+        onPageChange = new OnPageChange();
+        if (pageCurrentItem > 0) {
+            viewPagerView.setCurrentItem(pageCurrentItem, false);
+            cursorVideoFrg = adapter.getIndexAtFrg(pageCurrentItem);
+        }
+    }
+
+    protected void setAdapter() {
         ArrayList<VideoBaseFrg0> frgs = getFrgs();
         if (activity != null) {
             adapter = new VideoPagerAdapter3(activity, frgs.size());
@@ -64,13 +75,6 @@ public class ShortVideoManager2 {
         }
         viewPagerView.setAdapter(adapter);
         adapter.setFrgs(frgs);
-        //设置为1时 显示第五个页面时 才销毁第第一个
-        viewPagerView.setOffscreenPageLimit(1);
-        onPageChange = new OnPageChange();
-        if (pageCurrentItem > 0) {
-            viewPagerView.setCurrentItem(pageCurrentItem, false);
-            cursorVideoFrg = adapter.getIndexAtFrg(pageCurrentItem);
-        }
     }
 
     //设置7个页面
@@ -204,6 +208,18 @@ public class ShortVideoManager2 {
         }
     }
 
+    //true 删除
+    private boolean isDel;
+
+    public void delFrg(int index) {
+        isDel = true;
+        setAdapter();
+        cursorVideoFrg = null;
+        PlayerLog.d("页面删除", "index=" + index);
+        if (index >= 0) {
+            viewPagerView.setCurrentItem(index, false);
+        }
+    }
 
     public void onResume() {
         handlerUi.start();
@@ -221,7 +237,11 @@ public class ShortVideoManager2 {
             // 当页面滑动结束时调用，即页面完全改变时
             int indexPage = viewPagerView.getCurrentItem();
             cursorVideoFrg = getCursorFrg(indexPage);
-            PlayerLog.d("页面滑动 最后结果", "index=" + indexPage);
+            PlayerLog.d("页面滑动 选中", "index=" + indexPage + " 删除：" + isDel);
+            if (isDel) {
+                isDel = false;
+                return;
+            }
             if (indexPage > startPage) {
                 //上划 要预加载下一页
                 var isInfinite = adapter.isInfinite();
@@ -322,4 +342,5 @@ public class ShortVideoManager2 {
     public void setOnVideoLoading(OnVideoLoading onVideoLoading) {
         this.onVideoLoading = onVideoLoading;
     }
+
 }
