@@ -170,6 +170,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     }
 
+    //是否已经初始化
+    public boolean isInit() {
+        return player != null;
+    }
 
     //=========================设置缓存策略====================================
     @OptIn(markerClass = UnstableApi.class)
@@ -722,6 +726,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         videoSpeed = null;
         player.setPlaybackSpeed(speed);
     }
+
     //获取播放倍速
     public float getPlaybackSpeed() {
         PlaybackParameters parameters = getPlaybackParameters();
