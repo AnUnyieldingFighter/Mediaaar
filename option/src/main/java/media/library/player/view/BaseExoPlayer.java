@@ -37,6 +37,12 @@ class BaseExoPlayer extends PlayerDB {
     protected boolean isError;
     //true 静音 在播放器准备完成之前 可以设置
     protected boolean isMute;
+    //true 准备好了
+    protected boolean isReady;
+
+    public boolean isReady() {
+        return isReady;
+    }
 
     class ExoPlayerListener implements Player.Listener {
 
@@ -53,6 +59,7 @@ class BaseExoPlayer extends PlayerDB {
                     break;
                 case Player.STATE_READY:
                     // 准备就绪，可以播放
+                    isReady = true;
                     if (isMute) {
                         isMute = false;
                         player.setVolume(0);
@@ -122,6 +129,7 @@ class BaseExoPlayer extends PlayerDB {
                 case PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS:
                 case PlaybackException.ERROR_CODE_FAILED_RUNTIME_CHECK:
                     isError = true;
+                    isReady = false;
                     //player.release();
                     //player.set
                     //player.prepare();
@@ -138,8 +146,7 @@ class BaseExoPlayer extends PlayerDB {
     @UnstableApi
     class ExoPlayerAnalyticsListener implements AnalyticsListener {
         @Override
-        public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo,
-                                    MediaLoadData mediaLoadData) {
+        public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
             AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
             // 记录下载速度
             long speedKbps = loadEventInfo.bytesLoaded * 8 / (loadEventInfo.loadDurationMs * 1000);
@@ -161,8 +168,7 @@ class BaseExoPlayer extends PlayerDB {
             PlayerLog.d(tag, "缓冲 带宽:  总加载时长=" + totalLoadTimeMs + " 总加载字节=" + totalBytesLoaded + " 带宽估计值(dps)=" + bitrateEstimate);
             if (trackSelector != null) {
                 // 根据带宽调整ABR策略
-                DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters()
-                        .setMaxVideoBitrate((int) (bitrateEstimate * 0.8)); // 保留20%余量
+                DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters().setMaxVideoBitrate((int) (bitrateEstimate * 0.8)); // 保留20%余量
                 trackSelector.setParameters(builder);
             }
 

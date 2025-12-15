@@ -1,6 +1,7 @@
 package media.library.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.text.TextUtils;
 
@@ -17,10 +18,10 @@ import static android.os.Environment.getExternalStorageDirectory;
  * Environment.getDataDirectory():      /data
  * Context.getCacheDir():               /data/data/com.learn.test/cache
  * Context.getFilesDir():               /data/data/com.learn.test/files
- *
+ * <p>
  * Context.getExternalFilesDir()：SDCard/Android/data/你的应用的包名/files/
  * Context.getExternalCacheDir()：SDCard/Android/data/你的应用包名/cache/
-
+ * <p>
  * Created by guom on 2016/10/17.
  */
 public class FileUtil {
@@ -152,5 +153,51 @@ public class FileUtil {
 
     private static boolean existSDCard() {
         return Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED);
+    }
+
+
+    //=============================
+    private final static String NAME = "video_data";
+    private static SharedPreferences shared;
+    public final static String video_locked_speed = "video_data";
+
+
+    /**
+     * 保存数据
+     */
+    public static void stringSave(Context context, String name, Object value) {
+        if (shared == null) {
+            shared = context.getSharedPreferences(NAME, 0);
+        }
+        shared.edit().putString(name, String.valueOf(value)).commit();
+        shared = null;
+    }
+
+    /**
+     * 读取数据
+     */
+    public static String stringGet(Context context, String name) {
+        if (shared == null) {
+            shared = context.getSharedPreferences(NAME, 0);
+        }
+        return shared.getString(name, "");
+    }
+
+    public static void floatSave(Context context, String name, float value) {
+        if (shared == null) {
+            shared = context.getSharedPreferences(NAME, 0);
+        }
+        shared.edit().putFloat(name, value).commit();
+        shared = null;
+    }
+
+    /**
+     * 读取数据
+     */
+    public static float floatGet(Context context, String name) {
+        if (shared == null) {
+            shared = context.getSharedPreferences(NAME, 0);
+        }
+        return shared.getFloat(name, -1f);
     }
 }

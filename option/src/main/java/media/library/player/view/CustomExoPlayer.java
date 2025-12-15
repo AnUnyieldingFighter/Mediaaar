@@ -3,7 +3,6 @@ package media.library.player.view;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -16,7 +15,6 @@ import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.VideoSize;
-import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
@@ -51,7 +49,6 @@ import java.util.Random;
 import java.util.Set;
 
 import media.library.player.bean.VideoEntity;
-import media.library.player.manager.HandlerMedia;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
 import media.library.utils.Md5Media;
@@ -72,7 +69,9 @@ public class CustomExoPlayer extends BaseExoPlayer {
     }
 
     //==========================设置播放器数据，以便初始化===========================================
+    //tru 开启缓存
     private boolean isUseCache;
+
 
     /**
      * @param videoUrl 播放器url
@@ -89,6 +88,17 @@ public class CustomExoPlayer extends BaseExoPlayer {
      */
     @UnstableApi
     public void setPlayerVideo(Context context, String videoUrl, boolean isCache) {
+        setPlayerVideo(context, videoUrl, isCache, false);
+    }
+
+    /**
+     * @param videoUrl      播放器url
+     * @param isCache       true 可以缓存
+     * @param isLockedSpeed 锁定播放速度
+     */
+    @UnstableApi
+    public void setPlayerVideo(Context context, String videoUrl, boolean isCache, boolean isLockedSpeed) {
+        isReady = false;
         setCacheRelease();
         //
         this.isUseCache = isCache;
@@ -167,7 +177,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
             addListener(listener);
             addAnalyticsListener(analyticsListener);
         }
-
+        if (videoSpeed != null) {
+            player.setPlaybackSpeed(videoSpeed);
+            videoSpeed = null;
+        }
     }
 
     //是否已经初始化
@@ -239,8 +252,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
             //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
             // 自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(
-                    8 * 1000,  // 质量提升阈值
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8 * 1000,  // 质量提升阈值
                     20 * 1000, // 质量降低阈值
                     25 * 1000, // 保留缓冲
                     0.8f  // 带宽利用率
@@ -298,8 +310,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
     //设置视频分辨率限制（如最大 720p）setMaxVideoResolution(1280, 720)
     @OptIn(markerClass = UnstableApi.class)
     public void setMaxVideoResolution(int maxWidth, int maxHeight) {
-        TrackSelectionParameters params = trackSelector.buildUponParameters()
-                .setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
+        TrackSelectionParameters params = trackSelector.buildUponParameters().setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
                 // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）无此方法
                 .build();
         trackSelector.setParameters(params);
@@ -310,8 +321,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
     public void disableTrackType(int trackType) {
         Set<Integer> set = new HashSet<>();
         set.add(trackType);
-        TrackSelectionParameters params = trackSelector.buildUponParameters()
-                .setDisabledTrackTypes(set) // 禁用指定轨道类型
+        TrackSelectionParameters params = trackSelector.buildUponParameters().setDisabledTrackTypes(set) // 禁用指定轨道类型
                 .build();
         trackSelector.setParameters(params);
     }
@@ -673,6 +683,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     //======================获取播放器的相关数据，设置播放器数据==============================
 
+
     //准备
     public void prepare() {
         player.prepare();
@@ -713,18 +724,33 @@ public class CustomExoPlayer extends BaseExoPlayer {
         // if(exoPlayer.isReleased()){}
         //exoPlayer.play();
         player.setPlayWhenReady(true);
+        setLockedSpeed();
     }
+
 
     private Float videoSpeed = null;
 
     //设置倍速 大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
     public void setPlaybackSpeed(float speed) {
+        setPlaybackSpeed(speed, isLockedSpeed);
+    }
+
+    /**
+     * @param speed         大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
+     * @param isLockedSpeed true 锁定倍速
+     */
+    public void setPlaybackSpeed(float speed, boolean isLockedSpeed) {
         if (player == null) {
             this.videoSpeed = speed;
             return;
         }
         videoSpeed = null;
         player.setPlaybackSpeed(speed);
+        //锁定速度
+        this.isLockedSpeed = isLockedSpeed;
+        if (isLockedSpeed) {
+            FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
+        }
     }
 
     //获取播放倍速
@@ -734,6 +760,35 @@ public class CustomExoPlayer extends BaseExoPlayer {
             return 1.0f;
         }
         return parameters.speed;
+    }
+    //true 锁定播放速度
+    private boolean isLockedSpeed;
+
+    public void setIsLockedSpeed(boolean isLockedSpeed) {
+        this.isLockedSpeed = isLockedSpeed;
+        setLockedSpeed();
+    }
+    //设置锁定速度
+    private void setLockedSpeed() {
+        float speedNow = getPlaybackSpeed();
+        if (isLockedSpeed) {
+            //锁定播放速度
+            float speed = FileUtil.floatGet(playerContext, FileUtil.video_locked_speed);
+            if (speed == -1) {
+                speed = 1;
+            }
+            float lookSpeed = speed;
+            if (lookSpeed == speedNow) {
+                return;
+            }
+            setPlaybackSpeed(lookSpeed);
+        } else {
+            if (speedNow == 1) {
+                return;
+            }
+            setPlaybackSpeed(1);
+        }
+
     }
 
     //获取播放参数
