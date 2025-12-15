@@ -81,23 +81,12 @@ public class CustomExoPlayer extends BaseExoPlayer {
         setPlayerVideo(context, videoUrl, false);
     }
 
-
     /**
      * @param videoUrl 播放器url
      * @param isCache  true 可以缓存
      */
     @UnstableApi
     public void setPlayerVideo(Context context, String videoUrl, boolean isCache) {
-        setPlayerVideo(context, videoUrl, isCache, false);
-    }
-
-    /**
-     * @param videoUrl      播放器url
-     * @param isCache       true 可以缓存
-     * @param isLockedSpeed 锁定播放速度
-     */
-    @UnstableApi
-    public void setPlayerVideo(Context context, String videoUrl, boolean isCache, boolean isLockedSpeed) {
         isReady = false;
         setCacheRelease();
         //
@@ -741,15 +730,18 @@ public class CustomExoPlayer extends BaseExoPlayer {
     public void setPlaybackSpeed(float speed, boolean isLockedSpeed) {
         //锁定速度
         this.isLockedSpeed = isLockedSpeed;
+        if (isLockedSpeed) {
+            if (lockedSpeed != speed) {
+                FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
+            }
+            lockedSpeed = speed;
+        }
         if (player == null) {
             this.videoSpeed = speed;
             return;
         }
         videoSpeed = null;
         player.setPlaybackSpeed(speed);
-        if (isLockedSpeed) {
-            FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
-        }
     }
 
     //获取播放倍速
@@ -763,6 +755,8 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     //true 锁定播放速度
     private boolean isLockedSpeed;
+    //锁定的速度
+    private float lockedSpeed = -1;
 
     /**
      * 锁定播放速度
@@ -776,23 +770,21 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     //设置锁定速度
     private void setLockedSpeed() {
-        float speedNow = getPlaybackSpeed();
         if (isLockedSpeed) {
+            float speedNow = getPlaybackSpeed();
             //锁定播放速度
-            float speed = FileUtil.floatGet(playerContext, FileUtil.video_locked_speed);
-            if (speed == -1) {
-                speed = 1;
+            if (lockedSpeed == -1) {
+                float speed = FileUtil.floatGet(playerContext, FileUtil.video_locked_speed);
+                if (speed == -1) {
+                    speed = 1;
+                }
+                lockedSpeed = speed;
             }
-            float lookSpeed = speed;
+            float lookSpeed = lockedSpeed;
             if (lookSpeed == speedNow) {
                 return;
             }
             setPlaybackSpeed(lookSpeed);
-        } else {
-            if (speedNow == 1) {
-                return;
-            }
-            setPlaybackSpeed(1);
         }
 
     }
