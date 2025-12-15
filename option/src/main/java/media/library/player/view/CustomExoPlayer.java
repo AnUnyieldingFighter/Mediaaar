@@ -727,27 +727,26 @@ public class CustomExoPlayer extends BaseExoPlayer {
         setLockedSpeed();
     }
 
-
-    private Float videoSpeed = null;
-
     //设置倍速 大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
     public void setPlaybackSpeed(float speed) {
         setPlaybackSpeed(speed, isLockedSpeed);
     }
+
+    private Float videoSpeed = null;
 
     /**
      * @param speed         大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
      * @param isLockedSpeed true 锁定倍速
      */
     public void setPlaybackSpeed(float speed, boolean isLockedSpeed) {
+        //锁定速度
+        this.isLockedSpeed = isLockedSpeed;
         if (player == null) {
             this.videoSpeed = speed;
             return;
         }
         videoSpeed = null;
         player.setPlaybackSpeed(speed);
-        //锁定速度
-        this.isLockedSpeed = isLockedSpeed;
         if (isLockedSpeed) {
             FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
         }
@@ -761,13 +760,20 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         return parameters.speed;
     }
+
     //true 锁定播放速度
     private boolean isLockedSpeed;
 
+    /**
+     * 锁定播放速度
+     *
+     * @param isLockedSpeed true 锁定播放速度
+     */
     public void setIsLockedSpeed(boolean isLockedSpeed) {
         this.isLockedSpeed = isLockedSpeed;
         setLockedSpeed();
     }
+
     //设置锁定速度
     private void setLockedSpeed() {
         float speedNow = getPlaybackSpeed();
