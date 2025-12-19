@@ -402,7 +402,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     }
 
     //准备就绪
-    protected void onPlayReady() {
+    protected void onPlayReadyCompleted() {
 
     }
 
@@ -432,7 +432,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
                     break;
                 case Player.STATE_READY:
                     PlayerLog.d("视频播放", "播放状态 准备就绪，可以播放 state=" + playbackState);
-                    onPlayReady();
+                    onPlayReadyCompleted();
                     updatePlaybackStatus(false);
                     break;
                 case Player.STATE_ENDED:
