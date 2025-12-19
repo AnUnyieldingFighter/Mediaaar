@@ -1,7 +1,10 @@
 package media.library.player.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.text.TextUtils;
+import android.view.TextureView;
+import android.view.View;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.PlaybackException;

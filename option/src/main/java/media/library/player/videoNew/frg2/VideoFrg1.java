@@ -129,6 +129,9 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         exoPlayer.setRepeatMode(getPlayMode());
         //立即显示控制器（需在setPlayer()之后调用）
         playerView.showController();
+        if (isResume) {
+            exoPlayer.addListener(playerListener);
+        }
         onNewPlay();
     }
 
@@ -166,7 +169,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     }
 
     //更新播放源
-    public void updateVideoUrl(int pageIndex, String url) {
+    private void updateVideoUrl(int pageIndex, String url) {
         PlayerLog.d("视频播放Url", "计划播放 pageIndex：" + pageIndex + " url:" + url);
         if (playerView == null) {
             PlayerLog.d("未初始化", "------- index=" + pageIndex + "  " + this.pageIndex);
@@ -188,13 +191,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         initExoPlayer();
     }
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        setVideoDataPlay(-1);
-        PlayerLog.d("frg_", "onResume " + pageIndex);
-    }
 
     //设置拉取播放数据   pageIndex-1:拉当前的数据（播放） 否则就拉指定页的数据（预加载）
     @Override
@@ -233,9 +229,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         if (!isResume) {
             return;
         }
-        if (exoPlayer != null) {
-            exoPlayer.addListener(playerListener);
-        }
         setVideoPlay();
 
     }
@@ -267,6 +260,16 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             tvIndex.setText("页面：" + pageIndex + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
         }
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (exoPlayer != null) {
+            exoPlayer.addListener(playerListener);
+        }
+        setVideoDataPlay(-1);
+        PlayerLog.d("frg_", "onResume " + pageIndex);
     }
 
     @Override
