@@ -204,6 +204,9 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 case 0:
                     //初始化加载数据
                     ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls3();
+                    //播放不出来报错
+                    String video = "https://nbc.vtnbo.com/nbc/msg/video/pro/17674882940931162.mp4";
+                    urls.add(0, video);
                     isMoreNot = false;
                     isDataReq = false;
                     setPageData(urls);

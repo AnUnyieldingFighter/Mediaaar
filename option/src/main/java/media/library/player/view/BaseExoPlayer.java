@@ -137,6 +137,12 @@ class BaseExoPlayer extends PlayerDB {
                     //player.set
                     //player.prepare();
                     break;
+                case PlaybackException.ERROR_CODE_DECODER_INIT_FAILED:
+                    // MediaCodecVideoRenderer error, index=0, format=Format(1, null, video/mp4, video/avc, avc1.640034, 22400000, und, [4354, 2160, 29.999998, ColorInfo(BT709, Limited range, SDR SMPTE 170M, false, 8bit Luma, 8bit Chroma)], [-1, -1]), format_supported=NO_EXCEEDS_CAPABILITIES
+                    //解码初始化失败
+                    isError = true;
+                    isReady = false;
+                    break;
             }
         }
 
