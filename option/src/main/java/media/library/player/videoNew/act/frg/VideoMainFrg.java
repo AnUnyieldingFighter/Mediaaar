@@ -26,6 +26,7 @@ import media.library.player.videoNew.frg2.VideoBaseFrg0;
 import media.library.player.videoNew.frg2.VideoFrg1;
 import media.library.player.videoNew.manger.ShortVideoManager2;
 import media.library.player.view.CustomExoPlayer;
+import media.library.player.view.PlayerSupport;
 import media.library.player.view.VideoPageRl2;
 
 
@@ -204,9 +205,13 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 case 0:
                     //初始化加载数据
                     ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls3();
+
+                    String video = "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4";
                     //播放不出来报错
-                    String video = "https://nbc.vtnbo.com/nbc/msg/video/pro/17674882940931162.mp4";
-                    urls.add(0, video);
+                    String video2 = "https://nbc.vtnbo.com/nbc/msg/video/pro/17674882940931162.mp4";
+                    //PlayerSupport.getInstance().isVideoFormatSupported(video);
+                    // urls.add(0, video);
+                    urls.add(0, video2);
                     isMoreNot = false;
                     isDataReq = false;
                     setPageData(urls);

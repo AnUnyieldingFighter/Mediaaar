@@ -144,6 +144,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
             if (!isArb) {
                 //启用异步缓冲
                 DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+                // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
+                renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+                // 开启解码器降级策略，解码失败时自动切换备选解码器
+                renderersFactory.setEnableDecoderFallback(true);
                 //‌启用异步缓冲区排队
                 renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
                 builder = new ExoPlayer.Builder(context, renderersFactory);
@@ -171,7 +175,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
             videoSpeed = null;
         }
     }
-
     //是否已经初始化
     public boolean isInit() {
         return player != null;
