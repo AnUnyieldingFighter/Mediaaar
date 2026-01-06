@@ -6,7 +6,10 @@ import android.text.TextUtils;
 import android.view.TextureView;
 import android.view.View;
 
+import com.google.common.collect.ImmutableList;
+
 import androidx.annotation.OptIn;
+import androidx.media3.common.Format;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.Tracks;
@@ -141,7 +144,9 @@ class BaseExoPlayer extends PlayerDB {
                     //MediaCodecVideoRenderer error, index=0, format=Format(1, null, video/mp4, video/avc, avc1.640034, 22400000, und, [4354, 2160, 29.999998, ColorInfo(BT709, Limited range, SDR SMPTE 170M, false, 8bit Luma, 8bit Chroma)], [-1, -1]), format_supported=NO_EXCEEDS_CAPABILITIES code:4001 codeName:ERROR_CODE_DECODER_INIT_FAILED
                     //关键信息：
                     //分辨率：4354x2160（接近 4K 超高清，部分中低端设备 / 旧设备不支持该分辨率硬解码）
+                    //1080P (1920x1080) 或 720P (1280x720)	 绝大多数 Android 设备硬解码支持
                     //码率：22400000 bps = 22.4 Mbps（码率过高，设备解码芯片无法处理这么大的数据流）
+                    //2Mbps - 10Mbps	1080P 对应 5-10Mbps，720P 对应 2-5Mbps，避免过高
                     // NO_EXCEEDS_CAPABILITIES ：超出设备能力上限 说明不是视频格式 / 编码不兼容（视频是 MP4 封装 + H.264 (avc1) 编码，这是 Android 通用支持的），而是视频的具体参数超出了当前设备硬解码（MediaCodec）的处理极限。
                     //解码初始化失败
                     isError = true;
@@ -152,6 +157,30 @@ class BaseExoPlayer extends PlayerDB {
 
         @Override
         public void onTracksChanged(Tracks tracks) {
+            if (tracks == null) {
+                PlayerLog.d(tag, "无轨道信息1");
+                return;
+            }
+            ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
+            if (trackGroups == null || trackGroups.size() == 0) {
+                PlayerLog.d(tag, "无轨道信息1");
+                return;
+            }
+
+            for (int i = 0; i < trackGroups.size(); i++) {
+                Tracks.Group temp = trackGroups.get(i);
+                int length = temp.length;
+                int trackType = temp.getType();
+                PlayerLog.d(tag, "轨道" + i + "数量:" + length + " 类型：" + trackType);
+                for (int j = 0; j < length; j++) {
+                    boolean isSupported = temp.isTrackSupported(j);
+                    boolean isSelected = temp.isTrackSelected(j);
+                    Format format = temp.getTrackFormat(j);
+                    // 处理轨道信息
+                    PlayerLog.d(tag, "轨道信息" + j + "isSupported:" + isSupported + " isSelected：" + isSelected);
+                }
+            }
+
 
         }
     }

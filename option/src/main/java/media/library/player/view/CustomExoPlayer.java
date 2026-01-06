@@ -15,6 +15,7 @@ import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.VideoSize;
+import androidx.media3.common.util.Log;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
@@ -140,19 +141,22 @@ public class CustomExoPlayer extends BaseExoPlayer {
         playerContext = context;
         if (player == null) {
             ExoPlayer.Builder builder = null;
+            //
+            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+            // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
+            renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+            // 开启解码器降级策略，解码失败时自动切换备选解码器
+            renderersFactory.setEnableDecoderFallback(true);
+            //
             //ABR 不能在非主线程里加载
             if (!isArb) {
-                //启用异步缓冲
-                DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-                // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
-                renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
-                // 开启解码器降级策略，解码失败时自动切换备选解码器
-                renderersFactory.setEnableDecoderFallback(true);
                 //‌启用异步缓冲区排队
                 renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
-                builder = new ExoPlayer.Builder(context, renderersFactory);
+                builder = new ExoPlayer.Builder(context);
+                builder.setRenderersFactory(renderersFactory);
             } else {
                 builder = new ExoPlayer.Builder(context);
+                builder.setRenderersFactory(renderersFactory);
             }
             //设置缓存
             builder.setLoadControl(getDefBuffer());
@@ -175,6 +179,8 @@ public class CustomExoPlayer extends BaseExoPlayer {
             videoSpeed = null;
         }
     }
+
+
     //是否已经初始化
     public boolean isInit() {
         return player != null;
@@ -228,10 +234,10 @@ public class CustomExoPlayer extends BaseExoPlayer {
         return targetBufferBytes;
     }
 
-    //===================设置 音频轨道========================
-
+    //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getDefARB() {
+        PlayerLog.d(tag, "设置码率");
         if (bandwidthMeter == null) {
             // 带宽检测器：监测网络带宽
             bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
@@ -249,10 +255,17 @@ public class CustomExoPlayer extends BaseExoPlayer {
                     25 * 1000, // 保留缓冲
                     0.8f  // 带宽利用率
             );
-
             // 1. 初始化自适应轨道选择工厂（用于多码率场景）
             AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
             trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
+            //
+            PlayerLog.d(tag, "设置最大码率");
+            //仅能在多轨道媒体源中，筛选出码率低于设定值的备选
+            TrackSelectionParameters trackSelectionParameters = new TrackSelectionParameters.Builder(playerContext)
+                    .setMaxVideoSize(1920, 1080) // 限制最大分辨率为1080P
+                    .setMaxVideoBitrate(10 * 1024 * 1024) // 限制最大码率为10Mbps（10*1024*1024 bps）
+                    .build();
+            trackSelector.setParameters(trackSelectionParameters);
 
         }
         return trackSelector;
