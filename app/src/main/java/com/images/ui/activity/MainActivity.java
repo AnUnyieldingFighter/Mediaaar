@@ -16,6 +16,7 @@ import java.util.ArrayList;
 
 import media.library.images.config.entity.MediaEntity;
 import media.library.player.manager.DBManager;
+import media.library.player.utile.DeviceMediaCapabilityUtil;
 import media.library.player.video.act.TestVideoStartAct;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -32,7 +33,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.video_btn).setOnClickListener(this);
         //设置所有的缓存文件回到 可用状态
         DBManager.setCacheFileReleaseAll(this);
-
+        DeviceMediaCapabilityUtil.test();
     }
 
 
