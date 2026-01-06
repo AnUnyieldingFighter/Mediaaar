@@ -176,13 +176,43 @@ class BaseExoPlayer extends PlayerDB {
                     boolean isSupported = temp.isTrackSupported(j);
                     boolean isSelected = temp.isTrackSelected(j);
                     Format format = temp.getTrackFormat(j);
+                    testFormat(format, j);
                     // 处理轨道信息
-                    PlayerLog.d(tag, "轨道信息" + j + "isSupported:" + isSupported + " isSelected：" + isSelected);
+                    PlayerLog.d(tag, "轨道信息 " + j + " isSupported:" + isSupported + " isSelected：" + isSelected + " format:" + format);
                 }
             }
 
 
         }
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    private void testFormat(Format format, int trackIndex) {
+        if (format == null) {
+            return;
+        }
+        // 通用参数
+        String mimeType = format.sampleMimeType;//编码类型
+        long bitrate = format.bitrate;//码率
+        float bitrateMbps = (float) bitrate / 1024 / 1024;
+        String codec = format.codecs;//编码细节
+        // 视频专属参数
+        Integer width = format.width;
+        Integer height = format.height;
+        Float frameRate = format.frameRate;//帧率
+        Integer rotation = format.rotationDegrees;//旋转角度
+        // 拼接分辨率字符串（避免空指针）
+        String resolution = (width != null && height != null) ? width + "x" + height : "未知分辨率";
+        // 拼接帧率字符串
+        String frameRateStr = (frameRate != null) ? frameRate + " fps" : "未知帧率";
+        // 拼接旋转角度字符串
+        String rotationStr = (rotation != null) ? rotation + "°" : "0°";
+        // 打印解析结果
+        String str = "视频轨道" + trackIndex + "  编码类型：" + mimeType + "  编码细节：" + codec +
+                "  分辨率：" + resolution + "  码率：" + String.format("%.2f Mbps", bitrateMbps) +
+                "  帧率：" + frameRateStr + "  旋转角度：" + rotationStr;
+        PlayerLog.d(tag, str);
+
     }
 
     @UnstableApi
