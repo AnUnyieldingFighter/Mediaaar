@@ -68,7 +68,9 @@ class BaseExoPlayer extends PlayerDB {
                     isReady = true;
                     if (isMute) {
                         isMute = false;
-                        player.setVolume(0);
+                        if (player != null) {
+                            player.setVolume(0);
+                        }
                     }
                     break;
                 case Player.STATE_ENDED:
@@ -230,6 +232,9 @@ class BaseExoPlayer extends PlayerDB {
 
         @Override
         public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
+            if (player == null) {
+                return;
+            }
             long bufferedPosition = player.getBufferedPosition();
             long currentPosition = player.getCurrentPosition();
             PlayerLog.d(tag, "缓冲开始:  播放位置=" + currentPosition + " 缓存=" + bufferedPosition);
