@@ -58,7 +58,7 @@ dependencies {
     //视频解码
     implementation 'androidx.media3:media3-exoplayer-hls:1.8.0'
     implementation 'androidx.media3:media3-exoplayer-rtsp:1.8.0'
-    implementation 'androidx.media3:media3-datasource-rtmp:1.8.0'
+    //implementation 'androidx.media3:media3-datasource-rtmp:1.9.2'//1.9.2 与 1.8.0 里的 librtmp-jni.so 不支持 16k
     //FFmpeg扩展(解码)  可解决原生解码器不支持的格式（如RTSP、AAC音频等）
     //涵盖 H.264、H.265/HEVC、MPEG-4、AAC、MP3、FLAC 等绝大多数音视频格式，兼容性远超系统硬件解码
     //implementation "androidx.media3:media3-exoplayer-ffmpeg:1.8.0"
