@@ -1,30 +1,34 @@
 package media.library.player.view;
 
+import android.app.ActivityManager;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.text.TextUtils;
-import android.view.TextureView;
-import android.view.View;
+import android.view.Surface;
+import android.view.SurfaceView;
 
 import com.google.common.collect.ImmutableList;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.Format;
 import androidx.media3.common.PlaybackException;
+import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
+import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultLoadControl;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.source.LoadEventInfo;
 import androidx.media3.exoplayer.source.MediaLoadData;
-import androidx.media3.exoplayer.source.MediaSource;
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import media.library.player.manager.PlayerLog;
-
+//设置播放器
 class BaseExoPlayer extends PlayerDB {
     protected Context playerContext;
     protected ExoPlayer player;
@@ -46,11 +50,298 @@ class BaseExoPlayer extends PlayerDB {
     protected boolean isMute;
     //true 准备好了
     protected boolean isReady;
+    //设置倍数
+    protected Float videoSpeed = null;
 
     public boolean isReady() {
         return isReady;
     }
 
+    //==========================初始化播放器=====================================
+    //true 使用arb
+    private boolean isArb;
+
+    public void setARB(boolean isArb) {
+        this.isArb = isArb;
+    }
+
+    //是否已经初始化
+    public boolean isInit() {
+        return player != null;
+    }
+    @OptIn(markerClass = UnstableApi.class)
+    protected void initExoPlayer(Context context) {
+        if (player != null && playerContext != null && playerContext != context) {
+            player.release();
+            player = null;
+            setPlayerBuffRelease();
+            setMediaSourceCacheRelease();
+            PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
+        }
+        if (player != null && isError) {
+            player.release();
+            player = null;
+            setPlayerBuffRelease();
+            setMediaSourceCacheRelease();
+            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
+        }
+        isError = false;
+        /*if (player != null) {
+            //因为释放了 release 所以要重新设置
+            player.addListener(new ExoPlayerListener());
+            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
+            setVideoSurface(surface);
+            addListener(listener);
+            addAnalyticsListener(analyticsListener);
+        }*/
+        playerContext = context;
+        if (player == null) {
+            ExoPlayer.Builder builder = null;
+            //
+            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
+            // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
+            renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
+            // 开启解码器降级策略，解码失败时自动切换备选解码器
+            renderersFactory.setEnableDecoderFallback(true);
+            //
+            //ABR 不能在非主线程里加载
+            if (!isArb) {
+                //‌启用异步缓冲区排队
+                renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
+                builder = new ExoPlayer.Builder(context);
+                builder.setRenderersFactory(renderersFactory);
+            } else {
+                builder = new ExoPlayer.Builder(context);
+                builder.setRenderersFactory(renderersFactory);
+            }
+            //设置缓存
+            builder.setLoadControl(getPlayerDefBuffer());
+            // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+            // 已知 ABR 不能在非主线程里加载
+            // 报错 不知道什么原因 DefaultTrackSelector is accessed on the wrong thread.
+            if (isArb) {
+                builder.setTrackSelector(getPlayerDefARB());
+            }
+            //
+            player = builder.build();
+            player.addListener(new ExoPlayerListener());
+            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
+            setVideoSurface(surface);
+            addListener(listener);
+            addAnalyticsListener(analyticsListener);
+        }
+        if (videoSpeed != null) {
+            player.setPlaybackSpeed(videoSpeed);
+            videoSpeed = null;
+        }
+    }
+
+    //=====================================设置幕布==========================
+    private Surface surface;
+
+    public void setVideoSurface(Surface surface) {
+        if (surface == null) {
+            return;
+        }
+        if (player == null) {
+            this.surface = surface;
+            return;
+        }
+        this.surface = null;
+        player.setVideoSurface(surface);
+    }
+
+    public void setVideoSurfaceView(SurfaceView surfaceView) {
+        player.setVideoSurfaceView(surfaceView);
+    }
+
+    //===============================设置添加/取消监听===========================
+    private Player.Listener listener;
+
+    public void addListener(Player.Listener listener) {
+        if (listener == null) {
+            return;
+        }
+        if (player == null) {
+            this.listener = listener;
+            return;
+        }
+        player.addListener(listener);
+        this.listener = null;
+    }
+
+
+    public void removeListener(Player.Listener listener) {
+        if (player == null) {
+            return;
+        }
+        player.removeListener(listener);
+    }
+
+    AnalyticsListener analyticsListener;
+
+    public void addAnalyticsListener(AnalyticsListener listener) {
+        if (listener == null) {
+            return;
+        }
+        if (player == null) {
+            this.analyticsListener = listener;
+            return;
+        }
+        player.addAnalyticsListener(listener);
+        this.analyticsListener = null;
+    }
+
+    public void removeAnalyticsListener(AnalyticsListener listener) {
+        if (player == null) {
+            return;
+        }
+        player.removeAnalyticsListener(listener);
+    }
+
+    //=========================设置缓存策略====================================
+    //设置播放器中的缓存
+    @OptIn(markerClass = UnstableApi.class)
+    public void setPlayerBuffer(DefaultLoadControl buff) {
+        this.buff = buff;
+    }
+
+    //获取播放器中的缓存
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultLoadControl getPlayerDefBuffer() {
+        if (bandwidthMeter == null) {
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
+        }
+        if (buff == null) {
+            //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
+            DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
+            build.setBufferDurationsMs(15000,  // 最小预留15s缓冲
+                    30000,  // 内存最多缓存30s视频
+                    2500,  // 预加载满2.5s即可开始播放
+                    5000  // 卡顿后需缓冲5s恢复
+            );
+            //限制播放器内存缓冲上限
+            build.setTargetBufferBytes(getTargetBufferBytes());
+            build.setPrioritizeTimeOverSizeThresholds(true); //优先时间阈值而非数据量阈值
+            //setBufferDurationsMs	时间（秒）	预加载多少秒视频
+            //setTargetBufferBytes	内存（字节）	最多占用多少内存
+            //只要有一个生效 就停止缓存 防止OOM
+            //禁止回退缓存 一般直播用
+            //build.setBackBuffer(0, false);
+            DefaultLoadControl loadControl = build.build();
+            buff = loadControl;
+        }
+        return buff;
+    }
+
+    private int getTargetBufferBytes() {
+        ActivityManager am = (ActivityManager) playerContext.getSystemService(Context.ACTIVITY_SERVICE);
+        int memoryClass = am.getMemoryClass(); // 获取设备内存等级（MB）
+        int targetBufferBytes;
+        String str = "";
+        if (memoryClass <= 128) { // 低内存设备
+            str = "低内存设备 缓存3MB";
+            targetBufferBytes = 3 * 1024 * 1024; // 3MB
+        } else if (memoryClass <= 256) { // 中等内存设备
+            str = "中等内存设备 缓存6MB";
+            targetBufferBytes = 6 * 1024 * 1024; // 6MB
+        } else { // 高内存设备
+            str = "高内存设备 缓存10MB";
+            targetBufferBytes = 10 * 1024 * 1024; // 10MB
+        }
+        PlayerLog.d(tag, "内存等级：" + str + " memoryClass=" + memoryClass);
+        return targetBufferBytes;
+    }
+
+    //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
+    @OptIn(markerClass = UnstableApi.class)
+    private DefaultTrackSelector getPlayerDefARB() {
+        PlayerLog.d(tag, "设置码率");
+        if (bandwidthMeter == null) {
+            // 带宽检测器：监测网络带宽
+            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
+        }
+        // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
+        if (trackSelector == null) {
+            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
+            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
+            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
+            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
+            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
+            // 自定义Factory实现差异化配置
+            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8 * 1000,  // 质量提升阈值
+                    20 * 1000, // 质量降低阈值
+                    25 * 1000, // 保留缓冲
+                    0.8f  // 带宽利用率
+            );
+            // 1. 初始化自适应轨道选择工厂（用于多码率场景）
+            AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
+            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
+            //
+            PlayerLog.d(tag, "设置最大码率");
+            //仅能在多轨道媒体源中，筛选出码率低于设定值的备选
+            TrackSelectionParameters trackSelectionParameters = new TrackSelectionParameters.Builder(playerContext)
+                    .setMaxVideoSize(1920, 1080) // 限制最大分辨率为1080P
+                    .setMaxVideoBitrate(10 * 1024 * 1024) // 限制最大码率为10Mbps（10*1024*1024 bps）
+                    .build();
+            trackSelector.setParameters(trackSelectionParameters);
+
+        }
+        return trackSelector;
+    }
+
+    //=========================释放缓存====================================
+    //释放播放器中的缓存
+    @OptIn(markerClass = UnstableApi.class)
+    protected void setPlayerBuffRelease() {
+        if (trackSelector != null) {
+            //不要设置释放，会报错  DefaultTrackSelector is accessed on the wrong thread.
+            //trackSelector.release();
+            trackSelector = null;
+         /*   if (Looper.myLooper() == Looper.getMainLooper()) {
+                //已在主线程，直接执行
+                trackSelector.release();
+                trackSelector = null;
+
+            } else {
+                HandlerMedia.runInMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 子线程，切换主线程
+                        trackSelector.release();
+                        trackSelector = null;
+                    }
+                });
+            }*/
+
+        }
+        if (buff != null) {
+            //buff.onReleased();
+            //buff.onReleased(player.is);
+            buff = null;
+        }
+        if (bandwidthMeter != null) {
+            bandwidthMeter = null;
+        }
+    }
+
+    //释放播放源中的缓存
+    protected void setMediaSourceCacheRelease() {
+    }
+    //======================获取播放器的相关数据，设置播放器数据==============================
+    //获取播放参数
+    public PlaybackParameters getPlaybackParameters() {
+        if (player == null) {
+            return null;
+        }
+        PlaybackParameters parameters = player.getPlaybackParameters();
+        return parameters;
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    public void setSeekParameters(SeekParameters seekParameters) {
+        player.setSeekParameters(seekParameters);
+    }
     //==========================监听=================================================
     class ExoPlayerListener implements Player.Listener {
 

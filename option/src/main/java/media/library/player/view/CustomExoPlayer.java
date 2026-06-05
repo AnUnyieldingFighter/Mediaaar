@@ -1,11 +1,8 @@
 package media.library.player.view;
 
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.text.TextUtils;
-import android.view.Surface;
-import android.view.SurfaceView;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
@@ -20,26 +17,19 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
-import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
 import androidx.media3.datasource.cache.SimpleCache;
-import androidx.media3.exoplayer.DefaultLoadControl;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
-import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.SeekParameters;
-import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.drm.DrmSessionManager;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.exoplayer.source.TrackGroupArray;
-import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
@@ -62,17 +52,10 @@ import media.library.utils.Md5Media;
 //        exoPlayer.setPlayWhenReady(false);
 //        //设置循环播放
 //        exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
-public class CustomExoPlayer extends BaseExoPlayer {
-
-
+public class CustomExoPlayer extends BaseMediaSource {
     public CustomExoPlayer() {
 
     }
-
-    //==========================设置播放器数据，以便初始化===========================================
-    //tru 开启缓存
-    private boolean isUseCache;
-
 
     /**
      * @param videoUrl 播放器url
@@ -89,7 +72,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
     @UnstableApi
     public void setPlayerVideo(Context context, String videoUrl, boolean isCache) {
         isReady = false;
-        setCacheRelease();
         //
         this.isUseCache = isCache;
         this.videoUrl = videoUrl;
@@ -105,177 +87,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
     }
 
 
-    //true 使用arb
-    private boolean isArb;
-
-    public void setARB(boolean isArb) {
-        this.isArb = isArb;
-    }
-
-
-    @OptIn(markerClass = UnstableApi.class)
-    private void initExoPlayer(Context context) {
-        if (player != null && playerContext != null && playerContext != context) {
-            player.release();
-            player = null;
-            setBuffRelease();
-            setCacheRelease();
-            PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
-        }
-
-        if (player != null && isError) {
-            player.release();
-            player = null;
-            setBuffRelease();
-            setCacheRelease();
-            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
-        }
-        isError = false;
-        /*if (player != null) {
-            //因为释放了 release 所以要重新设置
-            player.addListener(new ExoPlayerListener());
-            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
-            setVideoSurface(surface);
-            addListener(listener);
-            addAnalyticsListener(analyticsListener);
-        }*/
-        playerContext = context;
-        if (player == null) {
-            ExoPlayer.Builder builder = null;
-            //
-            DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-            // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
-            renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
-            // 开启解码器降级策略，解码失败时自动切换备选解码器
-            renderersFactory.setEnableDecoderFallback(true);
-            //
-            //ABR 不能在非主线程里加载
-            if (!isArb) {
-                //‌启用异步缓冲区排队
-                renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
-                builder = new ExoPlayer.Builder(context);
-                builder.setRenderersFactory(renderersFactory);
-            } else {
-                builder = new ExoPlayer.Builder(context);
-                builder.setRenderersFactory(renderersFactory);
-            }
-            //设置缓存
-            builder.setLoadControl(getDefBuffer());
-            // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-            // 已知 ABR 不能在非主线程里加载
-            // 报错 不知道什么原因 DefaultTrackSelector is accessed on the wrong thread.
-            if (isArb) {
-                builder.setTrackSelector(getDefARB());
-            }
-            //
-            player = builder.build();
-            player.addListener(new ExoPlayerListener());
-            player.addAnalyticsListener(new ExoPlayerAnalyticsListener());
-            setVideoSurface(surface);
-            addListener(listener);
-            addAnalyticsListener(analyticsListener);
-        }
-        if (videoSpeed != null) {
-            player.setPlaybackSpeed(videoSpeed);
-            videoSpeed = null;
-        }
-    }
-
-
-    //是否已经初始化
-    public boolean isInit() {
-        return player != null;
-    }
-
-    //=========================设置缓存策略====================================
-    @OptIn(markerClass = UnstableApi.class)
-    public void setBuffer(DefaultLoadControl buff) {
-        this.buff = buff;
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultLoadControl getDefBuffer() {
-        if (bandwidthMeter == null) {
-            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
-        }
-        if (buff == null) {
-            //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
-            DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
-            build.setBufferDurationsMs(15000,  // 最小预留15s缓冲
-                    30000,  // 内存最多缓存30s视频
-                    2500,  // 预加载满2.5s即可开始播放
-                    5000  // 卡顿后需缓冲5s恢复
-            );
-            //限制播放器内存缓冲上限
-            build.setTargetBufferBytes(getTargetBufferBytes());
-            build.setPrioritizeTimeOverSizeThresholds(true); //优先时间阈值而非数据量阈值
-            //setBufferDurationsMs	时间（秒）	预加载多少秒视频
-            //setTargetBufferBytes	内存（字节）	最多占用多少内存
-            //只要有一个生效 就停止缓存 防止OOM
-            //禁止回退缓存 一般直播用
-            //build.setBackBuffer(0, false);
-            DefaultLoadControl loadControl = build.build();
-            buff = loadControl;
-        }
-        return buff;
-    }
-
-    private int getTargetBufferBytes() {
-        ActivityManager am = (ActivityManager) playerContext.getSystemService(Context.ACTIVITY_SERVICE);
-        int memoryClass = am.getMemoryClass(); // 获取设备内存等级（MB）
-        int targetBufferBytes;
-        String str = "";
-        if (memoryClass <= 128) { // 低内存设备
-            str = "低内存设备 缓存3MB";
-            targetBufferBytes = 3 * 1024 * 1024; // 3MB
-        } else if (memoryClass <= 256) { // 中等内存设备
-            str = "中等内存设备 缓存6MB";
-            targetBufferBytes = 6 * 1024 * 1024; // 6MB
-        } else { // 高内存设备
-            str = "高内存设备 缓存10MB";
-            targetBufferBytes = 10 * 1024 * 1024; // 10MB
-        }
-        PlayerLog.d(tag, "内存等级：" + str + " memoryClass=" + memoryClass);
-        return targetBufferBytes;
-    }
-
-    //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector getDefARB() {
-        PlayerLog.d(tag, "设置码率");
-        if (bandwidthMeter == null) {
-            // 带宽检测器：监测网络带宽
-            bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
-        }
-        // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-        if (trackSelector == null) {
-            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
-            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
-            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
-            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
-            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
-            // 自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(8 * 1000,  // 质量提升阈值
-                    20 * 1000, // 质量降低阈值
-                    25 * 1000, // 保留缓冲
-                    0.8f  // 带宽利用率
-            );
-            // 1. 初始化自适应轨道选择工厂（用于多码率场景）
-            AdaptiveTrackSelection.Factory factoryTemp2 = new AdaptiveTrackSelection.Factory();
-            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
-            //
-            PlayerLog.d(tag, "设置最大码率");
-            //仅能在多轨道媒体源中，筛选出码率低于设定值的备选
-            TrackSelectionParameters trackSelectionParameters = new TrackSelectionParameters.Builder(playerContext)
-                    .setMaxVideoSize(1920, 1080) // 限制最大分辨率为1080P
-                    .setMaxVideoBitrate(10 * 1024 * 1024) // 限制最大码率为10Mbps（10*1024*1024 bps）
-                    .build();
-            trackSelector.setParameters(trackSelectionParameters);
-
-        }
-        return trackSelector;
-    }
-
+    //===================================测试中的用法=============================
     public void testTrackSelector() {
         testTrackLog();
         setPreferredAudioLanguage("zh");
@@ -358,231 +170,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         params.setBandwidthFraction(0.8f); // 带宽利用率 80%
         params .setMinDurationForQualityIncreaseMs(8000); // 8秒后提升画质*/
     }
-
-    //===============================设置监听===========================
-    private Player.Listener listener;
-
-    public void addListener(Player.Listener listener) {
-        if (listener == null) {
-            return;
-        }
-        if (player == null) {
-            this.listener = listener;
-            return;
-        }
-        player.addListener(listener);
-        this.listener = null;
-    }
-
-
-    public void removeListener(Player.Listener listener) {
-        if (player == null) {
-            return;
-        }
-        player.removeListener(listener);
-    }
-
-    AnalyticsListener analyticsListener;
-
-    public void addAnalyticsListener(AnalyticsListener listener) {
-        if (listener == null) {
-            return;
-        }
-        if (player == null) {
-            this.analyticsListener = listener;
-            return;
-        }
-        player.addAnalyticsListener(listener);
-        this.analyticsListener = null;
-    }
-
-    public void removeAnalyticsListener(AnalyticsListener listener) {
-        if (player == null) {
-            return;
-        }
-        player.removeAnalyticsListener(listener);
-    }
-   //===============================================================================
-    @UnstableApi
-    private MediaSource getMediaSource() {
-       /* if (videoUrl.endsWith("m3u8")) {
-            // hls链接
-        } else if (videoUrl.startsWith("rtsp")) {
-            // rtsp链接
-        } else if (videoUrl.startsWith("rtmp")) {
-            // rtmp链接
-        } else {
-        }*/
-        return getMediaSource("");
-    }
-
-    private String img1 = "https://img0.baidu.com/it/u=3404601552,3434841255&fm=253&app=138&f=JPEG?w=800&h=1200";
-
-    @OptIn(markerClass = UnstableApi.class)
-    private MediaSource getMediaSource(String type) {
-        //媒体元数据描述 不知道用法
-        /*MediaMetadata mediaMetadata = new MediaMetadata.Builder()
-                .setTitle("示例标题")
-                .setArtist("示例艺术家")
-                .setSubtitle("小标题")
-                .setDescription("描述")
-                .setAlbumTitle("示例专辑")
-                .setArtworkUri(Uri.parse(img1))
-                .build();*/
-        MediaItem.Builder builder = new MediaItem.Builder()
-                //.setMediaMetadata(mediaMetadata)
-                .setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
-                .setUri(videoUrl).setMediaId(videoUrl);
-        //字幕
-        //setSubtitle(builder);
-        MediaItem videoItem = builder.build();
-        MediaSource mediaSource;
-        switch (type) {
-            case "m3u8":
-                // hls链接
-                DataSource.Factory factory = new DefaultDataSource.Factory(playerContext);
-                mediaSource = new HlsMediaSource.Factory(factory).createMediaSource(videoItem);
-                break;
-            case "rtsp":
-                // rtsp链接
-                mediaSource = new RtspMediaSource.Factory().createMediaSource(videoItem);
-                break;
-            case "rtmp":
-                // rtmp链接
-                // mediaSource = new ProgressiveMediaSource.Factory(new RtmpDataSource.Factory()).createMediaSource(videoItem);
-                // break;
-            default:
-                //ProgressiveMediaSource 处理数据源 并异步加载
-                DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
-                // 其他链接（http开头或https开头的普通视频链接）
-                if (!isUseCache) {
-                    //默认的  无缓存
-                    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
-                } else {
-                    //构建缓存
-                    simpleCache = createSimpleCache();
-                    //自动缓存到磁盘，预加载 / 二次播放直接读本地
-                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
-                            .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
-                            //更适合网络视频
-                            //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
-                            //缓存出错时自动回退到原始源
-                            //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
-                            //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
-                            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-                    //构建 MediaSource（支持 DRM + 缓存）
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                            .createMediaSource(videoItem);
-                }
-                break;
-        }
-        return mediaSource;
-    }
-
-    protected long maxBytes = 100 * 1024 * 1024;//100M
-    @UnstableApi
-    protected SimpleCache simpleCache;
-    @UnstableApi
-    protected File simpleCacheFile;
-
-    //构建缓存
-    @OptIn(markerClass = UnstableApi.class)
-    private SimpleCache createSimpleCache() {
-        //有缓存的
-        simpleCacheFile = getCacheFile();
-        SimpleCache simpleCache;
-        if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
-        } else {
-            simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
-        }
-        return simpleCache;
-    }
-
-    //获取缓存文件
-    private File getCacheFile() {
-        List<VideoEntity> datas = getDBVideoCache(playerContext, videoUrl);
-        int cacheSize = 0;
-        File videoFile = null;
-        if (datas != null && datas.size() > 0) {
-            File optFile = null;
-            cacheSize = datas.size();
-            long time = System.currentTimeMillis();
-            for (int i = 0; i < datas.size(); i++) {
-                VideoEntity entity = datas.get(i);
-                long videoCacheTime = entity.videoCacheTime;
-                /*if ((time - videoCacheTime) < 10 * 1000) {
-                    //10 秒以内 不使用这个缓存
-                    continue;
-                }*/
-                if (entity.videoCacheType == 1) {
-                    continue;
-                }
-                File cacheFile = new File(entity.videoCachePath);
-                if (optFile == null) {
-                    optFile = cacheFile;
-                    continue;
-                }
-                if (!optFile.isFile() && cacheFile.isFile()) {
-                    optFile = cacheFile;
-                    continue;
-                }
-                if (optFile.isFile() && cacheFile.isFile() && cacheFile.length() > optFile.length()) {
-                    optFile = cacheFile;
-                }
-            }
-            videoFile = optFile;
-
-        }
-        if (videoFile == null) {
-            videoFile = createFile(cacheSize);
-            dbVideoAdd(playerContext, videoUrl, videoFile);
-            PlayerLog.d(tag + "缓存地址", "新建 url:" + videoUrl + "\npath:" + videoFile.getPath());
-        } else {
-            dbSetVideoCacheUse(playerContext, videoFile);
-            PlayerLog.d(tag + "缓存地址", "取得 url:" + videoUrl + "\npath:" + videoFile.getPath());
-        }
-
-        return videoFile;
-    }
-
-    private File createFile(int index) {
-        Random random = new Random();
-        int randomNumber = random.nextInt(9999999);
-        String md5 = Md5Media.encode(videoUrl);
-        String fileName = md5 + "_" + index + "_" + randomNumber;
-        String dir = FileUtil.getVideoCacheDir(playerContext);
-        File file = new File(dir, fileName);
-        return file;
-    }
-
-    //读取信息 test
-    @OptIn(markerClass = UnstableApi.class)
-    public void readData() {
-        if (player == null) {
-            return;
-        }
-        MediaItem mediaItem = player.getCurrentMediaItem();
-        String mediaId = "";
-        if (mediaItem != null) {
-            mediaId = mediaItem.mediaId;
-            MediaMetadata mediaMetadata = mediaItem.mediaMetadata;
-            String str = "";
-            if (mediaMetadata != null) {
-
-                str = mediaMetadata.title + "-" + mediaMetadata.albumTitle + "-" + mediaMetadata.subtitle + "-" + mediaMetadata.description + "-" + mediaMetadata.artworkUri;
-            }
-            PlayerLog.d("视频播放Url", "当前播放地址 mediaId：" + mediaId + " str:" + str);
-        }
-
-    }
-
     //==================释放资源=======================================================
-
-
     //释放全部资源
     public void release() {
         if (cachePlayerView != null) {
@@ -591,110 +179,11 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         if (player != null) {
             player.release();
-            setBuffRelease();
+            setPlayerBuffRelease();
             player = null;
         }
-        setCacheRelease();
+        setMediaSourceCacheRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：" + videoUrl);
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    private void setBuffRelease() {
-        if (trackSelector != null) {
-            //不要设置释放，会报错  DefaultTrackSelector is accessed on the wrong thread.
-            //trackSelector.release();
-            trackSelector = null;
-         /*   if (Looper.myLooper() == Looper.getMainLooper()) {
-                //已在主线程，直接执行
-                trackSelector.release();
-                trackSelector = null;
-
-            } else {
-                HandlerMedia.runInMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // 子线程，切换主线程
-                        trackSelector.release();
-                        trackSelector = null;
-                    }
-                });
-            }*/
-
-        }
-        if (buff != null) {
-            //buff.onReleased();
-            //buff.onReleased(player.is);
-            buff = null;
-        }
-        if (bandwidthMeter != null) {
-            bandwidthMeter = null;
-        }
-    }
-
-    //释放缓存
-    @OptIn(markerClass = UnstableApi.class)
-    private void setCacheRelease() {
-        if (TextUtils.isEmpty(videoUrl)) {
-            return;
-        }
-        if (simpleCache != null) {
-            simpleCache.release();
-            simpleCache = null;
-        }
-        if (simpleCacheFile != null) {
-            dbSetVideoCacheUsable(playerContext, simpleCacheFile);
-            simpleCacheFile = null;
-        }
-        PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
-    }
-
-
-
-    //==========================设置播放源========================================
-    @OptIn(markerClass = UnstableApi.class)
-    public void setMediaSource(MediaSource mediaSource) {
-        player.setMediaSource(mediaSource);
-    }
-
-    //======================获取播放器的相关数据，设置播放器数据==============================
-
-
-    //获取播放参数
-    public PlaybackParameters getPlaybackParameters() {
-        if (player == null) {
-            return null;
-        }
-        PlaybackParameters parameters = player.getPlaybackParameters();
-        return parameters;
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    public void setSeekParameters(SeekParameters seekParameters) {
-        player.setSeekParameters(seekParameters);
-    }
-
-    //设置字幕
-    private void setSubtitle(MediaItem.Builder builder) {
-        //builder.setSubtitleConfigurations();
-    }
-
-    //=====================================设置幕布==========================
-    private Surface surface;
-
-    public void setVideoSurface(Surface surface) {
-        if (surface == null) {
-            return;
-        }
-        if (player == null) {
-            this.surface = surface;
-            return;
-        }
-        this.surface = null;
-        player.setVideoSurface(surface);
-    }
-
-    public void setVideoSurfaceView(SurfaceView surfaceView) {
-        player.setVideoSurfaceView(surfaceView);
     }
     //====================设置播放器的显示==================================================
     private PlayerView cachePlayerView;
@@ -724,6 +213,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
             cachePlayerView = null;
         }
     }
+
     //===================设置控制器=====================================================
     @OptIn(markerClass = UnstableApi.class)
     private PlayerControlView cachePlayerControlView;
@@ -745,6 +235,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         playerControlView.setPlayer(player);
         cachePlayerControlView = playerControlView;
     }
+
     //========================================操作方法======================
     //准备
     public void prepare() {
@@ -938,7 +429,6 @@ public class CustomExoPlayer extends BaseExoPlayer {
         setPlaybackSpeed(speed, isLockedSpeed);
     }
 
-    private Float videoSpeed = null;
 
     /**
      * @param speed         大于于0：1是正常速度，2是两倍速度，0.5是正常速度的一半。
