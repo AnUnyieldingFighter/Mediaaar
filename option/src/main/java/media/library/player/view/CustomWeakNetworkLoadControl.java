@@ -5,11 +5,13 @@ import androidx.media3.common.C;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.common.util.Util;
 import androidx.media3.exoplayer.LoadControl;
+import androidx.media3.exoplayer.analytics.PlayerId;
 import androidx.media3.exoplayer.upstream.Allocator;
 import androidx.media3.exoplayer.upstream.DefaultAllocator;
+
 //无用
 @OptIn(markerClass = UnstableApi.class)
-class CustomWeakNetworkLoadControl  implements LoadControl {
+class CustomWeakNetworkLoadControl implements LoadControl {
     private final DefaultAllocator allocator;
     private final long minBufferUs;
     private final long maxBufferUs;
@@ -29,8 +31,9 @@ class CustomWeakNetworkLoadControl  implements LoadControl {
         this.allocator.setTargetBufferSize(targetBufferBytes);
     }
 
+
     @Override
-    public Allocator getAllocator() {
+    public Allocator getAllocator(PlayerId playerId) {
         return null;
     }
 
