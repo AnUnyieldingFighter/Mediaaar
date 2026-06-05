@@ -217,6 +217,41 @@ public class ShortVideoManager2 {
         handlerUi.stop();
     }
 
+    public void setPageLoadNext() {
+        //要预加载下一页
+        int indexPage = viewPagerView.getCurrentItem();
+        indexPage += 1;
+        setPageLoadNext(indexPage);
+    }
+
+    public void setPageLoadNext(int indexNext) {
+        //上划 要预加载下一页
+        int dataSize = adapter.getDataSize();
+        if (indexNext >= dataSize) {
+            return;
+        }
+        if (onVideoLoading != null) {
+            VideoBaseFrg0 videoFrgDow = getCursorFrg(indexNext);
+            onVideoLoading.onVideoLoadingDow(indexNext, videoFrgDow);
+        }
+    }
+
+    public void setPageLoadUp() {
+        // 要预加载上一页
+        int indexPage = viewPagerView.getCurrentItem();
+        indexPage -= 1;
+        setPageLoadUp(indexPage);
+    }
+
+    public void setPageLoadUp(int indexUp) {
+        //下划 要预加载上一页
+        int dataSize = adapter.getDataSize();
+        if (indexUp >= 0 && indexUp < dataSize && onVideoLoading != null) {
+            VideoBaseFrg0 videoFrgUp = getCursorFrg(indexUp);
+            onVideoLoading.onVideoLoadingUp(indexUp, videoFrgUp);
+        }
+    }
+
     class OnPageChange extends ViewPager2.OnPageChangeCallback {
         @Override
         public void onPageSelected(int position) {
@@ -254,26 +289,6 @@ public class ShortVideoManager2 {
 
         }
 
-        public void setPageLoadNext(int indexNext) {
-            //上划 要预加载下一页
-            int dataSize = adapter.getDataSize();
-            if (indexNext >= dataSize) {
-                return;
-            }
-            if (onVideoLoading != null) {
-                VideoBaseFrg0 videoFrgDow = getCursorFrg(indexNext);
-                onVideoLoading.onVideoLoadingDow(indexNext, videoFrgDow);
-            }
-        }
-
-        public void setPageLoadUp(int indexUp) {
-            //下划 要预加载上一页
-            int dataSize = adapter.getDataSize();
-            if (indexUp >= 0 && indexUp < dataSize && onVideoLoading != null) {
-                VideoBaseFrg0 videoFrgUp = getCursorFrg(indexUp);
-                onVideoLoading.onVideoLoadingUp(indexUp, videoFrgUp);
-            }
-        }
 
         private int startPage = 0;
 
