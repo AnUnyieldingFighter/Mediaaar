@@ -229,7 +229,7 @@ public class ShortVideoManager2 {
                 isDel = false;
                 return;
             }
-            if (indexPage > startPage) {
+            if (indexPage > startPage || indexPage == startPage) {
                 //上划 要预加载下一页
                 var isInfinite = adapter.isInfinite();
                 int index = indexPage + 1;
@@ -275,7 +275,6 @@ public class ShortVideoManager2 {
                     //开始滑动
                     PlayerLog.d("页面滑动开始", "index=" + viewPagerView.getCurrentItem());
                     setVideoPause(getCursorVideoFrg());
-
                     break;
                 case ViewPager.SCROLL_STATE_SETTLING:
                     // 仍在滑动但即将停止
