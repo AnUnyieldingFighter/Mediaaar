@@ -71,19 +71,19 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videoPlaysManager = new ShortVideoManager2();
         videoPlaysManager.setOnVideoLoading(new OnVideoLoading() {
             @Override
-            public void onVideoLoadingUp(int index, int indexUp, VideoBaseFrg0 videoFrgNow, VideoBaseFrg0 videoFrgUp) {
+            public void onVideoLoadingUp(int indexUp, VideoBaseFrg0 videoFrgUp) {
                 //预加载上一页数据
-                if(videoFrgUp instanceof VideoFrg11){
-                    ((VideoFrg11)videoFrgUp).setVideoDataPlay(indexUp,true);
+                if (videoFrgUp instanceof VideoFrg11) {
+                    ((VideoFrg11) videoFrgUp).setVideoDataPlay(indexUp, true);
                 }
 
             }
 
             @Override
-            public void onVideoLoadingDow(int index, int indexDow, VideoBaseFrg0 videoFrgNow, VideoBaseFrg0 videoFrgDow) {
+            public void onVideoLoadingDow(int indexDow, VideoBaseFrg0 videoFrgDow) {
                 //预加载下一页数据
-                if(videoFrgDow instanceof VideoFrg11){
-                    ((VideoFrg11)videoFrgDow).setVideoDataPlay(indexDow,true);
+                if (videoFrgDow instanceof VideoFrg11) {
+                    ((VideoFrg11) videoFrgDow).setVideoDataPlay(indexDow, true);
                 }
             }
 
@@ -183,9 +183,9 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
         VideoBaseFrg0 videoFrg = videoPlaysManager.setPageCurrentItem0();
-        if(videoFrg instanceof VideoFrg11){
-            ((VideoFrg11)videoFrg).setVideoDataPlay(0,false);
-            ((VideoFrg11)videoFrg).setDataUpdate(0);
+        if (videoFrg instanceof VideoFrg11) {
+            ((VideoFrg11) videoFrg).setVideoDataPlay(0, false);
+            ((VideoFrg11) videoFrg).setDataUpdate(0);
         }
 
     }

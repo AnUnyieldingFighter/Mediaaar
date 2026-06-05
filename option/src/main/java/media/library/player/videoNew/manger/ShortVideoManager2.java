@@ -229,7 +229,10 @@ public class ShortVideoManager2 {
                 isDel = false;
                 return;
             }
-            if (indexPage > startPage || indexPage == startPage) {
+            if (indexPage == startPage) {
+                return;
+            }
+            if (indexPage > startPage) {
                 //上划 要预加载下一页
                 var isInfinite = adapter.isInfinite();
                 int index = indexPage + 1;
@@ -237,31 +240,39 @@ public class ShortVideoManager2 {
                     //无穷页面
                     if (onVideoLoading != null) {
                         VideoBaseFrg0 videoFrgDow = getCursorFrg(index);
-                        VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
-                        onVideoLoading.onVideoLoadingDow(indexPage, index, videoFrgNow, videoFrgDow);
+                        onVideoLoading.onVideoLoadingDow(index, videoFrgDow);
                     }
                 } else {
-                    //
-                    int dataSize = adapter.getDataSize();
-                    if (index >= dataSize) {
-                        return;
-                    }
-                    if (onVideoLoading != null) {
-                        VideoBaseFrg0 videoFrgDow = getCursorFrg(index);
-                        VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
-                        onVideoLoading.onVideoLoadingDow(indexPage, index, videoFrgNow, videoFrgDow);
-                    }
+                    //上划 要预加载下一页
+                    setPageLoadNext(index);
                 }
             } else {
                 //下划 要预加载上一页
                 int index = indexPage - 1;
-                if (index >= 0 && onVideoLoading != null) {
-                    VideoBaseFrg0 videoFrgUp = getCursorFrg(index);
-                    VideoBaseFrg0 videoFrgNow = getCursorFrg(indexPage);
-                    onVideoLoading.onVideoLoadingUp(indexPage, index, videoFrgNow, videoFrgUp);
-                }
+                setPageLoadUp(index);
             }
 
+        }
+
+        public void setPageLoadNext(int indexNext) {
+            //上划 要预加载下一页
+            int dataSize = adapter.getDataSize();
+            if (indexNext >= dataSize) {
+                return;
+            }
+            if (onVideoLoading != null) {
+                VideoBaseFrg0 videoFrgDow = getCursorFrg(indexNext);
+                onVideoLoading.onVideoLoadingDow(indexNext, videoFrgDow);
+            }
+        }
+
+        public void setPageLoadUp(int indexUp) {
+            //下划 要预加载上一页
+            int dataSize = adapter.getDataSize();
+            if (indexUp >= 0 && indexUp < dataSize && onVideoLoading != null) {
+                VideoBaseFrg0 videoFrgUp = getCursorFrg(indexUp);
+                onVideoLoading.onVideoLoadingUp(indexUp, videoFrgUp);
+            }
         }
 
         private int startPage = 0;
