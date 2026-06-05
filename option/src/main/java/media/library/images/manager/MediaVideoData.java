@@ -26,7 +26,11 @@ public class MediaVideoData {
     public MediaVideoData setVideoPath(String videoPath) {
         setVideoReadEnd();
         retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(videoPath);
+        try {
+            retriever.setDataSource(videoPath);
+        } catch (Exception e) {
+            setVideoReadEnd();
+        }
         return this;
     }
 
@@ -39,7 +43,7 @@ public class MediaVideoData {
             retriever.release();
             retriever = null;
         } catch (Exception e) {
-
+            retriever = null;
         }
     }
 
@@ -51,6 +55,9 @@ public class MediaVideoData {
      */
     public VideoDataBean getVideoData(boolean isEnd) {
         VideoDataBean videoData = new VideoDataBean();
+        if (retriever == null) {
+            return videoData;
+        }
         try {
             // 设置数据源路径
             String time = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
@@ -99,6 +106,9 @@ public class MediaVideoData {
      */
     public ArrayList<Bitmap> getVideoBit(boolean isEnd, boolean isPrecise, long... timeUs) {
         ArrayList<Bitmap> bits = new ArrayList();
+        if (retriever == null) {
+            return bits;
+        }
         try {
             // 设置数据源路径
             for (int i = 0; i < timeUs.length; i++) {
