@@ -63,41 +63,5 @@ public class VideoBaseFrg0 extends Fragment {
         isResume = false;
     }
 
-    public CustomExoPlayer getExoPlayer() {
-        return null;
-    }
 
-    //获取播放视图
-    public PlayerView getPlayerView() {
-        return null;
-    }
-
-    //获取页面索引
-    public int getPageIndex() {
-        return -1;
-    }
-
-    //设置暂停
-    public void setVideoPause() {
-
-    }
-
-    //设置播放
-    public void setVideoPlay() {
-
-    }
-
-    //更新播放进度
-    public void setUpdatePlayProgress() {
-
-    }
-
-    //设置拉取播放数据   pageIndex-1:拉当前的数据（播放） 否则就拉指定页的数据（预加载）
-    public void setVideoDataPlay(int pageIndex) {
-    }
-
-    //设置拉取其它数据（用户头像，昵称，点赞，收藏等）
-    public void setDataUpdate(int pageIndex) {
-
-    }
 }

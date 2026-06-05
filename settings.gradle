@@ -1,1 +1,1 @@
-include ':app', ':option'
+include ':app', ':option',':twitter-core'

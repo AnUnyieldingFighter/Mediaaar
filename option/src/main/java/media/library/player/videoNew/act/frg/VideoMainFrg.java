@@ -177,7 +177,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
         VideoBaseFrg0 videoFrg = videoPlaysManager.setPageCurrentItem0();
-        videoFrg.setVideoDataPlay(-1);
+        videoFrg.setVideoDataPlay(0);
         videoFrg.setDataUpdate(0);
     }
 

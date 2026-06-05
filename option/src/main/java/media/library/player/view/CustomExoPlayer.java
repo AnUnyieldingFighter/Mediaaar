@@ -11,6 +11,7 @@ import androidx.annotation.OptIn;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.TrackSelectionParameters;
@@ -19,6 +20,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
@@ -101,6 +103,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         /*MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
         player.setMediaItem(videoItem);*/
     }
+
 
     //true 使用arb
     private boolean isArb;
@@ -198,13 +201,17 @@ public class CustomExoPlayer extends BaseExoPlayer {
         if (buff == null) {
             //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
             DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
-            build.setBufferDurationsMs(15000,  // 最小缓冲时间（触发加载的阈值
-                    30000,  // 最大缓冲时间（停止加载的阈值）
-                    2500,  // 播放开始前预缓冲时间
-                    5000  // 重新缓冲后预缓冲时间
+            build.setBufferDurationsMs(15000,  // 最小预留15s缓冲
+                    30000,  // 内存最多缓存30s视频
+                    2500,  // 预加载满2.5s即可开始播放
+                    5000  // 卡顿后需缓冲5s恢复
             );
+            //限制播放器内存缓冲上限
             build.setTargetBufferBytes(getTargetBufferBytes());
             build.setPrioritizeTimeOverSizeThresholds(true); //优先时间阈值而非数据量阈值
+            //setBufferDurationsMs	时间（秒）	预加载多少秒视频
+            //setTargetBufferBytes	内存（字节）	最多占用多少内存
+            //只要有一个生效 就停止缓存 防止OOM
             //禁止回退缓存 一般直播用
             //build.setBackBuffer(0, false);
             DefaultLoadControl loadControl = build.build();
@@ -352,7 +359,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         params .setMinDurationForQualityIncreaseMs(8000); // 8秒后提升画质*/
     }
 
-    //==========================================================
+    //===============================设置监听===========================
     private Player.Listener listener;
 
     public void addListener(Player.Listener listener) {
@@ -395,7 +402,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
         }
         player.removeAnalyticsListener(listener);
     }
-
+   //===============================================================================
     @UnstableApi
     private MediaSource getMediaSource() {
        /* if (videoUrl.endsWith("m3u8")) {
@@ -424,7 +431,7 @@ public class CustomExoPlayer extends BaseExoPlayer {
                 .build();*/
         MediaItem.Builder builder = new MediaItem.Builder()
                 //.setMediaMetadata(mediaMetadata)
-                //.setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
+                .setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
                 .setUri(videoUrl).setMediaId(videoUrl);
         //字幕
         //setSubtitle(builder);
@@ -455,11 +462,20 @@ public class CustomExoPlayer extends BaseExoPlayer {
                 } else {
                     //构建缓存
                     simpleCache = createSimpleCache();
-                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory().setCache(simpleCache).setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                    //自动缓存到磁盘，预加载 / 二次播放直接读本地
+                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
+                            .setCache(simpleCache)
+                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                            //更适合网络视频
+                            //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
                             //缓存出错时自动回退到原始源
+                            //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
+                            //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
                             .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-                    //
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
+                    //构建 MediaSource（支持 DRM + 缓存）
+                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                            .createMediaSource(videoItem);
                 }
                 break;
         }
@@ -632,28 +648,54 @@ public class CustomExoPlayer extends BaseExoPlayer {
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
 
-    //===================设置控制器=====================================================
-    @OptIn(markerClass = UnstableApi.class)
-    private PlayerControlView cachePlayerControlView;
 
+
+    //==========================设置播放源========================================
     @OptIn(markerClass = UnstableApi.class)
-    public void setPlayerControlView(PlayerControlView playerControlView) {
-        if (cachePlayerControlView == playerControlView) {
-            return;
-        }
-        /*if (cachePlayerView != null) {
-            //旧视图  清空播放器
-            cachePlayerView.setPlayer(null);
-        }*/
-        if (cachePlayerControlView != null) {
-            //旧控制器  清空播放器
-            cachePlayerControlView.setPlayer(null);
-        }
-        //新控制器  设置播放器
-        playerControlView.setPlayer(player);
-        cachePlayerControlView = playerControlView;
+    public void setMediaSource(MediaSource mediaSource) {
+        player.setMediaSource(mediaSource);
     }
 
+    //======================获取播放器的相关数据，设置播放器数据==============================
+
+
+    //获取播放参数
+    public PlaybackParameters getPlaybackParameters() {
+        if (player == null) {
+            return null;
+        }
+        PlaybackParameters parameters = player.getPlaybackParameters();
+        return parameters;
+    }
+
+    @OptIn(markerClass = UnstableApi.class)
+    public void setSeekParameters(SeekParameters seekParameters) {
+        player.setSeekParameters(seekParameters);
+    }
+
+    //设置字幕
+    private void setSubtitle(MediaItem.Builder builder) {
+        //builder.setSubtitleConfigurations();
+    }
+
+    //=====================================设置幕布==========================
+    private Surface surface;
+
+    public void setVideoSurface(Surface surface) {
+        if (surface == null) {
+            return;
+        }
+        if (player == null) {
+            this.surface = surface;
+            return;
+        }
+        this.surface = null;
+        player.setVideoSurface(surface);
+    }
+
+    public void setVideoSurfaceView(SurfaceView surfaceView) {
+        player.setVideoSurfaceView(surfaceView);
+    }
     //====================设置播放器的显示==================================================
     private PlayerView cachePlayerView;
 
@@ -682,11 +724,28 @@ public class CustomExoPlayer extends BaseExoPlayer {
             cachePlayerView = null;
         }
     }
+    //===================设置控制器=====================================================
+    @OptIn(markerClass = UnstableApi.class)
+    private PlayerControlView cachePlayerControlView;
 
-
-    //======================获取播放器的相关数据，设置播放器数据==============================
-
-
+    @OptIn(markerClass = UnstableApi.class)
+    public void setPlayerControlView(PlayerControlView playerControlView) {
+        if (cachePlayerControlView == playerControlView) {
+            return;
+        }
+        /*if (cachePlayerView != null) {
+            //旧视图  清空播放器
+            cachePlayerView.setPlayer(null);
+        }*/
+        if (cachePlayerControlView != null) {
+            //旧控制器  清空播放器
+            cachePlayerControlView.setPlayer(null);
+        }
+        //新控制器  设置播放器
+        playerControlView.setPlayer(player);
+        cachePlayerControlView = playerControlView;
+    }
+    //========================================操作方法======================
     //准备
     public void prepare() {
         player.prepare();
@@ -730,32 +789,103 @@ public class CustomExoPlayer extends BaseExoPlayer {
         setLockedSpeed();
     }
 
-    //设置倍速 大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
-    public void setPlaybackSpeed(float speed) {
-        setPlaybackSpeed(speed, isLockedSpeed);
+    //设置播放进度
+    public void seekTo(long positionMs) {
+        player.seekTo(positionMs);
     }
 
-    private Float videoSpeed = null;
+    //比较播放的url是否相同
+    public boolean isEqualVideoPlay(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+        if (isError) {
+            return false;
+        }
+        return url.equals(videoUrl);
+    }
 
-    /**
-     * @param speed         大于于0，1是正常速度，2是两倍速度，0.5是正常速度的一半。
-     * @param isLockedSpeed true 锁定倍速
-     */
-    public void setPlaybackSpeed(float speed, boolean isLockedSpeed) {
-        //锁定速度
-        this.isLockedSpeed = isLockedSpeed;
-        if (isLockedSpeed) {
-            if (lockedSpeed != speed) {
-                FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
+    //设置静音
+    public void setMute(boolean isMute) {
+        int playbackState = player.getPlaybackState();
+        if (playbackState == Player.STATE_READY || player.isPlaying()) {
+            this.isMute = false;
+            if (isMute) {
+                player.setVolume(0);
+            } else {
+                player.setVolume(1);
             }
-            lockedSpeed = speed;
+        } else {
+            this.isMute = isMute;
         }
+
+    }
+
+    //当前播放进度
+    public long getCurrentPosition() {
+        return player.getCurrentPosition();
+    }
+
+    //总时长
+    public long getDuration() {
+        return player.getDuration();
+    }
+
+    public boolean isPlayerPaused() {
         if (player == null) {
-            this.videoSpeed = speed;
-            return;
+            return false;
         }
-        videoSpeed = null;
-        player.setPlaybackSpeed(speed);
+        boolean isPlayReady = player.getPlayWhenReady();
+        return player.getPlaybackState() == Player.STATE_READY && !isPlayReady;
+    }
+
+    public boolean getPlayWhenReady() {
+        if (player == null) {
+            return false;
+        }
+        return player.getPlayWhenReady();
+    }
+
+    //用于控制播放器的"准备就绪时自动播放"行为
+    //true： 当播放器准备好媒体资源（调用prepare()完成）后自动开始播放  自动播放 默认playWhenReady=true
+    //false：即使播放器准备完成，也不会自动播放，需手动调用play()
+    public void setPlayWhenReady(boolean playWhenReady) {
+        player.setPlayWhenReady(playWhenReady);
+    }
+
+
+    public void setRepeatMode(@Player.RepeatMode int repeatMode) {
+        player.setRepeatMode(repeatMode);
+    }
+
+    public boolean isPlaying() {
+        if (player == null) {
+            return false;
+        }
+        return player.isPlaying();
+    }
+
+    //获取状态
+    public int getPlaybackState() {
+        return player.getPlaybackState();
+    }
+
+    //获取视频大小
+    @OptIn(markerClass = UnstableApi.class)
+    public VideoSize getVideoSize() {
+        VideoSize videoSize = player.getVideoSize();
+        int width = videoSize.width;
+        int height = videoSize.height;
+        if (width <= 0 && height <= 0) {
+            List<VideoEntity> datas = getDBVideoSize(playerContext, videoUrl);
+            if (datas != null && datas.size() > 0) {
+                VideoEntity entity = datas.get(0);
+                if (entity.videoWidth > 0 && entity.videoHeight > 0) {
+                    videoSize = new VideoSize(entity.videoWidth, entity.videoHeight);
+                }
+            }
+        }
+        return videoSize;
     }
 
     //获取播放倍速
@@ -803,146 +933,32 @@ public class CustomExoPlayer extends BaseExoPlayer {
 
     }
 
-    //获取播放参数
-    public PlaybackParameters getPlaybackParameters() {
-        if (player == null) {
-            return null;
-        }
-        PlaybackParameters parameters = player.getPlaybackParameters();
-        return parameters;
+    //设置倍速 大于于0：1是正常速度，2是两倍速度，0.5是正常速度的一半。
+    public void setPlaybackSpeed(float speed) {
+        setPlaybackSpeed(speed, isLockedSpeed);
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    public void setSeekParameters(SeekParameters seekParameters) {
-        player.setSeekParameters(seekParameters);
-    }
+    private Float videoSpeed = null;
 
-    //设置字幕
-    private void setSubtitle(MediaItem.Builder builder) {
-        //builder.setSubtitleConfigurations();
-    }
-
-    public boolean isPlayerPaused() {
-        if (player == null) {
-            return false;
-        }
-        boolean isPlayReady = player.getPlayWhenReady();
-        return player.getPlaybackState() == Player.STATE_READY && !isPlayReady;
-    }
-
-    public boolean getPlayWhenReady() {
-        if (player == null) {
-            return false;
-        }
-        return player.getPlayWhenReady();
-    }
-
-    //用于控制播放器的"准备就绪时自动播放"行为
-    //true： 当播放器准备好媒体资源（调用prepare()完成）后自动开始播放  自动播放 默认playWhenReady=true
-    //false：即使播放器准备完成，也不会自动播放，需手动调用play()
-    public void setPlayWhenReady(boolean playWhenReady) {
-        player.setPlayWhenReady(playWhenReady);
-    }
-
-
-    public void setRepeatMode(@Player.RepeatMode int repeatMode) {
-        player.setRepeatMode(repeatMode);
-    }
-
-    public boolean isPlaying() {
-        if (player == null) {
-            return false;
-        }
-        return player.isPlaying();
-    }
-
-    //当前播放进度
-    public long getCurrentPosition() {
-        return player.getCurrentPosition();
-    }
-
-    //总时长
-    public long getDuration() {
-        return player.getDuration();
-    }
-
-    //获取视频大小
-    @OptIn(markerClass = UnstableApi.class)
-    public VideoSize getVideoSize() {
-        VideoSize videoSize = player.getVideoSize();
-        int width = videoSize.width;
-        int height = videoSize.height;
-        if (width <= 0 && height <= 0) {
-            List<VideoEntity> datas = getDBVideoSize(playerContext, videoUrl);
-            if (datas != null && datas.size() > 0) {
-                VideoEntity entity = datas.get(0);
-                if (entity.videoWidth > 0 && entity.videoHeight > 0) {
-                    videoSize = new VideoSize(entity.videoWidth, entity.videoHeight);
-                }
+    /**
+     * @param speed         大于于0：1是正常速度，2是两倍速度，0.5是正常速度的一半。
+     * @param isLockedSpeed true 锁定倍速
+     */
+    public void setPlaybackSpeed(float speed, boolean isLockedSpeed) {
+        //锁定速度
+        this.isLockedSpeed = isLockedSpeed;
+        if (isLockedSpeed) {
+            if (lockedSpeed != speed) {
+                FileUtil.floatSave(playerContext, FileUtil.video_locked_speed, speed);
             }
+            lockedSpeed = speed;
         }
-        return videoSize;
-    }
-
-    //获取状态
-    public int getPlaybackState() {
-        return player.getPlaybackState();
-    }
-
-    private Surface surface;
-
-    public void setVideoSurface(Surface surface) {
-        if (surface == null) {
+        if (player == null) {
+            this.videoSpeed = speed;
             return;
         }
-        if (player == null) {
-            this.surface = surface;
-            return;
-        }
-        this.surface = null;
-        player.setVideoSurface(surface);
+        videoSpeed = null;
+        player.setPlaybackSpeed(speed);
     }
-
-    @OptIn(markerClass = UnstableApi.class)
-    public void setMediaSource(MediaSource mediaSource) {
-        player.setMediaSource(mediaSource);
-    }
-
-    public void setVideoSurfaceView(SurfaceView surfaceView) {
-        player.setVideoSurfaceView(surfaceView);
-    }
-
-
-    public void setMute(boolean isMute) {
-        int playbackState = player.getPlaybackState();
-        if (playbackState == Player.STATE_READY || player.isPlaying()) {
-            this.isMute = false;
-            if (isMute) {
-                player.setVolume(0);
-            } else {
-                player.setVolume(1);
-            }
-        } else {
-            this.isMute = isMute;
-        }
-
-    }
-
-    //设置播放进度
-    public void seekTo(long positionMs) {
-        player.seekTo(positionMs);
-    }
-
-    //比较播放的url是否相同
-    public boolean isEqualVideoPlay(String url) {
-        if (TextUtils.isEmpty(url)) {
-            return false;
-        }
-        if (isError) {
-            return false;
-        }
-        return url.equals(videoUrl);
-    }
-
 
 }

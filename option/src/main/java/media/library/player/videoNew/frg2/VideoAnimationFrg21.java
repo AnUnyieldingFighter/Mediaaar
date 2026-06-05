@@ -7,7 +7,7 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import androidx.annotation.NonNull;
 
 //动画
-public class VideoAnimationFrg21 extends VideoFrg1 {
+public class VideoAnimationFrg21 extends VideoFrg11 {
     //============================动画开始==========================================
      private int animationTime = 200;
 

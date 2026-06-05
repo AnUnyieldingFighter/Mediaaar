@@ -21,6 +21,7 @@ import media.library.player.videoNew.able.OnVideoLoading;
 import media.library.player.videoNew.adapter.VideoPagerAdapter3;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
 import media.library.player.videoNew.frg2.VideoFrg1;
+import media.library.player.videoNew.frg2.VideoFrg11;
 import media.library.player.view.CustomExoPlayer;
 
 //短视频播放管理类
@@ -93,14 +94,6 @@ public class ShortVideoManager2 {
         return frgs;
     }
 
-
-    //无用
-    public void onCheck(Object str, Object obj) {
-        if (obj instanceof ExoPlayer) {
-            calculateFrgHoldPlayer(str.toString(), (ExoPlayer) obj);
-        }
-    }
-
     private MorePlayerManager playerManager;
 
     private MorePlayerManager getPlayerManager() {
@@ -148,20 +141,35 @@ public class ShortVideoManager2 {
             return videoFrg;
         }
         //调用暂停
-        getCursorVideoFrg().setVideoPause();
+        setVideoPause(getCursorVideoFrg());
         viewPagerView.setCurrentItem(pageIndex, false);
         return videoFrg;
+    }
+
+    //调用暂停
+    protected void setVideoPause(VideoBaseFrg0 frg) {
+        if (frg != null && frg instanceof VideoFrg1) {
+            ((VideoFrg1) frg).setVideoPause();
+        }
+    }
+
+    //调用播放
+    protected void setVideoPlay(VideoBaseFrg0 frg) {
+        if (frg != null && frg instanceof VideoFrg1) {
+            ((VideoFrg1) frg).setVideoPlay();
+        }
+    }
+
+    //更新播放进度
+    protected void setUpdatePlayProgress(VideoBaseFrg0 frg) {
+        if (frg != null && frg instanceof VideoFrg1) {
+            ((VideoFrg1) frg).setUpdatePlayProgress();
+        }
     }
 
     //获取当前页面对象
     public VideoBaseFrg0 getCursorVideoFrg() {
         return cursorVideoFrg;
-    }
-
-    //多余的
-    private VideoBaseFrg0 getCursorFrg() {
-        int index = viewPagerView.getCurrentItem();
-        return getCursorFrg(index);
     }
 
     //获取指定页面对象
@@ -178,34 +186,13 @@ public class ShortVideoManager2 {
 
     //获取当前的播放器
     public CustomExoPlayer getCursorVideoPlayer() {
-        return cursorVideoFrg.getExoPlayer();
-    }
-
-    //计算持有者数量（排除问题用）
-    private void calculateFrgHoldPlayer(String pageIndex, ExoPlayer player) {
-        int frgSize = adapter.getFrgSize();
-        for (int i = 0; i < frgSize; i++) {
-            VideoBaseFrg0 frg = adapter.getIndexAtFrg(i);
-            CustomExoPlayer tempPlayer = frg.getExoPlayer();
-            if (tempPlayer == null) {
-                continue;
-            }
-            if (tempPlayer == player) {
-                int tempIndex = frg.getPageIndex();
-                PlayerView playerView = frg.getPlayerView();
-                if (playerView == null) {
-                    PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有，但是播放视图未初始化");
-                } else {
-                    Player tempPlayer2 = playerView.getPlayer();
-                    if (tempPlayer2 == null) {
-                        PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有,但是播放视图未设置播放器");
-                    } else {
-                        PlayerLog.d("播放器", "页面" + pageIndex + "的播放器，被页面" + tempIndex + "所持有");
-                    }
-                }
-
-            }
+        if (cursorVideoFrg == null) {
+            return null;
         }
+        if (cursorVideoFrg instanceof VideoFrg1) {
+            return ((VideoFrg1) cursorVideoFrg).getExoPlayer();
+        }
+        return null;
     }
 
     //true 删除
@@ -287,7 +274,8 @@ public class ShortVideoManager2 {
                     startPage = viewPagerView.getCurrentItem();
                     //开始滑动
                     PlayerLog.d("页面滑动开始", "index=" + viewPagerView.getCurrentItem());
-                    getCursorVideoFrg().setVideoPause();
+                    setVideoPause(getCursorVideoFrg());
+
                     break;
                 case ViewPager.SCROLL_STATE_SETTLING:
                     // 仍在滑动但即将停止
@@ -295,7 +283,7 @@ public class ShortVideoManager2 {
                 case ViewPager.SCROLL_STATE_IDLE:
                     // 滑动结束
                     PlayerLog.d("页面滑动结束", "index=" + viewPagerView.getCurrentItem());
-                    getCursorVideoFrg().setVideoPlay();
+                    setVideoPlay(getCursorVideoFrg());
                     break;
             }
 
@@ -328,9 +316,7 @@ public class ShortVideoManager2 {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    if (cursorVideoFrg != null) {
-                        cursorVideoFrg.setUpdatePlayProgress();
-                    }
+                    setUpdatePlayProgress(getCursorVideoFrg());
                     sendEmptyMessageDelayed(1, 1 * 1000);
                     break;
             }

@@ -14,7 +14,7 @@ import androidx.media3.ui.AspectRatioFrameLayout;
 import media.library.player.manager.PlayerLog;
 
 //动画
-public class VideoAnimationFrg2 extends VideoFrg1 {
+public class VideoAnimationFrg2 extends VideoFrg11 {
 
     //============================动画开始==========================================
     private int totaltHeight, totaltWidth;
