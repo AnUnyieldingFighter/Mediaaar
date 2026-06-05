@@ -1,6 +1,7 @@
 package com.images.ui.activity.me.media;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,6 +13,7 @@ import com.bumptech.glide.Glide;
 
 import media.library.images.config.entity.MediaEntity;
 import media.library.images.manager.MediaPlayerManager;
+import media.library.images.manager.MediaVideoData;
 import media.library.images.manager.VideoDataBean;
 import media.library.utils.PhotoUtil;
 
@@ -124,8 +126,8 @@ public class MediaActivity extends AppCompatActivity implements View.OnClickList
             return;
         }
         if (id == R.id.image_7) {
-            VideoDataBean videoData = MediaPlayerManager.getVideoData1S(video2);
-            ivVideo.setImageBitmap(videoData.videoBitmap);
+            Bitmap videoBitmap = MediaVideoData.getInstance().setVideoPath(video2).getVideoBit(1 * 1000,true);
+            ivVideo.setImageBitmap(videoBitmap);
             return;
         }
     }

@@ -24,6 +24,7 @@ import media.library.player.videoNew.able.OnVideoLoading;
 import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
 import media.library.player.videoNew.frg2.VideoFrg1;
+import media.library.player.videoNew.frg2.VideoFrg11;
 import media.library.player.videoNew.manger.ShortVideoManager2;
 import media.library.player.view.CustomExoPlayer;
 import media.library.player.view.PlayerSupport;
@@ -72,13 +73,18 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             @Override
             public void onVideoLoadingUp(int index, int indexUp, VideoBaseFrg0 videoFrgNow, VideoBaseFrg0 videoFrgUp) {
                 //预加载上一页数据
-                videoFrgUp.setVideoDataPlay(indexUp);
+                if(videoFrgUp instanceof VideoFrg11){
+                    ((VideoFrg11)videoFrgUp).setVideoDataPlay(indexUp,true);
+                }
+
             }
 
             @Override
             public void onVideoLoadingDow(int index, int indexDow, VideoBaseFrg0 videoFrgNow, VideoBaseFrg0 videoFrgDow) {
                 //预加载下一页数据
-                videoFrgDow.setVideoDataPlay(indexDow);
+                if(videoFrgDow instanceof VideoFrg11){
+                    ((VideoFrg11)videoFrgDow).setVideoDataPlay(indexDow,true);
+                }
             }
 
             @Override
@@ -177,8 +183,11 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
         VideoBaseFrg0 videoFrg = videoPlaysManager.setPageCurrentItem0();
-        videoFrg.setVideoDataPlay(0);
-        videoFrg.setDataUpdate(0);
+        if(videoFrg instanceof VideoFrg11){
+            ((VideoFrg11)videoFrg).setVideoDataPlay(0,false);
+            ((VideoFrg11)videoFrg).setDataUpdate(0);
+        }
+
     }
 
     //设置页面
@@ -246,11 +255,6 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     public void recordDuration(String id, int pageIndex, long pro, long total) {
         //进度回调
 
-    }
-
-    @Override
-    public void onCheck(Object str, Object obj) {
-        //一些检查
     }
 
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null

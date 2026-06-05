@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import media.library.player.view.CustomExoPlayer;
-
+//保存播放器
 public class MorePlayerManager {
     private HashMap<Integer, CustomExoPlayer> players = new HashMap<>();
     private int playersMax = 7;
