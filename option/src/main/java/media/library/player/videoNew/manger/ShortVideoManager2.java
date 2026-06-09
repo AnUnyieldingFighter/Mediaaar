@@ -32,7 +32,8 @@ public class ShortVideoManager2 {
 
     private AppCompatActivity activity;
     private Fragment fragment;
-
+    //true 可以预加载
+    private boolean canLoadPre = true;
 
     public void setView(AppCompatActivity activity, ViewPager2 viewPagerView) {
         this.activity = activity;
@@ -44,6 +45,11 @@ public class ShortVideoManager2 {
         this.fragment = fragment;
         initView(viewPagerView);
         setClick();
+    }
+
+    //设置是否预加载
+    public void setCanLoadPre(boolean canLoadPre) {
+        this.canLoadPre = canLoadPre;
     }
 
     private ViewPager2 viewPagerView;
@@ -358,6 +364,9 @@ public class ShortVideoManager2 {
      * @param indexUp 索引
      */
     public void setPageLoadUp(int indexUp) {
+        if (!canLoadPre) {
+            return;
+        }
         //下划 要预加载上一页
         int dataSize = adapter.getDataSize();
         if (indexUp >= 0 && indexUp < dataSize) {
@@ -387,6 +396,9 @@ public class ShortVideoManager2 {
      * @param indexNext 索引
      */
     public void setPageLoadNext(int indexNext) {
+        if (!canLoadPre) {
+            return;
+        }
         //上划 要预加载下一页
         int dataSize = adapter.getDataSize();
         if (indexNext >= dataSize) {

@@ -22,7 +22,7 @@ public class VideoFrg11 extends VideoFrg1 {
     @Override
     public void onResume() {
         super.onResume();
-        setVideoDataPlay(pageIndex, false);
+        setVideoPlay(pageIndex);
     }
 
 
@@ -50,7 +50,7 @@ public class VideoFrg11 extends VideoFrg1 {
      * @param isPreLoad true 是预加载，false 不是预加载
      */
     private void setVideoDataPlay(int pageIndex, boolean isPreLoad) {
-        VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex);
+        VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex, isPreLoad);
         if (videoPlayVo == null || videoPlayVo.pageIndex < 0 ||
                 TextUtils.isEmpty(videoPlayVo.url)) {
             String tempPage = "";

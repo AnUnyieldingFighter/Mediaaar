@@ -253,11 +253,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null
     @Override
-    public VideoPlayVo getVideoPlayData(int pageIndex) {
+    public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre) {
         var index = pageIndex;
-        if (index == -1) {
-            //当前页面
+        if (index <= 0) {
+            //page 修正
             index = videoPlaysManager.getResumeIndex();
+            if (isPre) {
+                return null;
+            }
         }
         String videoUrl = "";
         if (videos != null && videos.size() > 0) {

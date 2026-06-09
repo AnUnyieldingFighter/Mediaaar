@@ -17,8 +17,8 @@ public interface OnVideoOperate2 {
     void recordDuration(String id, int pageIndex, long pro, long total);
 
 
-    //pageIndex  拉指定页的数据
-    VideoPlayVo getVideoPlayData(int pageIndex);
+    //pageIndex  拉指定页的数据 isPre :true 预记载
+    VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre);
 
     //已成功添加淘容器里
     void onFrgAttach(Fragment frg);
