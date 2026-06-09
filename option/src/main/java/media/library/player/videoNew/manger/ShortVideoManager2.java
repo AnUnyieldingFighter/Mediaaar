@@ -54,7 +54,7 @@ public class ShortVideoManager2 {
 
     private ViewPager2 viewPagerView;
     protected VideoPagerAdapter3 adapter;
-    private VideoBaseFrg0 cursorVideoFrg;
+
     private OnPageChange onPageChange;
 
 
@@ -72,7 +72,6 @@ public class ShortVideoManager2 {
         onPageChange = new OnPageChange();
         if (pageCurrentItem > 0) {
             viewPagerView.setCurrentItem(pageCurrentItem, false);
-            cursorVideoFrg = adapter.getIndexAtFrg(pageCurrentItem);
         }
     }
 
@@ -225,6 +224,8 @@ public class ShortVideoManager2 {
 
     //获取当前页面对象
     public VideoBaseFrg0 getCursorVideoFrg() {
+        int indexPage = viewPagerView.getCurrentItem();
+        VideoBaseFrg0 cursorVideoFrg = getCursorFrg(indexPage);
         return cursorVideoFrg;
     }
 
@@ -287,6 +288,7 @@ public class ShortVideoManager2 {
         //循环播放
         exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
     }
+
 
     private boolean isDel;
 
@@ -476,15 +478,15 @@ public class ShortVideoManager2 {
             // 当页面滚动状态改变时调用，例如开始滑动、滑动结束等
             switch (state) {
                 case ViewPager.SCROLL_STATE_DRAGGING:
-                    //开始滑动
+                    //开始滑动/手指拖动中
                     PlayerLog.d("页面滑动开始", "index=" + viewPagerView.getCurrentItem());
                     setVideoPause(getCursorVideoFrg());
                     break;
                 case ViewPager.SCROLL_STATE_SETTLING:
-                    // 仍在滑动但即将停止
+                    // 仍在滑动但即将停止/松手
                     break;
                 case ViewPager.SCROLL_STATE_IDLE:
-                    // 滑动结束
+                    //滑动结束(会调用  onPageSelected 再走这里)
                     PlayerLog.d("页面滑动结束", "当前 index=" + viewPagerView.getCurrentItem());
                     setVideoPlay(getCursorVideoFrg());
                     break;
