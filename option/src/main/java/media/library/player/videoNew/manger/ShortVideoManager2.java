@@ -243,6 +243,7 @@ public class ShortVideoManager2 {
 
     //获取当前的播放器
     public CustomExoPlayer getCursorVideoPlayer() {
+        VideoBaseFrg0 cursorVideoFrg = getCursorVideoFrg();
         if (cursorVideoFrg == null) {
             return null;
         }
