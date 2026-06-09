@@ -1,9 +1,11 @@
 package media.library.player.videoNew.frg2;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
@@ -37,6 +39,12 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     //true 添加到缓存
     protected boolean isUseCache = true;
 
+    //成功添加到 Activity/容器里  它在onCreate 之前
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+    }
+
     //=================================设置view/初始化
     @Override
     protected void setViewInit(View view, Bundle savedInstanceState) {
@@ -58,6 +66,9 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         }
         if (relyFrg instanceof OnVideoOperate2) {
             videoOperate2 = (OnVideoOperate2) relyFrg;
+        }
+        if (videoOperate2 != null) {
+            videoOperate2.onFrgAttach(this);
         }
         setClick();
     }
@@ -435,4 +446,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         int[] res = new int[]{finalWidth, finalHeight};
         return res;
     }
+
+
 }

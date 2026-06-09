@@ -2,11 +2,8 @@ package media.library.player.videoNew.frg2;
 
 import android.text.TextUtils;
 
-import androidx.media3.common.Player;
-import androidx.media3.ui.PlayerView;
 import media.library.player.bean.VideoPlayVo;
 import media.library.player.manager.PlayerLog;
-import media.library.player.view.CustomExoPlayer;
 
 
 public class VideoFrg11 extends VideoFrg1 {
@@ -17,13 +14,33 @@ public class VideoFrg11 extends VideoFrg1 {
         return pageIndex;
     }
 
+    //因为删除了一个frg，这个是相邻的下一个frg，索引要变根
+    public void setUpdateIndex(int index) {
+        pageIndex = index;
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         setVideoDataPlay(pageIndex, false);
     }
-    //设置拉取播放数据   pageIndex-1:拉当前的数据（播放） 否则就拉指定页的数据（预加载）
-    //一切从这里开始
+
+
+    /**
+     * 预加载
+     *
+     * @param pageIndex
+     *
+     */
+    public void setVideoPre(int pageIndex) {
+        PlayerLog.d("视频播放 预加加载", "pageIndex=" + pageIndex);
+        setVideoDataPlay(pageIndex, true);
+    }
+
+    public void setVideoPlay(int pageIndex) {
+        PlayerLog.d("视频播放 加载播放", "pageIndex=" + pageIndex);
+        setVideoDataPlay(pageIndex, false);
+    }
 
     /**
      * 设置拉取播放数据
@@ -32,7 +49,7 @@ public class VideoFrg11 extends VideoFrg1 {
      * @param pageIndex 要加载的数据索引
      * @param isPreLoad true 是预加载，false 不是预加载
      */
-    public void setVideoDataPlay(int pageIndex, boolean isPreLoad) {
+    private void setVideoDataPlay(int pageIndex, boolean isPreLoad) {
         VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex);
         if (videoPlayVo == null || videoPlayVo.pageIndex < 0 ||
                 TextUtils.isEmpty(videoPlayVo.url)) {
@@ -56,16 +73,21 @@ public class VideoFrg11 extends VideoFrg1 {
     public void setDataUpdate(int pageIndex) {
 
     }
+
     //===============================================数据拉取
     //isPreloading true  是预加载
     protected void setVideoStart(VideoPlayVo videoPlayVo, boolean isPreloading) {
         int tempIndex = videoPlayVo.pageIndex;
         String tempUrl = videoPlayVo.url;
+        if (TextUtils.isEmpty(tempUrl)) {
+            return;
+        }
         //拉取播放地址
         updateVideoUrl(tempIndex, tempUrl);
         //
-        setShowIndexTest();
         onPLVideoSizeChanged();
+        //显示页面信息
+        setShowIndexTest();
         if (isPreloading) {
             return;
         }

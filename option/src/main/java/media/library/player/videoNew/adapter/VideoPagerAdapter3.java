@@ -1,7 +1,6 @@
 package media.library.player.videoNew.adapter;
 
 
-
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -9,6 +8,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
+import media.library.player.videoNew.frg2.VideoFrg1;
+import media.library.player.view.CustomExoPlayer;
 
 public class VideoPagerAdapter3 extends FragmentStateAdapter {
     private ArrayList<VideoBaseFrg0> frgs = new ArrayList<>();
@@ -89,6 +90,22 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return frg;
     }
 
+    //删除了一个数据
+    public void removeFrg(int position, VideoBaseFrg0 frg) {
+        int index = position % frgs.size();
+        VideoBaseFrg0 temp = frgs.get(index);
+        if (temp instanceof VideoFrg1) {
+            CustomExoPlayer exoPlayer = ((VideoFrg1) temp).getExoPlayer();
+            if (exoPlayer != null) {
+                exoPlayer.release();
+            }
+        }
+        frgs.remove(index);
+        frgs.add(frg);
+        this.dataSize -= 1;
+        notifyDataSetChanged();
+    }
+
     public int getFrgSize() {
         return frgs.size();
     }
@@ -108,6 +125,11 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     public long getItemId(int position) {
         VideoBaseFrg0 frg = getFrg(position);
         return frg.hashCode();
+    }
+
+    // 可选：让 Adapter 知道这个 Fragment 是哪个
+    public VideoBaseFrg0 getFragmentAt(int pos) {
+        return frgs.get(pos % frgs.size());
     }
 
     @Override

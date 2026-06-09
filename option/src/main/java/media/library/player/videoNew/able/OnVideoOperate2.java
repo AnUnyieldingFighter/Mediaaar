@@ -1,5 +1,6 @@
 package media.library.player.videoNew.able;
 
+import androidx.fragment.app.Fragment;
 import media.library.player.bean.VideoPlayVo;
 import media.library.player.view.CustomExoPlayer;
 
@@ -16,8 +17,10 @@ public interface OnVideoOperate2 {
     void recordDuration(String id, int pageIndex, long pro, long total);
 
 
-
     //pageIndex  拉指定页的数据
     VideoPlayVo getVideoPlayData(int pageIndex);
+
+    //已成功添加淘容器里
+    void onFrgAttach(Fragment frg);
 
 }

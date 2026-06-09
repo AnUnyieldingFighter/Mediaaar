@@ -50,4 +50,14 @@
         android:gravity="center"
         android:text="音频设置"
         android:textColor="#181818" />
+
+    <TextView
+        android:id="@+id/tv_data_del"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentRight="true"
+        android:background="#fff"
+        android:gravity="center"
+        android:text="删除\n这个"
+        android:textColor="#181818" />
 </media.library.player.view.VideoPageRl2>

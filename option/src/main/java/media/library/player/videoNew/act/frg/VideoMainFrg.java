@@ -3,6 +3,7 @@ package media.library.player.videoNew.act.frg;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +28,6 @@ import media.library.player.videoNew.frg2.VideoFrg1;
 import media.library.player.videoNew.frg2.VideoFrg11;
 import media.library.player.videoNew.manger.ShortVideoManager2;
 import media.library.player.view.CustomExoPlayer;
-import media.library.player.view.PlayerSupport;
 import media.library.player.view.VideoPageRl2;
 
 
@@ -56,13 +56,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     private ViewPager2 viewPager2;
     private VideoPageRl2 videoPageRl;
-    private View viewDataLoading;
+    private View viewDataLoading, tvDataDel;
     private TextView tvLoadingData, tvAudioPar;
     private ShortVideoManager2 videoPlaysManager;
 
     private void setViewInit(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
         viewPager2 = view.findViewById(R.id.view_pager);
+        tvDataDel = view.findViewById(R.id.tv_data_del);
         viewDataLoading = view.findViewById(R.id.view_data_loading);
         tvLoadingData = view.findViewById(R.id.tv_loading_data);
         tvAudioPar = view.findViewById(R.id.tv_audio_par);
@@ -71,33 +72,8 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videoPlaysManager = new ShortVideoManager2();
         videoPlaysManager.setOnVideoLoading(new OnVideoLoading() {
             @Override
-            public void onVideoLoadingUp(int indexUp, VideoBaseFrg0 videoFrgUp) {
-                //预加载上一页数据
-                if (videoFrgUp instanceof VideoFrg11) {
-                    ((VideoFrg11) videoFrgUp).setVideoDataPlay(indexUp, true);
-                }
-
-            }
-
-            @Override
-            public void onVideoLoadingDow(int indexDow, VideoBaseFrg0 videoFrgDow) {
-                //预加载下一页数据
-                if (videoFrgDow instanceof VideoFrg11) {
-                    ((VideoFrg11) videoFrgDow).setVideoDataPlay(indexDow, true);
-                }
-            }
-
-            @Override
-            public ArrayList<VideoBaseFrg0> getPages() {
-                ArrayList pages = new ArrayList<VideoBaseFrg0>();
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                pages.add(new VideoFrg1());
-                return pages;
+            public VideoBaseFrg0 getVideoPage() {
+                return new VideoFrg11();
             }
         });
         videoPlaysManager.setView(this, viewPager2);
@@ -107,6 +83,11 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videoPageRl.setOnVerticalListener(new VideoPageRl2.OnVerticalListener() {
             @Override
             public void onVertical() {
+                if (true) {
+                    //先不要
+                    return;
+                }
+                //触发加载更多
                 if (isMoreReq) {
                     return;
                 }
@@ -136,6 +117,19 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             @Override
             public void onClick(View v) {
                 videoPlaysManager.getCursorVideoPlayer().testTrackSelector();
+            }
+        });
+        tvDataDel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //删除一个视频
+                int resumeIndex = videoPlaysManager.getResumeIndex();
+                if (videos.size() == 0) {
+                    return;
+                }
+                Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(resumeIndex));
+                videos.remove(resumeIndex);
+                videoPlaysManager.delData();
             }
         });
     }
@@ -182,15 +176,10 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videos.clear();
         videos.addAll(urls);
         videoPlaysManager.setUpdateDataSize(videos.size());
-        VideoBaseFrg0 videoFrg = videoPlaysManager.setPageCurrentItem0();
-        if (videoFrg instanceof VideoFrg11) {
-            ((VideoFrg11) videoFrg).setVideoDataPlay(0, false);
-            ((VideoFrg11) videoFrg).setDataUpdate(0);
-        }
-
+        videoPlaysManager.setVideoPlay(0);
     }
 
-    //设置页面
+    //设置加载更多页面
     private void setPageDataMore(ArrayList<String> urls) {
         /*if (videos.contains(url)) {
         //不去重
@@ -214,15 +203,20 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 case 0:
                     //初始化加载数据
                     ArrayList<String> urls = new TestVideoUrl().buildTestVideoUrls3();
-
                     String video = "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4";
                     //播放不出来报错
                     String video2 = "https://nbc.vtnbo.com/nbc/msg/video/pro/17674882940931162.mp4";
-                    //PlayerSupport.getInstance().isVideoFormatSupported(video);
-                    // urls.add(0, video);
-                    urls.add(0, video2);
+                    //PlayerSupport.getInstance().test(act,video);
+                    urls.add(video);
+                    urls.add(video2);
                     isMoreNot = false;
                     isDataReq = false;
+                    //
+                    /*ArrayList<String> urls2 = new ArrayList<>();
+                    urls2.add(video);
+                    urls2.add(video2);
+                    setPageData(urls2);*/
+                    //
                     setPageData(urls);
                     tvLoadingData.setText("重新加载数据");
                     break;
@@ -275,6 +269,11 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         vo.id = "-1";
         return vo;
 
+    }
+
+    @Override
+    public void onFrgAttach(Fragment frg) {
+        videoPlaysManager.setFrgAttach(frg);
     }
     //=====================其它数据操作接口======================================
 
