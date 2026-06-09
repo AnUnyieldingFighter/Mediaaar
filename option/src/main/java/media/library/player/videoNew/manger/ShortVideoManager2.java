@@ -313,7 +313,7 @@ public class ShortVideoManager2 {
             }
         }
         //从列表删除这个播放器
-        playerManager.setDelExoPlayer(index);
+        getPlayerManager().setDelExoPlayer(index);
         //去掉这个frg的预加载
         setFrgPreDel(adapter.getFragmentAt(index));
         //删除一个frg再补一个frg，并且 释放播放器

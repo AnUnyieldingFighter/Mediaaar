@@ -21,11 +21,12 @@ public class MorePlayerManager {
         int index = pageIndex % playersMax;
         CustomExoPlayer temp = null;
         if (index >= players.size()) {
-            temp = new CustomExoPlayer();
-            players.add(temp);
-        } else {
-            temp = players.get(index);
+            while (index >= players.size()) {
+                temp = new CustomExoPlayer();
+                players.add(temp);
+            }
         }
+        temp = players.get(index);
         return temp;
     }
 
