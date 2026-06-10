@@ -22,7 +22,7 @@ public class VideoFrg11 extends VideoFrg1 {
     @Override
     public void onResume() {
         super.onResume();
-        setVideoPlay(pageIndex);
+        setVideoDataPlay(pageIndex);
     }
 
 
@@ -32,12 +32,12 @@ public class VideoFrg11 extends VideoFrg1 {
      * @param pageIndex
      *
      */
-    public void setVideoPre(int pageIndex) {
+    public void setVideoDataPre(int pageIndex) {
         PlayerLog.d("视频播放 预加加载", "pageIndex=" + pageIndex);
         setVideoDataPlay(pageIndex, true);
     }
 
-    public void setVideoPlay(int pageIndex) {
+    public void setVideoDataPlay(int pageIndex) {
         PlayerLog.d("视频播放 加载播放", "pageIndex=" + pageIndex);
         setVideoDataPlay(pageIndex, false);
     }

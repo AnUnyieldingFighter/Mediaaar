@@ -182,8 +182,8 @@ public class ShortVideoManager2 {
             //没有被初始化，走预加载逻辑
             setFrgPre(frg, index);
         } else {
-            if (frg instanceof VideoFrg1) {
-                ((VideoFrg11) frg).setVideoPlay(index);
+            if (frg instanceof VideoFrg11) {
+                ((VideoFrg11) frg).setVideoDataPlay(index);
                 ((VideoFrg11) frg).setDataUpdate(index);
             }
         }
@@ -210,7 +210,7 @@ public class ShortVideoManager2 {
     //设置页面视频预加载
     protected void setPageVideoPre(Fragment frg, int pageIndex) {
         if (frg instanceof VideoFrg11) {
-            ((VideoFrg11) frg).setVideoPre(pageIndex);
+            ((VideoFrg11) frg).setVideoDataPre(pageIndex);
         }
     }
 
@@ -445,7 +445,7 @@ public class ShortVideoManager2 {
         mapFrg.remove(frg);
     }
 
-    //frg 已创建时的回调
+    //frg 已创建时的回调 在frg的 onViewCreated 里
     public void setFrgAttach(Fragment frg) {
         if (!mapFrg.containsKey(frg)) {
             return;
