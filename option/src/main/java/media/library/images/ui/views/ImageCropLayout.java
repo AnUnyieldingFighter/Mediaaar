@@ -46,6 +46,7 @@ public class ImageCropLayout extends RelativeLayout {
 
     private int outWidth, outHeight;
     private String path;
+    private boolean fitImageInside = true;
 
     public void setOutWH(int outWidth, int outHeight) {
         this.outWidth = outWidth;
@@ -55,8 +56,14 @@ public class ImageCropLayout extends RelativeLayout {
     private Context context;
 
     public void setMedias(Context context, MediaEntity media) {
+        setMedias(context, media, true);
+    }
+
+    // fitImageInside true 图片完整显示在容器内  false:图片填满容器 ，图片边缘可能超出容器。
+    public void setMedias(Context context, MediaEntity media, boolean fitImageInside) {
         path = media.mediaPathSource;
         this.context = context;
+        this.fitImageInside = fitImageInside;
         if (enjoyCropLayout != null) {
             setImg();
         }
@@ -99,7 +106,7 @@ public class ImageCropLayout extends RelativeLayout {
         }
         //旋转图片
         bitmapRotate = BitmapUtile.imageRotate(path, bitmap);
-        enjoyCropLayout.setImage(bitmapRotate);
+        enjoyCropLayout.setImage(bitmapRotate, fitImageInside);
         defineCropParams();
     }
 
@@ -111,7 +118,7 @@ public class ImageCropLayout extends RelativeLayout {
     //更新图片
     public void updateBit(Bitmap bit) {
         bitmapRotate = bit;
-        enjoyCropLayout.setImage(bit);
+        enjoyCropLayout.setImage(bit, fitImageInside);
         //boolean isRestrict = enjoyCropLayout.isRestrict();
         //enjoyCropLayout.setRestrict(isRestrict);
     }

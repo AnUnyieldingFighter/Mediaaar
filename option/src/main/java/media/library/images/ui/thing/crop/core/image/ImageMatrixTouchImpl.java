@@ -55,7 +55,7 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
     @Override
     public void init() {
         mView.setScaleType(ImageView.ScaleType.MATRIX);
-        postCenter();
+        postCenter(true);
     }
 
     public RectF getRestrictRect() {
@@ -70,14 +70,19 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
     }
 
     public void reset() {
+        reset(true);
+    }
+
+    public void reset(boolean fitImageInside) {
         mScale = 1;
-        postCenter();
+        postCenter(fitImageInside);
     }
 
     /**
      * 在屏幕中心显示,这里来自于ImageView的源码
+     * fitImageInside true 图片完整显示在容器内，使用 Math.min()。 false:图片填满容器，使用 Math.max()，图片边缘可能超出容器。
      */
-    private void postCenter() {
+    private void postCenter(final boolean fitImageInside) {
         mView.post(new Runnable() {
             @Override
             public void run() {
@@ -89,16 +94,17 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
 
                 final int vwidth = mView.getWidth() - mView.getPaddingLeft() - mView.getPaddingRight();
                 final int vheight = mView.getHeight() - mView.getPaddingTop() - mView.getPaddingBottom();
-                float scale;
-                float dx = 0, dy = 0;
-
-                if (dwidth * vheight > vwidth * dheight) {
-                    scale = (float) vheight / (float) dheight;
-                    dx = (vwidth - dwidth * scale) * 0.5f;
-                } else {
-                    scale = (float) vwidth / (float) dwidth;
-                    dy = (vheight - dheight * scale) * 0.5f;
+                if (dwidth <= 0 || dheight <= 0 || vwidth <= 0 || vheight <= 0) {
+                    return;
                 }
+
+                float widthScale = (float) vwidth / (float) dwidth;
+                float heightScale = (float) vheight / (float) dheight;
+                float scale = fitImageInside ? Math.min(widthScale, heightScale)
+                        : Math.max(widthScale, heightScale);
+                float dx = (vwidth - dwidth * scale) * 0.5f;
+                float dy = (vheight - dheight * scale) * 0.5f;
+
                 Matrix matrix = new Matrix();
                 matrix.setScale(scale, scale);
                 matrix.postTranslate(Math.round(dx), Math.round(dy));

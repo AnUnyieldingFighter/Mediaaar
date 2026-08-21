@@ -86,6 +86,7 @@ public class EnjoyCropLayout extends FrameLayout {
     }
     private BaseLayerView mLayerView;
     private EnjoyImageView mImageView;
+    private boolean fitImageInside = true;
 
     /**
      * 初始化裁剪所需组件，并且添加到容器中
@@ -108,6 +109,7 @@ public class EnjoyCropLayout extends FrameLayout {
         addView(layerView, new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         mLayerView = layerView;
+        mImageView.resetImageMatrix(fitImageInside);
     }
 
 
@@ -149,8 +151,13 @@ public class EnjoyCropLayout extends FrameLayout {
      * @param bitmap
      */
     public void setImage(Bitmap bitmap) {
+        setImage(bitmap, true);
+    }
+
+    public void setImage(Bitmap bitmap, boolean fitImageInside) {
+        this.fitImageInside = fitImageInside;
         mImageView.setImageBitmap(bitmap);
-        mImageView.resetImageMatrix();
+        mImageView.resetImageMatrix(fitImageInside);
     }
 
     /**

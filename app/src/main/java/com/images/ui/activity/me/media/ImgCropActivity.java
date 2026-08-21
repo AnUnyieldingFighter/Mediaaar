@@ -24,7 +24,7 @@ public class ImgCropActivity extends AppCompatActivity {
         setContentView(R.layout.activity_img_crop);
         mediaLayout = findViewById(R.id.media_layout);
         ivCrop = findViewById(R.id.iv_crop);
-        mediaLayout.setMedias(this, MediaActivity.temp.get(0));
+        mediaLayout.setMedias(this, MediaActivity.temp.get(0), true);
         findViewById(R.id.tv_crop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

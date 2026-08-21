@@ -76,6 +76,10 @@ public class EnjoyImageView extends AppCompatImageView {
         mImageToucheHandler.reset();
     }
 
+    public void resetImageMatrix(boolean fitImageInside) {
+        mImageToucheHandler.reset(fitImageInside);
+    }
+
     /**
      * 设置图片移动放大边界
      *
