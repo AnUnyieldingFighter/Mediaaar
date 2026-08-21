@@ -9,14 +9,17 @@ import android.view.MotionEvent;
 
 import androidx.appcompat.widget.AppCompatImageView;
 
-/**支持缩放功能、拖动功能的ImageView
+/**
+ * 支持缩放功能、拖动功能的ImageView
+ *
  * @author Zhouztashin
  * @version 1.0
  * @created 2016/3/17
  */
 public class EnjoyImageView extends AppCompatImageView {
     private final String TAG = EnjoyImageView.class.getSimpleName();
-    private  ImageMatrixTouchImpl mImageToucheHandler;
+    private ImageMatrixTouchImpl mImageToucheHandler;
+
     public EnjoyImageView(Context context) {
         super(context);
         init();
@@ -27,7 +30,8 @@ public class EnjoyImageView extends AppCompatImageView {
         super(context, attrs);
         init();
     }
-    private  void init(){
+
+    private void init() {
         mImageToucheHandler = ImageMatrixTouchImpl.newInstance(this);
         mImageToucheHandler.init();
     }
@@ -38,32 +42,47 @@ public class EnjoyImageView extends AppCompatImageView {
     }
 
 
-
-    public double getScale(){
+    public double getScale() {
         return mImageToucheHandler.getScale();
     }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         boolean result = mImageToucheHandler.touch(event);
-        if(result){
+        if (result) {
             return result;
-        }else{
+        } else {
             return super.onTouchEvent(event);
         }
     }
-    public float getActuallyScrollX(){
-        return getScrollX()+mImageToucheHandler.getScrollX();
+
+    public float getActuallyScrollX() {
+        return getScrollX() + mImageToucheHandler.getScrollX();
     }
-    public float getActuallyScrollY(){
-        return getScrollY()+mImageToucheHandler.getScrollY();
+
+    public float getActuallyScrollY() {
+        return getScrollY() + mImageToucheHandler.getScrollY();
+    }
+
+
+    /**重置裁剪图片的显示矩阵
+     * reset() 会：
+     * 1.清除之前拖拽、缩放产生的 Matrix 状态
+     * 2.根据新 Bitmap 的宽高重新计算缩放比例
+     * 3.将图片重新居中显示
+     * 4.更新当前缩放值 mScale
+     */
+    public void resetImageMatrix() {
+        mImageToucheHandler.reset();
     }
 
     /**
      * 设置图片移动放大边界
+     *
      * @param rectF
      * @return
      */
-    public void setRestrictBound(RectF rectF){
+    public void setRestrictBound(RectF rectF) {
         mImageToucheHandler.setRestrictRect(rectF);
     }
 }

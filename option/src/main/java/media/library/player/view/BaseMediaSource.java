@@ -73,16 +73,32 @@ class BaseMediaSource extends BaseExoPlayer {
         MediaSource mediaSource;
         switch (type) {
             case "m3u8":
-                // hls链接
-                DataSource.Factory factory = new DefaultDataSource.Factory(playerContext);
+                // hls链接 里面记录了一段段 .ts 分片视频的地址，播放器按顺序逐个加载、拼接播放，实现流式播放。
+                DataSource.Factory factory = null;
+                if (!isUseCache) {
+                    factory = new DefaultDataSource.Factory(playerContext);
+                } else {
+                    setMediaSourceCacheRelease();
+                    //构建缓存
+                    simpleCache = createSimpleCache();
+                    factory = new CacheDataSource.Factory()
+                            .setCache(simpleCache)
+                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                            //更适合网络视频
+                            //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
+                            //缓存出错时自动回退到原始源
+                            //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
+                            //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
+                            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+                }
                 mediaSource = new HlsMediaSource.Factory(factory).createMediaSource(videoItem);
                 break;
             case "rtsp":
-                // rtsp链接
+                // rtsp链接 传输实时音视频流，主打直播、监控、摄像头画面。
                 mediaSource = new RtspMediaSource.Factory().createMediaSource(videoItem);
                 break;
             case "rtmp":
-                // rtmp链接
+                // rtmp链接 实时消息传输协议，早年主流的直播推 / 拉流协议 主要用于音视频直播，分为推流（主播上传画面到服务器）、拉流（观众播放）
                 //mediaSource = new ProgressiveMediaSource.Factory(new RtmpDataSource.Factory()).createMediaSource(videoItem);
                 //break;
             default:

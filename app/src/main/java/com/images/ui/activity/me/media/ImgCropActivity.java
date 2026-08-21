@@ -24,7 +24,7 @@ public class ImgCropActivity extends AppCompatActivity {
         setContentView(R.layout.activity_img_crop);
         mediaLayout = findViewById(R.id.media_layout);
         ivCrop = findViewById(R.id.iv_crop);
-        mediaLayout.setMedias(this,  MediaActivity.temp.get(0));
+        mediaLayout.setMedias(this, MediaActivity.temp.get(0));
         findViewById(R.id.tv_crop).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -32,6 +32,13 @@ public class ImgCropActivity extends AppCompatActivity {
                 Glide.with(ImgCropActivity.this).load(savePath).placeholder(com.images.imageselect.R.mipmap.image_select_default)
                         //.centerCrop()
                         .into(ivCrop);
+            }
+        });
+
+        findViewById(R.id.tv_xz).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediaLayout.rotateImage(90);
             }
         });
     }

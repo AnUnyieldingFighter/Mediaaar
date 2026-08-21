@@ -144,7 +144,7 @@ public class BitmapUtile {
      * @param bitmap
      * @return
      */
-    private static Bitmap rotaingImageView(int angle, Bitmap bitmap) {
+    public static Bitmap rotaingImageView(int angle, Bitmap bitmap) {
         if (angle == 0) {
             return bitmap;
         }

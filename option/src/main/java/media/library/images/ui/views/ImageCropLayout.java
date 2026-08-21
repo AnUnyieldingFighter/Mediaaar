@@ -3,8 +3,13 @@ package media.library.images.ui.views;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
+
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.view.animation.AccelerateDecelerateInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +28,7 @@ import java.io.File;
 
 //图片裁剪
 public class ImageCropLayout extends RelativeLayout {
+    private static final long ROTATION_DURATION_MS = 300L;
 
     public ImageCropLayout(@NonNull Context context) {
         super(context);
@@ -67,13 +73,22 @@ public class ImageCropLayout extends RelativeLayout {
         return path;
     }
 
-    private EnjoyCropLayout enjoyCropLayout;
+    //获取裁剪的头像
+    public Bitmap getCropImg() {
+        Bitmap bitmap = enjoyCropLayout.crop();
+        return bitmap;
+    }
+
+
+    protected EnjoyCropLayout enjoyCropLayout;
 
     private void initContent() {
         enjoyCropLayout = new EnjoyCropLayout(context);
         addView(enjoyCropLayout);
         setImg();
     }
+
+    private Bitmap bitmapRotate;
 
     private void setImg() {
         //设置裁剪原图片
@@ -83,9 +98,57 @@ public class ImageCropLayout extends RelativeLayout {
             return;
         }
         //旋转图片
-        Bitmap bitmapRotate = BitmapUtile.imageRotate(path, bitmap);
+        bitmapRotate = BitmapUtile.imageRotate(path, bitmap);
         enjoyCropLayout.setImage(bitmapRotate);
         defineCropParams();
+    }
+
+    //获取原图
+    public Bitmap getOriginalImg() {
+        return bitmapRotate;
+    }
+
+    //更新图片
+    public void updateBit(Bitmap bit) {
+        bitmapRotate = bit;
+        enjoyCropLayout.setImage(bit);
+        //boolean isRestrict = enjoyCropLayout.isRestrict();
+        //enjoyCropLayout.setRestrict(isRestrict);
+    }
+
+    private boolean isRotating;
+
+    /**
+     * 以预览动画将图像旋转指定角度。
+     *
+     * @param angle 角度
+     */
+    public void rotateImage(int angle) {
+        if (isRotating || bitmapRotate == null || enjoyCropLayout == null) {
+            return;
+        }
+
+        final Bitmap rotatedBitmap = BitmapUtile.rotaingImageView(angle, bitmapRotate);
+        if (rotatedBitmap == null) {
+            return;
+        }
+
+        final View imageView = enjoyCropLayout.getImageView();
+        isRotating = true;
+        imageView.animate()
+                .rotationBy(angle)
+                .setDuration(ROTATION_DURATION_MS)
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        //旋转角度重置为 0° 恢复正常方向
+                        imageView.setRotation(0f);
+                        updateBit(rotatedBitmap);
+                        isRotating = false;
+                    }
+                })
+                .start();
     }
 
     private void defineCropParams() {
@@ -109,6 +172,7 @@ public class ImageCropLayout extends RelativeLayout {
         //设置边界限制，如果设置了该参数，预览框则不会超出图片
         enjoyCropLayout.setRestrict(true);
     }
+
 
     private int width, height;
 

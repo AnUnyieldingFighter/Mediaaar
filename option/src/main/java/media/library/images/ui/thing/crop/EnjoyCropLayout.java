@@ -31,8 +31,7 @@ import media.library.images.unmix.ImageLog;
  * @created 2016/3/15
  */
 public class EnjoyCropLayout extends FrameLayout {
-    private BaseLayerView mLayerView;
-    private EnjoyImageView mImageView;
+
 
     /**
      * 是否限制边界
@@ -85,6 +84,8 @@ public class EnjoyCropLayout extends FrameLayout {
     public void setFillColor(int fillColor) {
         this.mFillColor = fillColor;
     }
+    private BaseLayerView mLayerView;
+    private EnjoyImageView mImageView;
 
     /**
      * 初始化裁剪所需组件，并且添加到容器中
@@ -149,6 +150,7 @@ public class EnjoyCropLayout extends FrameLayout {
      */
     public void setImage(Bitmap bitmap) {
         mImageView.setImageBitmap(bitmap);
+        mImageView.resetImageMatrix();
     }
 
     /**

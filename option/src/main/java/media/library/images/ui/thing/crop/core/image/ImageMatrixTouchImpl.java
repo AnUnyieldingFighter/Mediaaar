@@ -31,6 +31,10 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
     private final String TAG = ImageMatrixTouchImpl.class.getSimpleName();
     private ScaleGestureDetector mGestrueDetector;
     private boolean isScale;
+    //例如：
+    //mScale = 1：原始大小显示
+    //mScale = 0.5：图片缩小为一半
+    //mScale = 2：图片放大两倍
     private double mScale;
     /**
      * 限制图片的范围
@@ -63,6 +67,11 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
 
     public void setRestrictRect(RectF restrictRect) {
         this.mRestrictRect = restrictRect;
+    }
+
+    public void reset() {
+        mScale = 1;
+        postCenter();
     }
 
     /**
