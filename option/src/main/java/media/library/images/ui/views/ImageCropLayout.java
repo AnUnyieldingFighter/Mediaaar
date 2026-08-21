@@ -51,6 +51,8 @@ public class ImageCropLayout extends RelativeLayout {
     private boolean fitImageInside = true;
     //原图
     private Bitmap bitOriginal;
+    //裁剪布局
+    protected EnjoyCropLayout enjoyCropLayout;
 
     public void setOutWH(int outWidth, int outHeight) {
         this.outWidth = outWidth;
@@ -81,7 +83,7 @@ public class ImageCropLayout extends RelativeLayout {
         setImageCrop(imgPatch);
     }
 
-    //true 设置成功
+    //true 初始设置成功
     private boolean isSetInit;
 
     private void setImageCrop(String imgPatch) {
@@ -125,14 +127,7 @@ public class ImageCropLayout extends RelativeLayout {
     }
 
 
-    protected EnjoyCropLayout enjoyCropLayout;
-
-    //更新图片
-    public void updateBit(Bitmap bit) {
-        bitOriginal = bit;
-        enjoyCropLayout.setImage(bit, fitImageInside);
-    }
-
+    //true 正在旋转
     private boolean isRotating;
 
     /**
@@ -166,6 +161,12 @@ public class ImageCropLayout extends RelativeLayout {
                     }
                 })
                 .start();
+    }
+
+    //更新图片
+    public void updateBit(Bitmap bit) {
+        bitOriginal = bit;
+        enjoyCropLayout.setImage(bit, fitImageInside);
     }
 
     private void defineCropParams() {
