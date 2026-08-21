@@ -146,7 +146,7 @@ public class EnjoyCropLayout extends FrameLayout {
     }
 
     /**
-     * 设置将裁剪的图片
+     * 设置要裁剪的图片
      *
      * @param bitmap
      */

@@ -2,6 +2,7 @@ package media.library.images.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -46,7 +47,10 @@ public class ImageCropLayout extends RelativeLayout {
 
     private int outWidth, outHeight;
     private String path;
+    // fitImageInside true 图片完整显示在容器内  false:图片填满容器 ，图片边缘可能超出容器。
     private boolean fitImageInside = true;
+    //原图
+    private Bitmap bitOriginal;
 
     public void setOutWH(int outWidth, int outHeight) {
         this.outWidth = outWidth;
@@ -59,16 +63,45 @@ public class ImageCropLayout extends RelativeLayout {
         setMedias(context, media, true);
     }
 
-    // fitImageInside true 图片完整显示在容器内  false:图片填满容器 ，图片边缘可能超出容器。
+    /**
+     *
+     * @param context        上下文
+     * @param media          媒体图
+     * @param fitImageInside fitImageInside true 图片完整显示在容器内  false:图片填满容器 ，图片边缘可能超出容器。
+     */
     public void setMedias(Context context, MediaEntity media, boolean fitImageInside) {
-        path = media.mediaPathSource;
+        setImageCrop(context, media.mediaPathSource, fitImageInside);
+
+    }
+
+    //设置图片裁剪
+    public void setImageCrop(Context context, String imgPatch, boolean fitImageInside) {
         this.context = context;
         this.fitImageInside = fitImageInside;
+        setImageCrop(imgPatch);
+    }
+
+    //true 设置成功
+    private boolean isSetInit;
+
+    private void setImageCrop(String imgPatch) {
+        path = imgPatch;
         if (enjoyCropLayout != null) {
-            setImg();
+            isSetInit = true;
+            //设置裁剪原图片
+            Bitmap bitmap = BitmapUtile.resizeBitmap(path, width, height);
+            if (bitmap == null) {
+                ImageLog.d("bitmap：读取失败");
+                return;
+            }
+            //旋转图片
+            bitOriginal = BitmapUtile.imageRotate(path, bitmap);
+            enjoyCropLayout.setImage(bitOriginal, fitImageInside);
+            defineCropParams();
         }
     }
 
+    //裁剪
     public String saveImg() {
         Bitmap bitmap = enjoyCropLayout.crop();
         File file = FileUtil.createCropFile(context);
@@ -86,41 +119,18 @@ public class ImageCropLayout extends RelativeLayout {
         return bitmap;
     }
 
+    //获取原图
+    public Bitmap getOriginalImg() {
+        return bitOriginal;
+    }
+
 
     protected EnjoyCropLayout enjoyCropLayout;
 
-    private void initContent() {
-        enjoyCropLayout = new EnjoyCropLayout(context);
-        addView(enjoyCropLayout);
-        setImg();
-    }
-
-    private Bitmap bitmapRotate;
-
-    private void setImg() {
-        //设置裁剪原图片
-        Bitmap bitmap = BitmapUtile.resizeBitmap(path, width, height);
-        if (bitmap == null) {
-            ImageLog.d("bitmap：读取失败");
-            return;
-        }
-        //旋转图片
-        bitmapRotate = BitmapUtile.imageRotate(path, bitmap);
-        enjoyCropLayout.setImage(bitmapRotate, fitImageInside);
-        defineCropParams();
-    }
-
-    //获取原图
-    public Bitmap getOriginalImg() {
-        return bitmapRotate;
-    }
-
     //更新图片
     public void updateBit(Bitmap bit) {
-        bitmapRotate = bit;
+        bitOriginal = bit;
         enjoyCropLayout.setImage(bit, fitImageInside);
-        //boolean isRestrict = enjoyCropLayout.isRestrict();
-        //enjoyCropLayout.setRestrict(isRestrict);
     }
 
     private boolean isRotating;
@@ -131,11 +141,11 @@ public class ImageCropLayout extends RelativeLayout {
      * @param angle 角度
      */
     public void rotateImage(int angle) {
-        if (isRotating || bitmapRotate == null || enjoyCropLayout == null) {
+        if (isRotating || bitOriginal == null || enjoyCropLayout == null) {
             return;
         }
 
-        final Bitmap rotatedBitmap = BitmapUtile.rotaingImageView(angle, bitmapRotate);
+        final Bitmap rotatedBitmap = BitmapUtile.rotaingImageView(angle, bitOriginal);
         if (rotatedBitmap == null) {
             return;
         }
@@ -196,7 +206,13 @@ public class ImageCropLayout extends RelativeLayout {
             height = temp;
         }
         getViewTreeObserver().removeOnGlobalLayoutListener(globalLayoutListener);
-        initContent();
+        //
+        enjoyCropLayout = new EnjoyCropLayout(context);
+        addView(enjoyCropLayout);
+        //尝试重新初始化数据
+        if (!isSetInit && !TextUtils.isEmpty(path)) {
+            setImageCrop(path);
+        }
     }
 
     private GlobalLayoutListener globalLayoutListener = new GlobalLayoutListener();
