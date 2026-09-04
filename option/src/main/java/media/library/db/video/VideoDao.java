@@ -34,7 +34,7 @@ public interface VideoDao {
     @Query("UPDATE tab_video SET pro = :pro, total = :total, lookTime = :lookTime WHERE videoUrl = :videoUrl")
     int updateVideoLookHis(String videoUrl, long pro, long total, long lookTime);
 
-    @Query("UPDATE tab_video SET videoWidth = :videoWidth, total = :videoHeight  WHERE videoUrl = :videoUrl")
+    @Query("UPDATE tab_video SET videoWidth = :videoWidth, videoHeight = :videoHeight WHERE videoUrl = :videoUrl")
     int updateVideoSize(String videoUrl, int videoWidth, int videoHeight);
 
     @Delete
