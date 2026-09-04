@@ -136,19 +136,19 @@ class BaseMediaSource extends BaseExoPlayer {
     @UnstableApi
     protected SimpleCache simpleCache;
     @UnstableApi
-    protected File simpleCacheFile;
+    protected File simpleCacheDir;
     protected long maxBytes = 100 * 1024 * 1024;//100M
 
     //构建缓存
     @OptIn(markerClass = UnstableApi.class)
     private SimpleCache createSimpleCache() {
-        //有缓存的
-        simpleCacheFile = getCacheFile();
+        // 有缓存目录则复用，没有则新建
+        simpleCacheDir = getCacheFile();
         SimpleCache simpleCache;
         if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheFile, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
+            simpleCache = new SimpleCache(simpleCacheDir, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
         } else {
-            simpleCache = new SimpleCache(simpleCacheFile, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
+            simpleCache = new SimpleCache(simpleCacheDir, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
         }
         return simpleCache;
     }
@@ -165,9 +165,9 @@ class BaseMediaSource extends BaseExoPlayer {
             simpleCache.release();
             simpleCache = null;
         }
-        if (simpleCacheFile != null) {
-            dbSetVideoCacheUsable(playerContext, simpleCacheFile);
-            simpleCacheFile = null;
+        if (simpleCacheDir != null) {
+            dbSetVideoCacheUsable(playerContext, simpleCacheDir);
+            simpleCacheDir = null;
         }
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
@@ -175,52 +175,44 @@ class BaseMediaSource extends BaseExoPlayer {
     //获取缓存文件
     private File getCacheFile() {
         List<VideoEntity> datas = getDBVideoCache(playerContext, videoUrl);
-        int cacheSize = 0;
-        File videoFile = null;
+        File cacheDir = null;
         if (datas != null && datas.size() > 0) {
-            File optFile = null;
-            cacheSize = datas.size();
-            long time = System.currentTimeMillis();
             for (int i = 0; i < datas.size(); i++) {
                 VideoEntity entity = datas.get(i);
-                long videoCacheTime = entity.videoCacheTime;
-                /*if ((time - videoCacheTime) < 10 * 1000) {
-                    //10 秒以内 不使用这个缓存
-                    continue;
-                }*/
                 if (entity.videoCacheType == 1) {
                     continue;
                 }
-                File cacheFile = new File(entity.videoCachePath);
-                if (optFile == null) {
-                    optFile = cacheFile;
+                if (TextUtils.isEmpty(entity.videoCachePath)) {
                     continue;
                 }
-                if (!optFile.isFile() && cacheFile.isFile()) {
-                    optFile = cacheFile;
+                File candidate = new File(entity.videoCachePath);
+                if (!candidate.exists()) {
+                    candidate.mkdirs();
+                }
+                if (!candidate.isDirectory()) {
                     continue;
                 }
-                if (optFile.isFile() && cacheFile.isFile() && cacheFile.length() > optFile.length()) {
-                    optFile = cacheFile;
-                }
+                cacheDir = candidate;
+                dbSetVideoCacheUse(playerContext, cacheDir);
+                break;
             }
-            videoFile = optFile;
-
         }
-        if (videoFile == null) {
-            videoFile = createFile(cacheSize);
-            dbVideoAdd(playerContext, videoUrl, videoFile);
-            PlayerLog.d(tag + "缓存地址", "新建 url:" + videoUrl + "\npath:" + videoFile.getPath());
+        if (cacheDir == null) {
+            cacheDir = createCacheDir(datas == null ? 0 : datas.size());
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs();
+            }
+            dbVideoAdd(playerContext, videoUrl, cacheDir);
+            PlayerLog.d(tag + "缓存地址", "新建 url:" + videoUrl + "\npath:" + cacheDir.getPath());
         } else {
-            dbSetVideoCacheUse(playerContext, videoFile);
-            PlayerLog.d(tag + "缓存地址", "取得 url:" + videoUrl + "\npath:" + videoFile.getPath());
+            PlayerLog.d(tag + "缓存地址", "取得 url:" + videoUrl + "\npath:" + cacheDir.getPath());
         }
 
-        return videoFile;
+        return cacheDir;
     }
 
-    //创建缓存文件
-    private File createFile(int index) {
+    //创建缓存目录
+    private File createCacheDir(int index) {
         Random random = new Random();
         int randomNumber = random.nextInt(9999999);
         String md5 = Md5Media.encode(videoUrl);
