@@ -11,6 +11,23 @@
         android:contentDescription="相机预览"
         android:keepScreenOn="true" />
 
+    <ImageView
+        android:id="@+id/camera_photo_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:contentDescription="拍照结果预览"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/camera_player"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:keepScreenOn="true"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/camera_status"
         android:layout_width="wrap_content"
@@ -25,6 +42,16 @@
         android:text="正在初始化相机"
         android:textColor="#FFFFFF"
         android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/camera_reset_preview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|right"
+        android:layout_marginTop="24dp"
+        android:layout_marginRight="12dp"
+        android:text="返回预览"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"

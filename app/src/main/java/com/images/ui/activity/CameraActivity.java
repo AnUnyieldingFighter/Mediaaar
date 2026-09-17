@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,10 +19,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.media3.ui.PlayerView;
 
 import com.media.option.R;
 
-import java.io.File;
 import java.util.Map;
 
 import media.library.camera.CameraController;
@@ -37,17 +38,21 @@ public class CameraActivity extends AppCompatActivity
         implements View.OnClickListener, CameraController.Callback {
 
     private PreviewView previewView;
+    private ImageView photoPreviewView;
+    private PlayerView playerView;
     private TextView statusText;
     private Button recordButton;
     private Button pauseButton;
     private Button stopButton;
     private Button photoButton;
+    private Button resetPreviewButton;
 
     private CameraController cameraController;
     private ScaleGestureDetector scaleGestureDetector;
     private float downX;
     private float downY;
     private boolean movedAfterDown;
+    private boolean recordingPaused;
 
 
     /**
@@ -67,16 +72,20 @@ public class CameraActivity extends AppCompatActivity
      */
     private void initViews() {
         previewView = findViewById(R.id.camera_preview);
+        photoPreviewView = findViewById(R.id.camera_photo_preview);
+        playerView = findViewById(R.id.camera_player);
         statusText = findViewById(R.id.camera_status);
         recordButton = findViewById(R.id.camera_record);
         pauseButton = findViewById(R.id.camera_pause);
         stopButton = findViewById(R.id.camera_stop);
         photoButton = findViewById(R.id.camera_photo);
+        resetPreviewButton = findViewById(R.id.camera_reset_preview);
 
         recordButton.setOnClickListener(this);
         pauseButton.setOnClickListener(this);
         stopButton.setOnClickListener(this);
         photoButton.setOnClickListener(this);
+        resetPreviewButton.setOnClickListener(this);
         updateButtonState(false);
     }
 
@@ -193,6 +202,12 @@ public class CameraActivity extends AppCompatActivity
             cameraController.release();
         }
         cameraController = new CameraController(this, this);
+        //开启后，拍照保存完成会直接停留在刚拍好的照片画面。
+        cameraController.setStayOnCapturedPhoto(true);
+        cameraController.bindPhotoView(photoPreviewView);
+        //开启后，停止录像保存完成会直接在当前页面播放刚录好的视频。
+        cameraController.setAutoPlayRecordedVideo(true);
+        cameraController.bindPlayerView(playerView);
         cameraController.bind(this, previewView);
     }
 
@@ -207,20 +222,35 @@ public class CameraActivity extends AppCompatActivity
             return;
         }
         if (id == R.id.camera_record) {
+            updateResetPreviewButton(false);
             cameraController.startRecording();
             statusText.setText("正在录像");
             updateButtonState(true);
         } else if (id == R.id.camera_pause) {
-            cameraController.pauseRecording();
-            statusText.setText("录像已暂停");
-            pauseButton.setText("继续录像");
-            pauseButton.setTag(Boolean.TRUE);
+            if (recordingPaused) {
+                cameraController.resumeRecording();
+                statusText.setText("正在录像");
+                pauseButton.setText("暂停录像");
+                recordingPaused = false;
+            } else {
+                cameraController.pauseRecording();
+                statusText.setText("录像已暂停");
+                pauseButton.setText("继续录像");
+                recordingPaused = true;
+            }
         } else if (id == R.id.camera_stop) {
+            updateResetPreviewButton(false);
             cameraController.stopRecording();
             statusText.setText("正在保存录像");
             updateButtonState(false);
         } else if (id == R.id.camera_photo) {
+            updateResetPreviewButton(false);
             cameraController.takePhoto();
+        } else if (id == R.id.camera_reset_preview) {
+            cameraController.resetToCameraPreview();
+            statusText.setText("相机已准备好");
+            updateButtonState(false);
+            updateResetPreviewButton(false);
         }
     }
 
@@ -235,6 +265,20 @@ public class CameraActivity extends AppCompatActivity
         if (!recording) {
             pauseButton.setText("暂停录像");
             pauseButton.setTag(Boolean.FALSE);
+            recordingPaused = false;
+        }
+    }
+
+    /**
+     * 根据是否处于照片/视频预览状态更新返回预览按钮。
+     */
+    private void updateResetPreviewButton(boolean show) {
+        resetPreviewButton.setVisibility(show ? View.VISIBLE : View.GONE);
+        if (show) {
+            recordButton.setEnabled(false);
+            pauseButton.setEnabled(false);
+            stopButton.setEnabled(false);
+            photoButton.setEnabled(false);
         }
     }
 
@@ -245,18 +289,21 @@ public class CameraActivity extends AppCompatActivity
     public void onCameraReady() {
         statusText.setText("相机已准备好");
         updateButtonState(false);
+        updateResetPreviewButton(false);
     }
 
     @Override
     public void onPhotoSaved(Uri uri) {
         statusText.setText("照片保存成功");
+        updateResetPreviewButton(true);
         showMessage("照片已保存：" + uri);
     }
 
     @Override
     public void onVideoSaved(Uri uri) {
-        statusText.setText("视频保存成功");
+        statusText.setText("视频保存成功，正在播放");
         updateButtonState(false);
+        updateResetPreviewButton(true);
         showMessage("录像已保存：" + uri);
     }
 
@@ -267,6 +314,7 @@ public class CameraActivity extends AppCompatActivity
     public void onCameraError(String message, Throwable throwable) {
         statusText.setText(message);
         updateButtonState(false);
+        updateResetPreviewButton(false);
         showMessage(message);
     }
 

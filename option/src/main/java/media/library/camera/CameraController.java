@@ -10,12 +10,9 @@ import android.os.Environment;
 import android.provider.MediaStore;
 
 import androidx.annotation.NonNull;
-import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
-import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.MeteringPoint;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.video.FallbackStrategy;
@@ -34,8 +31,6 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Arrays;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * CameraX 相机控制器。
@@ -43,40 +38,8 @@ import java.util.concurrent.TimeUnit;
  * <p>负责相机预览、拍照、录像、暂停录像、继续录像、点击对焦和双指缩放。
  * Activity 只需要处理权限、按钮和结果回调。</p>
  */
-public class CameraController {
+public class CameraController extends BaseCameraController {
 
-    /**
-     * 相机结果回调。
-     */
-    public interface Callback {
-        /**
-         * 相机初始化完成。
-         */
-        void onCameraReady();
-
-        /**
-         * 拍照完成。
-         */
-        void onPhotoSaved(Uri uri);
-
-        /**
-         * 录像完成。
-         */
-        void onVideoSaved(Uri uri);
-
-        /**
-         * 相机发生错误。
-         */
-        void onCameraError(String message, Throwable throwable);
-    }
-
-    private final Context appContext;
-    private final Callback callback;
-    private final Executor mainExecutor;
-
-    private ProcessCameraProvider cameraProvider;
-    private Camera camera;
-    private PreviewView previewView;
     private ImageCapture imageCapture;
     private VideoCapture<Recorder> videoCapture;
     private Recording recording;
@@ -85,14 +48,13 @@ public class CameraController {
      * 创建相机控制器。
      */
     public CameraController(Context context, Callback callback) {
-        appContext = context.getApplicationContext();
-        this.callback = callback;
-        mainExecutor = ContextCompat.getMainExecutor(appContext);
+        super(context, callback);
     }
 
     /**
      * 绑定相机预览和拍照录像用例。
      */
+    @Override
     public void bind(final LifecycleOwner lifecycleOwner, final PreviewView view) {
         if (lifecycleOwner == null || view == null) {
             notifyError("相机页面参数为空", null);
@@ -164,11 +126,14 @@ public class CameraController {
     /**
      * 拍照并保存到系统相册。
      */
+    @Override
     public void takePhoto() {
         if (imageCapture == null) {
             notifyError("相机还没有准备好", null);
             return;
         }
+        stopVideoPlayback();
+        stopPhotoPreview();
 
         ContentValues contentValues = createPhotoContentValues();
         ImageCapture.OutputFileOptions outputOptions =
@@ -189,6 +154,7 @@ public class CameraController {
                         if (callback != null) {
                             callback.onPhotoSaved(savedUri);
                         }
+                        showCapturedPhotoIfNeeded(savedUri);
                     }
 
                     @Override
@@ -204,6 +170,7 @@ public class CameraController {
      *
      * <p>如果录音权限没有授予，会继续录制无声音视频。</p>
      */
+    @Override
     public void startRecording() {
         if (videoCapture == null) {
             notifyError("相机还没有准备好", null);
@@ -213,6 +180,8 @@ public class CameraController {
             notifyError("当前已经在录像", null);
             return;
         }
+        stopVideoPlayback();
+        stopPhotoPreview();
 
         ContentValues contentValues = createVideoContentValues();
         MediaStoreOutputOptions outputOptions =
@@ -240,8 +209,11 @@ public class CameraController {
                             recording = null;
                             if (finalizeEvent.hasError()) {
                                 notifyError("录像失败，错误码：" + finalizeEvent.getError(), null);
-                            } else if (callback != null) {
-                                callback.onVideoSaved(outputUri);
+                            } else {
+                                if (callback != null) {
+                                    callback.onVideoSaved(outputUri);
+                                }
+                                playRecordedVideoIfNeeded(outputUri);
                             }
                         }
                     }
@@ -252,6 +224,7 @@ public class CameraController {
     /**
      * 暂停录像。
      */
+    @Override
     public void pauseRecording() {
         if (recording != null) {
             recording.pause();
@@ -261,6 +234,7 @@ public class CameraController {
     /**
      * 继续录像。
      */
+    @Override
     public void resumeRecording() {
         if (recording != null) {
             recording.resume();
@@ -270,6 +244,7 @@ public class CameraController {
     /**
      * 停止录像并保存文件。
      */
+    @Override
     public void stopRecording() {
         if (recording != null) {
             recording.stop();
@@ -279,70 +254,23 @@ public class CameraController {
     /**
      * 判断当前是否正在录像。
      */
+    @Override
     public boolean isRecording() {
         return recording != null;
     }
 
     /**
-     * 点击预览画面时进行自动对焦和曝光测光。
-     */
-    public void focusAt(float x, float y) {
-        if (camera == null || previewView == null) {
-            return;
-        }
-        if (x < 0 || y < 0 || x > previewView.getWidth() || y > previewView.getHeight()) {
-            return;
-        }
-
-        MeteringPoint point = previewView.getMeteringPointFactory().createPoint(x, y);
-        FocusMeteringAction action = new FocusMeteringAction.Builder(
-                point,
-                FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE
-        ).setAutoCancelDuration(5, TimeUnit.SECONDS).build();
-        camera.getCameraControl().startFocusAndMetering(action);
-    }
-
-    /**
-     * 根据双指手势缩放镜头。
-     */
-    public void zoomByScale(float scaleFactor) {
-        if (camera == null || scaleFactor <= 0) {
-            return;
-        }
-        androidx.lifecycle.LiveData<androidx.camera.core.ZoomState> zoomState =
-                camera.getCameraInfo().getZoomState();
-        androidx.camera.core.ZoomState state = zoomState.getValue();
-        if (state == null) {
-            return;
-        }
-        float targetZoom = state.getZoomRatio() * scaleFactor;
-        float minZoom = state.getMinZoomRatio();
-        float maxZoom = state.getMaxZoomRatio();
-        if (targetZoom < minZoom) {
-            targetZoom = minZoom;
-        }
-        if (targetZoom > maxZoom) {
-            targetZoom = maxZoom;
-        }
-        camera.getCameraControl().setZoomRatio(targetZoom);
-    }
-
-    /**
      * 释放相机和录像资源。
      */
+    @Override
     public void release() {
         if (recording != null) {
             recording.stop();
             recording = null;
         }
-        if (cameraProvider != null) {
-            cameraProvider.unbindAll();
-            cameraProvider = null;
-        }
-        camera = null;
+        releaseBaseResources();
         imageCapture = null;
         videoCapture = null;
-        previewView = null;
     }
 
     /**
@@ -381,21 +309,4 @@ public class CameraController {
         return values;
     }
 
-    /**
-     * 通知相机初始化完成。
-     */
-    private void notifyReady() {
-        if (callback != null) {
-            callback.onCameraReady();
-        }
-    }
-
-    /**
-     * 通知相机错误。
-     */
-    private void notifyError(String message, Throwable throwable) {
-        if (callback != null) {
-            callback.onCameraError(message, throwable);
-        }
-    }
 }
