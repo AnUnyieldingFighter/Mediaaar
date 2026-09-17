@@ -39,7 +39,23 @@ import androidx.media3.ui.PlayerView;
  *
  * <p>统一管理页面预览控件、照片停留控件、视频回放控件、相机对象和结果回调。
  * 子类只需要关心具体的拍照、录像和 CameraX 用例绑定逻辑。</p>
+ * 播放视频
+ *  -> OperationCamera.playRecordedVideoIfNeeded()
+ *  -> pauseCameraPreview()
+ *  -> cameraProvider.unbindAll()
+ *  -> camera = null
+ *  -> imageCapture = null
+ *  -> videoCapture = null
+ *  点击“返回预览”时：
+ *  CameraActivity 点击 camera_reset_preview
+ *  -> OperationCamera.resetToCameraPreview()
+ *  -> stopVideoPlayback()
+ *  -> stopPhotoPreview()
+ *  -> resumeCameraPreview()
+ *  -> BaseCamera.bindUseCases(boundLifecycleOwner)
+ *  -> cameraProvider.bindToLifecycle(...)
  */
+
 public abstract class BaseCamera {
     protected final Context appContext;
     //这是一个主线程（UI 线程）执行器，调用 `mainExecutor.execute(Runnable)`，
@@ -327,7 +343,7 @@ public abstract class BaseCamera {
     }
 
     /**
-     * 根据用户点击的预览坐标进行自动对焦和测光。
+     * 根据用户点击的预览坐标进行自动对焦和测光。聚焦
      */
     public void focusAt(float x, float y) {
         if (released || camera == null || previewView == null || cameraPreviewPaused) {
