@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import media.library.camera.BaseCameraController;
-import media.library.camera.CameraController;
+import media.library.camera.BaseCamera;
+import media.library.camera.OperationCamera;
 
 
 /**
@@ -39,7 +39,7 @@ import media.library.camera.CameraController;
  * 点击预览画面可以对焦，双指张开或合拢可以缩放镜头。</p>
  */
 public class CameraActivity extends AppCompatActivity
-        implements View.OnClickListener, BaseCameraController.Callback {
+        implements View.OnClickListener, BaseCamera.Callback {
 
     private PreviewView previewView;
     private ImageView photoPreviewView;
@@ -50,8 +50,10 @@ public class CameraActivity extends AppCompatActivity
     private Button stopButton;
     private Button photoButton;
     private Button resetPreviewButton;
+    private Button switchCameraButton;
+    private Button flashButton;
 
-    private CameraController cameraController;
+    private OperationCamera operationCamera;
     private ScaleGestureDetector scaleGestureDetector;
     private float downX;
     private float downY;
@@ -84,12 +86,16 @@ public class CameraActivity extends AppCompatActivity
         stopButton = findViewById(R.id.camera_stop);
         photoButton = findViewById(R.id.camera_photo);
         resetPreviewButton = findViewById(R.id.camera_reset_preview);
+        switchCameraButton = findViewById(R.id.camera_switch);
+        flashButton = findViewById(R.id.camera_flash);
 
         recordButton.setOnClickListener(this);
         pauseButton.setOnClickListener(this);
         stopButton.setOnClickListener(this);
         photoButton.setOnClickListener(this);
         resetPreviewButton.setOnClickListener(this);
+        switchCameraButton.setOnClickListener(this);
+        flashButton.setOnClickListener(this);
         updateButtonState(false);
     }
 
@@ -103,8 +109,8 @@ public class CameraActivity extends AppCompatActivity
                     @Override
                     public boolean onScale(ScaleGestureDetector detector) {
                         movedAfterDown = true;
-                        if (cameraController != null) {
-                            cameraController.zoomByScale(detector.getScaleFactor());
+                        if (operationCamera != null) {
+                            operationCamera.zoomByScale(detector.getScaleFactor());
                         }
                         return true;
                     }
@@ -140,9 +146,8 @@ public class CameraActivity extends AppCompatActivity
             case MotionEvent.ACTION_UP:
                 if (!movedAfterDown
                         && !scaleGestureDetector.isInProgress()
-                        && cameraController != null) {
-                    cameraController.focusAt(event.getX(), event.getY());
-                    showMessage("正在对焦");
+                        && operationCamera != null) {
+                    operationCamera.focusAt(event.getX(), event.getY());
                 }
                 break;
             default:
@@ -217,17 +222,18 @@ public class CameraActivity extends AppCompatActivity
      * 创建并绑定相机控制器。
      */
     private void bindCamera() {
-        if (cameraController != null) {
-            cameraController.release();
+        if (operationCamera != null) {
+            operationCamera.release();
         }
-        cameraController = new CameraController(this, this);
+        operationCamera = new OperationCamera(this, this);
         //开启后，拍照保存完成会直接停留在刚拍好的照片画面。
-        cameraController.setStayOnCapturedPhoto(true);
-        cameraController.bindPhotoView(photoPreviewView);
+        operationCamera.setStayOnCapturedPhoto(true);
+        operationCamera.bindPhotoView(photoPreviewView);
         //开启后，停止录像保存完成会直接在当前页面播放刚录好的视频。
-        cameraController.setAutoPlayRecordedVideo(true);
-        cameraController.bindPlayerView(playerView);
-        cameraController.bind(this, previewView);
+        operationCamera.setAutoPlayRecordedVideo(true);
+        operationCamera.bindPlayerView(playerView);
+        operationCamera.bind(this, previewView);
+        updateCameraOptionButtons();
     }
 
     /**
@@ -236,40 +242,52 @@ public class CameraActivity extends AppCompatActivity
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if (cameraController == null) {
+        if (operationCamera == null) {
             showMessage("相机还没有准备好");
             return;
         }
         if (id == R.id.camera_record) {
             updateResetPreviewButton(false);
-            cameraController.startRecording();
+            operationCamera.startRecording();
             statusText.setText("正在录像");
             updateButtonState(true);
         } else if (id == R.id.camera_pause) {
             if (recordingPaused) {
-                cameraController.resumeRecording();
+                operationCamera.resumeRecording();
                 statusText.setText("正在录像");
                 pauseButton.setText("暂停录像");
                 recordingPaused = false;
             } else {
-                cameraController.pauseRecording();
+                operationCamera.pauseRecording();
                 statusText.setText("录像已暂停");
                 pauseButton.setText("继续录像");
                 recordingPaused = true;
             }
         } else if (id == R.id.camera_stop) {
             updateResetPreviewButton(false);
-            cameraController.stopRecording();
+            operationCamera.stopRecording();
             statusText.setText("正在保存录像");
             updateButtonState(false);
         } else if (id == R.id.camera_photo) {
             updateResetPreviewButton(false);
-            cameraController.takePhoto();
+            operationCamera.takePhoto();
         } else if (id == R.id.camera_reset_preview) {
-            cameraController.resetToCameraPreview();
+            operationCamera.resetToCameraPreview();
             statusText.setText("相机已准备好");
             updateButtonState(false);
             updateResetPreviewButton(false);
+        } else if (id == R.id.camera_switch) {
+            boolean switched = operationCamera.switchCamera();
+            updateCameraOptionButtons();
+            if (switched) {
+                statusText.setText(operationCamera.isBackCamera() ? "已切换到后置摄像头" : "已切换到前置摄像头");
+            }
+        } else if (id == R.id.camera_flash) {
+            boolean enabled = operationCamera.toggleFlash();
+            updateCameraOptionButtons();
+            if (operationCamera.hasFlashUnit()) {
+                statusText.setText(enabled ? "闪光灯已开启" : "闪光灯已关闭");
+            }
         }
     }
 
@@ -281,6 +299,8 @@ public class CameraActivity extends AppCompatActivity
         pauseButton.setEnabled(recording);
         stopButton.setEnabled(recording);
         photoButton.setEnabled(!recording);
+        switchCameraButton.setEnabled(!recording);
+        flashButton.setEnabled(true);
         if (!recording) {
             pauseButton.setText("暂停录像");
             pauseButton.setTag(Boolean.FALSE);
@@ -298,7 +318,22 @@ public class CameraActivity extends AppCompatActivity
             pauseButton.setEnabled(false);
             stopButton.setEnabled(false);
             photoButton.setEnabled(false);
+            switchCameraButton.setEnabled(false);
+            flashButton.setEnabled(false);
         }
+    }
+
+    /**
+     * 更新切换摄像头和闪光灯按钮文案。
+     */
+    private void updateCameraOptionButtons() {
+        if (operationCamera == null) {
+            switchCameraButton.setText("切前置");
+            flashButton.setText("开闪光");
+            return;
+        }
+        switchCameraButton.setText(operationCamera.isBackCamera() ? "切前置" : "切后置");
+        flashButton.setText(operationCamera.isFlashEnabled() ? "关闪光" : "开闪光");
     }
 
     /**
@@ -309,6 +344,7 @@ public class CameraActivity extends AppCompatActivity
         statusText.setText("相机已准备好");
         updateButtonState(false);
         updateResetPreviewButton(false);
+        updateCameraOptionButtons();
     }
 
     @Override
@@ -332,8 +368,12 @@ public class CameraActivity extends AppCompatActivity
     @Override
     public void onCameraError(String message, Throwable throwable) {
         statusText.setText(message);
-        updateButtonState(false);
-        updateResetPreviewButton(false);
+        boolean recording = operationCamera != null && operationCamera.isRecording();
+        updateButtonState(recording);
+        if (!recording) {
+            updateResetPreviewButton(false);
+        }
+        updateCameraOptionButtons();
         showMessage(message);
     }
 
@@ -349,9 +389,9 @@ public class CameraActivity extends AppCompatActivity
      */
     @Override
     protected void onDestroy() {
-        if (cameraController != null) {
-            cameraController.release();
-            cameraController = null;
+        if (operationCamera != null) {
+            operationCamera.release();
+            operationCamera = null;
         }
         super.onDestroy();
     }

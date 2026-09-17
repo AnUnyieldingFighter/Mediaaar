@@ -8,134 +8,88 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.View;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
-import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.video.FallbackStrategy;
 import androidx.camera.video.MediaStoreOutputOptions;
 import androidx.camera.video.PendingRecording;
-import androidx.camera.video.Quality;
-import androidx.camera.video.QualitySelector;
-import androidx.camera.video.Recorder;
 import androidx.camera.video.Recording;
-import androidx.camera.video.VideoCapture;
 import androidx.camera.video.VideoRecordEvent;
-import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleOwner;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.Arrays;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.ui.PlayerView;
 
 /**
- * CameraX 相机控制器。
+ * CameraX 相机操作类。
  *
- * <p>负责相机预览、拍照、录像、暂停录像、继续录像、点击对焦和双指缩放。
- * Activity 只需要处理权限、按钮和结果回调。</p>
+ * <p>继承 BaseCamera，复用父类已有的相机绑定、缩放和释放能力。
+ * 本类只补充拍照、录像、照片停留、视频回放等操作。</p>
  */
-public class CameraController extends BaseCameraController {
+public class OperationCamera extends BaseCamera {
 
-    private ImageCapture imageCapture;
-    private VideoCapture<Recorder> videoCapture;
-    private Recording recording;
+    private final Callback operationCallback;
+
+    //=========================初始化和页面控件
 
     /**
-     * 创建相机控制器。
+     * 创建相机操作类。
      */
-    public CameraController(Context context, Callback callback) {
+    public OperationCamera(Context context, Callback callback) {
         super(context, callback);
+        operationCallback = callback;
     }
 
+
     /**
-     * 绑定相机预览和拍照录像用例。
+     * 恢复到相机初始预览状态。
      */
-    @Override
-    public void bind(final LifecycleOwner lifecycleOwner, final PreviewView view) {
+    public void resetToCameraPreview() {
         if (released) {
             return;
         }
-        if (lifecycleOwner == null || view == null) {
-            notifyError("相机页面参数为空", null);
-            return;
-        }
-        if (ContextCompat.checkSelfPermission(appContext, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            notifyError("没有相机权限", null);
-            return;
-        }
-
-        previewView = view;
-        final ListenableFuture<ProcessCameraProvider> providerFuture =
-                ProcessCameraProvider.getInstance(appContext);
-        providerFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (released) {
-                        return;
-                    }
-                    cameraProvider = providerFuture.get();
-                    bindUseCases(lifecycleOwner);
-                } catch (Exception e) {
-                    notifyError("初始化相机失败", e);
-                }
-            }
-        }, mainExecutor);
+        stopVideoPlayback();
+        stopPhotoPreview();
+        resumeCameraPreview();
     }
 
+    //=========================拍照============================
+    private ImageView photoView;
+    private boolean stayOnCapturedPhoto;
+
     /**
-     * 绑定相机用例。
+     * 绑定当前页面用于展示拍照结果的图片控件。
      */
-    private void bindUseCases(LifecycleOwner lifecycleOwner) {
+    public void bindPhotoView(ImageView view) {
         if (released) {
             return;
         }
-        if (cameraProvider == null || previewView == null) {
-            notifyError("相机未准备好", null);
+        photoView = view;
+        if (photoView != null) {
+            photoView.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 设置拍照完成后是否停留在刚拍好的照片画面。
+     */
+    public void setStayOnCapturedPhoto(boolean stayOnCapturedPhoto) {
+        if (released) {
             return;
         }
-
-        cameraProvider.unbindAll();
-
-        Preview preview = new Preview.Builder().build();
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-        imageCapture = new ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .build();
-
-        QualitySelector qualitySelector = QualitySelector.fromOrderedList(
-                Arrays.asList(Quality.FHD, Quality.HD, Quality.SD),
-                FallbackStrategy.lowerQualityOrHigherThan(Quality.SD)
-        );
-        Recorder recorder = new Recorder.Builder()
-                .setQualitySelector(qualitySelector)
-                .build();
-        videoCapture = VideoCapture.withOutput(recorder);
-
-        try {
-            camera = cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
-                    preview,
-                    imageCapture,
-                    videoCapture
-            );
-            notifyReady();
-        } catch (Exception e) {
-            notifyError("绑定相机失败", e);
+        this.stayOnCapturedPhoto = stayOnCapturedPhoto;
+        if (!stayOnCapturedPhoto) {
+            stopPhotoPreview();
         }
     }
 
     /**
      * 拍照并保存到系统相册。
      */
-    @Override
     public void takePhoto() {
         if (released) {
             return;
@@ -166,8 +120,8 @@ public class CameraController extends BaseCameraController {
                             return;
                         }
                         Uri savedUri = outputFileResults.getSavedUri();
-                        if (callback != null) {
-                            callback.onPhotoSaved(savedUri);
+                        if (operationCallback != null) {
+                            operationCallback.onPhotoSaved(savedUri);
                         }
                         showCapturedPhotoIfNeeded(savedUri);
                     }
@@ -184,11 +138,52 @@ public class CameraController extends BaseCameraController {
     }
 
     /**
+     * 如果开关打开，就在当前页面展示刚拍好的照片。
+     */
+    private void showCapturedPhotoIfNeeded(Uri photoUri) {
+        if (!stayOnCapturedPhoto || photoUri == null || photoView == null) {
+            return;
+        }
+        stopVideoPlayback();
+        photoView.setImageURI(photoUri);
+        photoView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 关闭当前页面的照片停留画面。
+     */
+    private void stopPhotoPreview() {
+        if (photoView != null) {
+            photoView.setImageURI(null);
+            photoView.setVisibility(View.GONE);
+        }
+    }
+
+    //=========================录像===============================
+    private Recording recording;
+    private boolean autoPlayRecordedVideo;
+
+
+    /**
+     * 设置录像完成后是否在当前页面循环播放刚录制的视频。
+     */
+    public void setAutoPlayRecordedVideo(boolean autoPlayRecordedVideo) {
+        if (released) {
+            return;
+        }
+        this.autoPlayRecordedVideo = autoPlayRecordedVideo;
+        if (!autoPlayRecordedVideo) {
+            stopVideoPlayback();
+            resumeCameraPreview();
+        }
+    }
+
+
+    /**
      * 开始录像。
      *
      * <p>如果录音权限没有授予，会继续录制无声音视频。</p>
      */
-    @Override
     public void startRecording() {
         if (released) {
             return;
@@ -235,8 +230,8 @@ public class CameraController extends BaseCameraController {
                             if (finalizeEvent.hasError()) {
                                 notifyError("录像失败，错误码：" + finalizeEvent.getError(), null);
                             } else {
-                                if (callback != null) {
-                                    callback.onVideoSaved(outputUri);
+                                if (operationCallback != null) {
+                                    operationCallback.onVideoSaved(outputUri);
                                 }
                                 playRecordedVideoIfNeeded(outputUri);
                             }
@@ -249,7 +244,6 @@ public class CameraController extends BaseCameraController {
     /**
      * 暂停录像。
      */
-    @Override
     public void pauseRecording() {
         if (!released && recording != null) {
             recording.pause();
@@ -259,7 +253,6 @@ public class CameraController extends BaseCameraController {
     /**
      * 继续录像。
      */
-    @Override
     public void resumeRecording() {
         if (!released && recording != null) {
             recording.resume();
@@ -269,7 +262,6 @@ public class CameraController extends BaseCameraController {
     /**
      * 停止录像并保存文件。
      */
-    @Override
     public void stopRecording() {
         if (!released && recording != null) {
             recording.stop();
@@ -279,23 +271,88 @@ public class CameraController extends BaseCameraController {
     /**
      * 判断当前是否正在录像。
      */
-    @Override
     public boolean isRecording() {
         return recording != null;
     }
 
+
+    //=========================摄像头选项=========================
+
     /**
-     * 释放相机和录像资源。
+     * BaseCamera 未开放 CameraProvider / CameraSelector，当前类不能安全切换前后摄像头。
      */
-    @Override
-    protected void releaseControllerResources() {
-        if (recording != null) {
-            recording.stop();
-            recording = null;
-        }
-        imageCapture = null;
-        videoCapture = null;
+    public boolean switchCamera() {
+        notifyError("BaseCamera 未开放摄像头切换能力", null);
+        return false;
     }
+
+    /**
+     * 当前 BaseCamera 固定使用后置摄像头。
+     */
+    public boolean isBackCamera() {
+        return true;
+    }
+
+    //=========================视频回放==========================
+    private PlayerView playerView;
+    private ExoPlayer videoPlayer;
+
+    /**
+     * 绑定当前页面的视频播放器控件。
+     */
+    public void bindPlayerView(PlayerView view) {
+        if (released) {
+            return;
+        }
+        playerView = view;
+        if (playerView != null) {
+            playerView.setVisibility(View.GONE);
+            playerView.setPlayer(getOrCreateVideoPlayer());
+        }
+    }
+
+    /**
+     * 如果开关打开，就在当前页面循环播放刚录制完成的视频。
+     */
+    private void playRecordedVideoIfNeeded(Uri videoUri) {
+        if (!autoPlayRecordedVideo || videoUri == null || playerView == null) {
+            return;
+        }
+        stopPhotoPreview();
+        pauseCameraPreview();
+        playerView.setVisibility(View.VISIBLE);
+        ExoPlayer player = getOrCreateVideoPlayer();
+        player.setRepeatMode(Player.REPEAT_MODE_ONE);
+        player.setMediaItem(MediaItem.fromUri(videoUri));
+        player.prepare();
+        player.play();
+    }
+
+    /**
+     * 停止当前页面的视频回放。
+     */
+    private void stopVideoPlayback() {
+        if (videoPlayer != null) {
+            videoPlayer.stop();
+            videoPlayer.clearMediaItems();
+            videoPlayer.setRepeatMode(Player.REPEAT_MODE_OFF);
+        }
+        if (playerView != null) {
+            playerView.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * 获取或创建当前页面使用的视频播放器。
+     */
+    private ExoPlayer getOrCreateVideoPlayer() {
+        if (videoPlayer == null) {
+            videoPlayer = new ExoPlayer.Builder(appContext).build();
+        }
+        return videoPlayer;
+    }
+
+    //=========================相册保存参数 照片========================
 
     /**
      * 创建照片写入系统相册需要的媒体信息。
@@ -314,7 +371,7 @@ public class CameraController extends BaseCameraController {
         }
         return values;
     }
-
+    //=========================相册保存参数 视频========================
     /**
      * 创建视频写入系统相册需要的媒体信息。
      */
@@ -332,5 +389,4 @@ public class CameraController extends BaseCameraController {
         }
         return values;
     }
-
 }
