@@ -359,6 +359,7 @@ class BaseExoPlayer extends PlayerDB {
                 case Player.STATE_READY:
                     // 准备就绪，可以播放
                     isReady = true;
+                    isError = false;
                     if (isMute) {
                         isMute = false;
                         if (player != null) {
@@ -424,13 +425,13 @@ class BaseExoPlayer extends PlayerDB {
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
             //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
             PlayerLog.d(tag, "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
+            isError = true;
+            isReady = false;
             switch (error.errorCode) {
                 case PlaybackException.ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED:
                 case PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT:
                 case PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS:
                 case PlaybackException.ERROR_CODE_FAILED_RUNTIME_CHECK:
-                    isError = true;
-                    isReady = false;
                     //player.release();
                     //player.set
                     //player.prepare();
@@ -444,8 +445,6 @@ class BaseExoPlayer extends PlayerDB {
                     //2Mbps - 10Mbps	1080P 对应 5-10Mbps，720P 对应 2-5Mbps，避免过高
                     // NO_EXCEEDS_CAPABILITIES ：超出设备能力上限 说明不是视频格式 / 编码不兼容（视频是 MP4 封装 + H.264 (avc1) 编码，这是 Android 通用支持的），而是视频的具体参数超出了当前设备硬解码（MediaCodec）的处理极限。
                     //解码初始化失败
-                    isError = true;
-                    isReady = false;
                     break;
             }
         }
