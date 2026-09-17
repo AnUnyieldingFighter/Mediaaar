@@ -40,20 +40,6 @@ import androidx.media3.ui.PlayerView;
  * <p>统一管理页面预览控件、照片停留控件、视频回放控件、相机对象和结果回调。
  * 子类只需要关心具体的拍照、录像和 CameraX 用例绑定逻辑。</p>
  * 播放视频
- *  -> OperationCamera.playRecordedVideoIfNeeded()
- *  -> pauseCameraPreview()
- *  -> cameraProvider.unbindAll()
- *  -> camera = null
- *  -> imageCapture = null
- *  -> videoCapture = null
- *  点击“返回预览”时：
- *  CameraActivity 点击 camera_reset_preview
- *  -> OperationCamera.resetToCameraPreview()
- *  -> stopVideoPlayback()
- *  -> stopPhotoPreview()
- *  -> resumeCameraPreview()
- *  -> BaseCamera.bindUseCases(boundLifecycleOwner)
- *  -> cameraProvider.bindToLifecycle(...)
  */
 
 public abstract class BaseCamera {
@@ -72,30 +58,6 @@ public abstract class BaseCamera {
         mainExecutor = ContextCompat.getMainExecutor(appContext);
     }
 
-    /**
-     * 相机结果回调。
-     */
-    public interface Callback {
-        /**
-         * 相机初始化完成。
-         */
-        void onCameraReady();
-
-        /**
-         * 拍照完成。
-         */
-        void onPhotoSaved(Uri uri);
-
-        /**
-         * 录像完成。
-         */
-        void onVideoSaved(Uri uri);
-
-        /**
-         * 相机发生错误。
-         */
-        void onCameraError(String message, Throwable throwable);
-    }
 
     //相机的预览器
     private PreviewView previewView;
@@ -400,4 +362,29 @@ public abstract class BaseCamera {
             callback.onCameraError(message, throwable);
         }
     }
+    /**
+     * 相机结果回调。
+     */
+    public interface Callback {
+        /**
+         * 相机初始化完成。
+         */
+        void onCameraReady();
+
+        /**
+         * 拍照完成。
+         */
+        void onPhotoSaved(Uri uri);
+
+        /**
+         * 录像完成。
+         */
+        void onVideoSaved(Uri uri);
+
+        /**
+         * 相机发生错误。
+         */
+        void onCameraError(String message, Throwable throwable);
+    }
+
 }

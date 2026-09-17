@@ -44,6 +44,7 @@ public class CameraActivity extends AppCompatActivity
     private PreviewView previewView;
     private ImageView photoPreviewView;
     private PlayerView playerView;
+    private View focusIndicatorView;
     private TextView statusText;
     private Button recordButton;
     private Button pauseButton;
@@ -59,6 +60,7 @@ public class CameraActivity extends AppCompatActivity
     private float downY;
     private boolean movedAfterDown;
     private boolean recordingPaused;
+    private int focusAnimationToken;
 
 
     /**
@@ -80,6 +82,7 @@ public class CameraActivity extends AppCompatActivity
         previewView = findViewById(R.id.camera_preview);
         photoPreviewView = findViewById(R.id.camera_photo_preview);
         playerView = findViewById(R.id.camera_player);
+        focusIndicatorView = findViewById(R.id.camera_focus_indicator);
         statusText = findViewById(R.id.camera_status);
         recordButton = findViewById(R.id.camera_record);
         pauseButton = findViewById(R.id.camera_pause);
@@ -147,12 +150,140 @@ public class CameraActivity extends AppCompatActivity
                 if (!movedAfterDown
                         && !scaleGestureDetector.isInProgress()
                         && operationCamera != null) {
+                    showFocusAnimation(event.getX(), event.getY());
                     operationCamera.focusAt(event.getX(), event.getY());
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * 显示点击对焦的绿色缩放框动画。
+     */
+    private void showFocusAnimation(float x, float y) {
+        if (focusIndicatorView == null || previewView == null) {
+            return;
+        }
+        final int animationToken = ++focusAnimationToken;
+
+        int size = focusIndicatorView.getWidth();
+        if (size <= 0) {
+            size = dpToPx(76);
+        }
+
+        focusIndicatorView.animate().cancel();
+        focusIndicatorView.setVisibility(View.VISIBLE);
+        focusIndicatorView.setAlpha(1.0f);
+        focusIndicatorView.setScaleX(1.65f);
+        focusIndicatorView.setScaleY(1.65f);
+        focusIndicatorView.setX(previewView.getLeft() + x - size / 2.0f);
+        focusIndicatorView.setY(previewView.getTop() + y - size / 2.0f);
+        focusIndicatorView.bringToFront();
+
+        focusIndicatorView.animate()
+                .scaleX(0.82f)
+                .scaleY(0.82f)
+                .alpha(1.0f)
+                .setStartDelay(0)
+                .setDuration(180)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (animationToken != focusAnimationToken) {
+                            return;
+                        }
+                        focusIndicatorView.animate()
+                                .scaleX(1.0f)
+                                .scaleY(1.0f)
+                                .alpha(1.0f)
+                                .setStartDelay(0)
+                                .setDuration(120)
+                                .withEndAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        startFocusBlinkAnimation(animationToken);
+                                    }
+                                })
+                                .start();
+                    }
+                })
+                .start();
+    }
+
+    /**
+     * 聚焦框定格后快速闪烁，用来提示聚焦动作完成。
+     */
+    private void startFocusBlinkAnimation(final int animationToken) {
+        blinkFocusIndicator(animationToken, 0);
+    }
+
+    /**
+     * 执行单次聚焦框闪烁，连续闪烁 3 次后消失。
+     */
+    private void blinkFocusIndicator(final int animationToken, final int blinkCount) {
+        if (animationToken != focusAnimationToken || focusIndicatorView == null) {
+            return;
+        }
+        if (blinkCount >= 3) {
+            fadeOutFocusIndicator(animationToken);
+            return;
+        }
+        focusIndicatorView.animate()
+                .alpha(0.35f)
+                .setStartDelay(blinkCount == 0 ? 260 : 0)
+                .setDuration(55)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (animationToken != focusAnimationToken || focusIndicatorView == null) {
+                            return;
+                        }
+                        focusIndicatorView.animate()
+                                .alpha(1.0f)
+                                .setStartDelay(0)
+                                .setDuration(55)
+                                .withEndAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        blinkFocusIndicator(animationToken, blinkCount + 1);
+                                    }
+                                })
+                                .start();
+                    }
+                })
+                .start();
+    }
+
+    /**
+     * 聚焦框完成提示后淡出消失。
+     */
+    private void fadeOutFocusIndicator(final int animationToken) {
+        if (animationToken != focusAnimationToken || focusIndicatorView == null) {
+            return;
+        }
+        focusIndicatorView.animate()
+                .alpha(0.0f)
+                .setStartDelay(180)
+                .setDuration(180)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (animationToken != focusAnimationToken || focusIndicatorView == null) {
+                            return;
+                        }
+                        focusIndicatorView.setVisibility(View.GONE);
+                    }
+                })
+                .start();
+    }
+
+    /**
+     * dp 转 px。
+     */
+    private int dpToPx(float dp) {
+        return (int) (dp * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     /**

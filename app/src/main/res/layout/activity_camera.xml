@@ -28,6 +28,15 @@
         android:keepScreenOn="true"
         android:visibility="gone" />
 
+    <View
+        android:id="@+id/camera_focus_indicator"
+        android:layout_width="76dp"
+        android:layout_height="76dp"
+        android:background="@drawable/camera_focus_indicator_bg"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/camera_status"
         android:layout_width="wrap_content"

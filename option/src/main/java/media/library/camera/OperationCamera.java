@@ -29,6 +29,20 @@ import androidx.media3.ui.PlayerView;
  *
  * <p>继承 BaseCamera，复用父类已有的相机绑定、缩放和释放能力。
  * 本类只补充拍照、录像、照片停留、视频回放等操作。</p>
+ *  -> OperationCamera.playRecordedVideoIfNeeded()
+ *  -> pauseCameraPreview()
+ *  -> cameraProvider.unbindAll()
+ *  -> camera = null
+ *  -> imageCapture = null
+ *  -> videoCapture = null
+ *  点击“返回预览”时：
+ *  CameraActivity 点击 camera_reset_preview
+ *  -> OperationCamera.resetToCameraPreview()
+ *  -> stopVideoPlayback()
+ *  -> stopPhotoPreview()
+ *  -> resumeCameraPreview()
+ *  -> BaseCamera.bindUseCases(boundLifecycleOwner)
+ *  -> cameraProvider.bindToLifecycle(...)
  */
 public class OperationCamera extends BaseCamera {
 
