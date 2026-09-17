@@ -2,6 +2,7 @@ package com.images.ui.activity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -48,29 +49,6 @@ public class CameraActivity extends AppCompatActivity
     private float downY;
     private boolean movedAfterDown;
 
-    /**
-     * 请求相机和录音权限。
-     */
-    private final ActivityResultLauncher<String[]> permissionLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.RequestMultiplePermissions(),
-                    new ActivityResultCallback<Map<String, Boolean>>() {
-                        @Override
-                        public void onActivityResult(Map<String, Boolean> result) {
-                            Boolean cameraGranted = result.get(Manifest.permission.CAMERA);
-                            if (Boolean.TRUE.equals(cameraGranted)
-                                    || ContextCompat.checkSelfPermission(
-                                    CameraActivity.this,
-                                    Manifest.permission.CAMERA
-                            ) == PackageManager.PERMISSION_GRANTED) {
-                                bindCamera();
-                            } else {
-                                showMessage("需要相机权限才能使用相机");
-                                finish();
-                            }
-                        }
-                    }
-            );
 
     /**
      * 创建相机页面。
@@ -163,14 +141,10 @@ public class CameraActivity extends AppCompatActivity
      * 请求相机和录音权限。
      */
     private void requestCameraPermission() {
-        boolean cameraGranted = ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED;
-        boolean audioGranted = ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED;
+        //相机权限
+        boolean cameraGranted = isPermission(Manifest.permission.CAMERA);
+        //访问手机麦克风，采集音频
+        boolean audioGranted = isPermission(Manifest.permission.RECORD_AUDIO);
         if (cameraGranted) {
             bindCamera();
             if (!audioGranted) {
@@ -183,6 +157,33 @@ public class CameraActivity extends AppCompatActivity
                 Manifest.permission.RECORD_AUDIO
         });
     }
+
+    //true 有这个权限
+    private boolean isPermission(String permissionName) {
+        int cameraPermission = ContextCompat.checkSelfPermission(this, permissionName);
+        return cameraPermission == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /**
+     * 请求相机和录音权限。
+     */
+    private final ActivityResultLauncher<String[]> permissionLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    new ActivityResultCallback<Map<String, Boolean>>() {
+                        @Override
+                        public void onActivityResult(Map<String, Boolean> result) {
+                            Boolean cameraGranted = result.get(Manifest.permission.CAMERA);
+                            boolean cameraGranted2 = isPermission(Manifest.permission.CAMERA);
+                            if (Boolean.TRUE.equals(cameraGranted) || cameraGranted2) {
+                                bindCamera();
+                            } else {
+                                showMessage("需要相机权限才能使用相机");
+                                finish();
+                            }
+                        }
+                    }
+            );
 
     /**
      * 创建并绑定相机控制器。
@@ -246,23 +247,17 @@ public class CameraActivity extends AppCompatActivity
         updateButtonState(false);
     }
 
-    /**
-     * 拍照完成回调。
-     */
     @Override
-    public void onPhotoSaved(File file) {
-        statusText.setText("照片已保存");
-        showMessage("照片已保存：" + file.getAbsolutePath());
+    public void onPhotoSaved(Uri uri) {
+        statusText.setText("照片保存成功");
+        showMessage("照片已保存：" + uri);
     }
 
-    /**
-     * 录像完成回调。
-     */
     @Override
-    public void onVideoSaved(File file) {
-        statusText.setText("录像已保存");
+    public void onVideoSaved(Uri uri) {
+        statusText.setText("视频保存成功");
         updateButtonState(false);
-        showMessage("录像已保存：" + file.getAbsolutePath());
+        showMessage("录像已保存：" + uri);
     }
 
     /**
