@@ -66,6 +66,7 @@ public abstract class BaseCameraController {
     protected ExoPlayer videoPlayer;
     protected boolean stayOnCapturedPhoto;
     protected boolean autoPlayRecordedVideo;
+    protected boolean released;
 
     /**
      * 创建基础相机控制器。
@@ -112,14 +113,29 @@ public abstract class BaseCameraController {
     public abstract boolean isRecording();
 
     /**
-     * 释放相机资源。
+     * 释放子类持有的相机资源。
      */
-    public abstract void release();
+    protected abstract void releaseControllerResources();
+
+    /**
+     * 释放相机、预览、照片停留和视频回放资源。
+     */
+    public final void release() {
+        if (released) {
+            return;
+        }
+        released = true;
+        releaseControllerResources();
+        releaseBaseResources();
+    }
 
     /**
      * 设置录像完成后是否在当前页面自动循环播放刚录制的视频。
      */
     public void setAutoPlayRecordedVideo(boolean autoPlayRecordedVideo) {
+        if (released) {
+            return;
+        }
         this.autoPlayRecordedVideo = autoPlayRecordedVideo;
         if (!autoPlayRecordedVideo) {
             stopVideoPlayback();
@@ -130,6 +146,9 @@ public abstract class BaseCameraController {
      * 设置拍照完成后是否停留在刚拍好的照片画面。
      */
     public void setStayOnCapturedPhoto(boolean stayOnCapturedPhoto) {
+        if (released) {
+            return;
+        }
         this.stayOnCapturedPhoto = stayOnCapturedPhoto;
         if (!stayOnCapturedPhoto) {
             stopPhotoPreview();
@@ -140,6 +159,9 @@ public abstract class BaseCameraController {
      * 绑定当前页面用于展示拍照结果的图片控件。
      */
     public void bindPhotoView(ImageView view) {
+        if (released) {
+            return;
+        }
         photoView = view;
         if (photoView != null) {
             photoView.setVisibility(View.GONE);
@@ -150,6 +172,9 @@ public abstract class BaseCameraController {
      * 绑定当前页面的视频播放器控件。
      */
     public void bindPlayerView(PlayerView view) {
+        if (released) {
+            return;
+        }
         playerView = view;
         if (playerView != null) {
             playerView.setVisibility(View.GONE);
@@ -161,6 +186,9 @@ public abstract class BaseCameraController {
      * 恢复到相机初始预览状态。
      */
     public void resetToCameraPreview() {
+        if (released) {
+            return;
+        }
         stopVideoPlayback();
         stopPhotoPreview();
     }
@@ -173,10 +201,24 @@ public abstract class BaseCameraController {
     }
 
     /**
+     * 判断当前页面是否正在显示录像回放层。
+     */
+    public boolean isVideoPreviewShowing() {
+        return playerView != null && playerView.getVisibility() == View.VISIBLE;
+    }
+
+    /**
+     * 判断当前页面是否正在显示拍照停留层。
+     */
+    public boolean isPhotoPreviewShowing() {
+        return photoView != null && photoView.getVisibility() == View.VISIBLE;
+    }
+
+    /**
      * 点击预览画面时进行自动对焦和曝光测光。
      */
     public void focusAt(float x, float y) {
-        if (camera == null || previewView == null) {
+        if (released || camera == null || previewView == null) {
             return;
         }
         if (x < 0 || y < 0 || x > previewView.getWidth() || y > previewView.getHeight()) {
@@ -195,7 +237,7 @@ public abstract class BaseCameraController {
      * 根据双指手势缩放镜头。
      */
     public void zoomByScale(float scaleFactor) {
-        if (camera == null || scaleFactor <= 0) {
+        if (released || camera == null || scaleFactor <= 0) {
             return;
         }
         androidx.lifecycle.LiveData<ZoomState> zoomState = camera.getCameraInfo().getZoomState();
@@ -219,7 +261,7 @@ public abstract class BaseCameraController {
      * 如果开关打开，就在当前页面展示刚拍好的照片。
      */
     protected void showCapturedPhotoIfNeeded(Uri photoUri) {
-        if (!stayOnCapturedPhoto || photoUri == null || photoView == null) {
+        if (released || !stayOnCapturedPhoto || photoUri == null || photoView == null) {
             return;
         }
         stopVideoPlayback();
@@ -231,6 +273,9 @@ public abstract class BaseCameraController {
      * 关闭当前页面的照片停留画面，恢复相机预览。
      */
     public void stopPhotoPreview() {
+        if (released && photoView == null && previewView == null) {
+            return;
+        }
         if (photoView != null) {
             photoView.setImageURI(null);
             photoView.setVisibility(View.GONE);
@@ -244,7 +289,7 @@ public abstract class BaseCameraController {
      * 如果开关打开，就在当前页面循环播放刚录制完成的视频。
      */
     protected void playRecordedVideoIfNeeded(Uri videoUri) {
-        if (!autoPlayRecordedVideo || videoUri == null || playerView == null) {
+        if (released || !autoPlayRecordedVideo || videoUri == null || playerView == null) {
             return;
         }
         stopPhotoPreview();
@@ -263,6 +308,9 @@ public abstract class BaseCameraController {
      * 停止当前页面的视频回放并恢复相机预览。
      */
     public void stopVideoPlayback() {
+        if (released && videoPlayer == null && playerView == null && previewView == null) {
+            return;
+        }
         if (videoPlayer != null) {
             videoPlayer.stop();
             videoPlayer.clearMediaItems();
@@ -320,7 +368,7 @@ public abstract class BaseCameraController {
      * 通知相机初始化完成。
      */
     protected void notifyReady() {
-        if (callback != null) {
+        if (!released && callback != null) {
             callback.onCameraReady();
         }
     }
@@ -329,7 +377,7 @@ public abstract class BaseCameraController {
      * 通知相机错误。
      */
     protected void notifyError(String message, Throwable throwable) {
-        if (callback != null) {
+        if (!released && callback != null) {
             callback.onCameraError(message, throwable);
         }
     }

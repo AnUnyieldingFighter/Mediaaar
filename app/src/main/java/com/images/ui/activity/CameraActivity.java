@@ -3,6 +3,7 @@ package com.images.ui.activity;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -23,8 +24,11 @@ import androidx.media3.ui.PlayerView;
 
 import com.media.option.R;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import media.library.camera.BaseCameraController;
 import media.library.camera.CameraController;
 
 
@@ -35,7 +39,7 @@ import media.library.camera.CameraController;
  * 点击预览画面可以对焦，双指张开或合拢可以缩放镜头。</p>
  */
 public class CameraActivity extends AppCompatActivity
-        implements View.OnClickListener, CameraController.Callback {
+        implements View.OnClickListener, BaseCameraController.Callback {
 
     private PreviewView previewView;
     private ImageView photoPreviewView;
@@ -154,23 +158,38 @@ public class CameraActivity extends AppCompatActivity
         boolean cameraGranted = isPermission(Manifest.permission.CAMERA);
         //访问手机麦克风，采集音频
         boolean audioGranted = isPermission(Manifest.permission.RECORD_AUDIO);
+        //Android 9 及以下写入公共相册需要存储权限
+        boolean storageGranted = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                || isPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (cameraGranted) {
             bindCamera();
+            List<String> permissions = new ArrayList<>();
             if (!audioGranted) {
-                permissionLauncher.launch(new String[]{Manifest.permission.RECORD_AUDIO});
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            }
+            if (!storageGranted) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            }
+            if (!permissions.isEmpty()) {
+                permissionLauncher.launch(permissions.toArray(new String[0]));
             }
             return;
         }
-        permissionLauncher.launch(new String[]{
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
-        });
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.CAMERA);
+        permissions.add(Manifest.permission.RECORD_AUDIO);
+        if (!storageGranted) {
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        permissionLauncher.launch(permissions.toArray(new String[0]));
     }
 
-    //true 有这个权限
+    /**
+     * 判断是否已经有指定权限。
+     */
     private boolean isPermission(String permissionName) {
-        int cameraPermission = ContextCompat.checkSelfPermission(this, permissionName);
-        return cameraPermission == PackageManager.PERMISSION_GRANTED;
+        int permission = ContextCompat.checkSelfPermission(this, permissionName);
+        return permission == PackageManager.PERMISSION_GRANTED;
     }
 
     /**

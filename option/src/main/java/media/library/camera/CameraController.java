@@ -56,6 +56,9 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void bind(final LifecycleOwner lifecycleOwner, final PreviewView view) {
+        if (released) {
+            return;
+        }
         if (lifecycleOwner == null || view == null) {
             notifyError("相机页面参数为空", null);
             return;
@@ -73,6 +76,9 @@ public class CameraController extends BaseCameraController {
             @Override
             public void run() {
                 try {
+                    if (released) {
+                        return;
+                    }
                     cameraProvider = providerFuture.get();
                     bindUseCases(lifecycleOwner);
                 } catch (Exception e) {
@@ -86,6 +92,9 @@ public class CameraController extends BaseCameraController {
      * 绑定相机用例。
      */
     private void bindUseCases(LifecycleOwner lifecycleOwner) {
+        if (released) {
+            return;
+        }
         if (cameraProvider == null || previewView == null) {
             notifyError("相机未准备好", null);
             return;
@@ -128,6 +137,9 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void takePhoto() {
+        if (released) {
+            return;
+        }
         if (imageCapture == null) {
             notifyError("相机还没有准备好", null);
             return;
@@ -150,6 +162,9 @@ public class CameraController extends BaseCameraController {
                     @Override
                     public void onImageSaved(
                             @NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        if (released) {
+                            return;
+                        }
                         Uri savedUri = outputFileResults.getSavedUri();
                         if (callback != null) {
                             callback.onPhotoSaved(savedUri);
@@ -159,6 +174,9 @@ public class CameraController extends BaseCameraController {
 
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
+                        if (released) {
+                            return;
+                        }
                         notifyError("拍照失败", exception);
                     }
                 }
@@ -172,6 +190,9 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void startRecording() {
+        if (released) {
+            return;
+        }
         if (videoCapture == null) {
             notifyError("相机还没有准备好", null);
             return;
@@ -203,6 +224,10 @@ public class CameraController extends BaseCameraController {
                     @Override
                     public void accept(VideoRecordEvent event) {
                         if (event instanceof VideoRecordEvent.Finalize) {
+                            if (released) {
+                                recording = null;
+                                return;
+                            }
                             VideoRecordEvent.Finalize finalizeEvent =
                                     (VideoRecordEvent.Finalize) event;
                             Uri outputUri = finalizeEvent.getOutputResults().getOutputUri();
@@ -226,7 +251,7 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void pauseRecording() {
-        if (recording != null) {
+        if (!released && recording != null) {
             recording.pause();
         }
     }
@@ -236,7 +261,7 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void resumeRecording() {
-        if (recording != null) {
+        if (!released && recording != null) {
             recording.resume();
         }
     }
@@ -246,7 +271,7 @@ public class CameraController extends BaseCameraController {
      */
     @Override
     public void stopRecording() {
-        if (recording != null) {
+        if (!released && recording != null) {
             recording.stop();
         }
     }
@@ -263,12 +288,11 @@ public class CameraController extends BaseCameraController {
      * 释放相机和录像资源。
      */
     @Override
-    public void release() {
+    protected void releaseControllerResources() {
         if (recording != null) {
             recording.stop();
             recording = null;
         }
-        releaseBaseResources();
         imageCapture = null;
         videoCapture = null;
     }
