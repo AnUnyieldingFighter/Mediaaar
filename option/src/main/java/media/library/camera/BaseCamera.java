@@ -51,7 +51,6 @@ public abstract class BaseCamera {
     private final Callback callback;
 
 
-
     public BaseCamera(Context context, Callback callback) {
         appContext = context.getApplicationContext();
         this.callback = callback;
@@ -63,9 +62,9 @@ public abstract class BaseCamera {
     private PreviewView previewView;
     //当前绑定相机的生命周期对象
     private LifecycleOwner boundLifecycleOwner;
-    //已释放
+    //true 已销毁/不可再用
     protected boolean released;
-    //相机预览是否已经暂停
+    //相机预览是否已经暂停 true 暂停预览
     private boolean cameraPreviewPaused;
     //闪光灯是否开启
     private boolean flashEnabled;
@@ -362,6 +361,7 @@ public abstract class BaseCamera {
             callback.onCameraError(message, throwable);
         }
     }
+
     /**
      * 相机结果回调。
      */
