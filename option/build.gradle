@@ -67,6 +67,13 @@ dependencies {
     //implementation "androidx.media3:media3-exoplayer-ffmpeg:1.8.0"
     //implementation 'androidx.media3:media3-exoplayer-ffmpeg:1.9.0'
     //implementation "androidx.media3.decoder.ffmpeg:1.8.0"
+    //相机 CameraX
+    def cameraxVersion = "1.6.2"
+    api "androidx.camera:camera-core:$cameraxVersion"
+    api "androidx.camera:camera-camera2:$cameraxVersion"
+    api "androidx.camera:camera-lifecycle:$cameraxVersion"
+    api "androidx.camera:camera-video:$cameraxVersion"
+    api "androidx.camera:camera-view:$cameraxVersion"
 
 }
 afterEvaluate {

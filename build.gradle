@@ -8,7 +8,7 @@ buildscript {
 
     repositories {
 
-        jcenter()
+       // jcenter()
         mavenCentral()
         google()
 
@@ -23,7 +23,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.5.2'// 这个是gradle插件 要确保与gradle版本对应
+        classpath 'com.android.tools.build:gradle:8.13.0'// 这个是gradle插件 要确保与gradle版本对应
 
         //classpath 'com.android.tools.build:gradle:7.4.2'
         //应该与kotlin_version 一致，这里用了高版本
@@ -34,7 +34,7 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
+        //jcenter()
         mavenCentral()
         google()
 
@@ -58,10 +58,10 @@ task clean(type: Delete) {
 }
 
 ext {
-    compileSdkVersion = 35
-    buildToolsVersion = '35.0.0'
+    compileSdkVersion = 36
+    buildToolsVersion = '36.0.0'
     minSdkVersion = 26
-    targetSdkVersion = 35
+    targetSdkVersion = 36
     //compose_version = '1.1.0-beta03'
     //对应kotlin-gradle-plugin:1.9.25 版本
     compose_version = '1.5.15'

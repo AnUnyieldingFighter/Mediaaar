@@ -1,43 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
+    android:orientation="vertical">
 
     <Button
         android:id="@+id/image_test1_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="图片选择"
-        />
+        android:text="图片选择" />
+
     <Button
         android:id="@+id/video_test1_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="内置短视频"
-        />
-    <Button
-         android:id="@+id/google_btn"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="google图片选择器"
-        />
+        android:text="内置短视频" />
 
     <Button
-        android:visibility="gone"
+        android:id="@+id/google_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="google图片选择器" />
+
+    <Button
         android:id="@+id/image_camera_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="相机测试"
-        />
+        android:visibility="gone" />
 
     <Button
-        android:visibility="gone"
         android:id="@+id/video_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="视频编辑"
-        />
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/video_img_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="视频录制/拍照" />
 </LinearLayout>

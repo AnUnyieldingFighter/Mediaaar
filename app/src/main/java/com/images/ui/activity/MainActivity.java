@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.google_btn).setOnClickListener(this);
         findViewById(R.id.image_camera_btn).setOnClickListener(this);
         findViewById(R.id.video_btn).setOnClickListener(this);
+        findViewById(R.id.video_img_btn).setOnClickListener(this);
+
         //设置所有的缓存文件回到 可用状态
         DBManager.setCacheFileReleaseAll(this);
         DeviceMediaCapabilityUtil.test();
@@ -58,6 +60,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //google 图片选择器
             Intent it = new Intent();
             it.setClass(this, GoogleActivity.class);
+            startActivity(it);
+            return;
+        }
+        if (id == R.id.video_img_btn) {
+            Intent it = new Intent();
+            it.setClass(this, CameraActivity.class);
             startActivity(it);
             return;
         }
