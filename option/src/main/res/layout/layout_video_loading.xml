@@ -37,19 +37,20 @@
             android:indeterminate="true"
             android:layout_gravity="center"/>
 
-        <TextView android:id="@id/exo_error_message"
+        <TextView
+            android:id="@id/exo_error_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="@dimen/exo_error_message_margin_bottom"
-            android:gravity="center"
-            android:textColor="@color/exo_white"
-            android:textSize="@dimen/exo_error_message_text_size"
             android:background="@drawable/exo_rounded_rectangle"
+            android:gravity="center"
             android:paddingLeft="@dimen/exo_error_message_text_padding_horizontal"
-            android:paddingRight="@dimen/exo_error_message_text_padding_horizontal"
             android:paddingTop="@dimen/exo_error_message_text_padding_vertical"
-            android:paddingBottom="@dimen/exo_error_message_text_padding_vertical"/>
+            android:paddingRight="@dimen/exo_error_message_text_padding_horizontal"
+            android:paddingBottom="@dimen/exo_error_message_text_padding_vertical"
+            android:textColor="@color/exo_white"
+            android:textSize="@dimen/exo_error_message_text_size" />
 
     </androidx.media3.ui.AspectRatioFrameLayout>
 
