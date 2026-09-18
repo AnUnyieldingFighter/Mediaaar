@@ -49,7 +49,7 @@ public class PlayerErrorMessageUtil {
             case PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED:
                 return "暂不支持该视频格式";
             default:
-                return "视频播放失败，请稍后重试";
+                return message;
         }
     }
 
