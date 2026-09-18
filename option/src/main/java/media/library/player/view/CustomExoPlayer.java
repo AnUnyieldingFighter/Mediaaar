@@ -95,21 +95,22 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     //===================================测试中的用法=============================
     public void testTrackSelector() {
-        setTrackLog();
-        setPreferredAudioLanguage("zh");
-        //setMaxVideoResolution(100, 100);
-        //
-        disableTrackType(C.TRACK_TYPE_VIDEO);// 禁用视频（纯音频播放）
-        disableTrackType(C.TRACK_TYPE_AUDIO);// 禁用音频（静音播放）
-        disableTrackType(C.TRACK_TYPE_TEXT);// 禁用字幕
+        if (customTrackSelector != null) {
+            customTrackSelector.setTrackLog();
+            customTrackSelector.setPreferredAudioLanguage("zh");
+            //
+            customTrackSelector.disableTrackType(C.TRACK_TYPE_VIDEO);// 禁用视频（纯音频播放）
+            customTrackSelector.disableTrackType(C.TRACK_TYPE_AUDIO);// 禁用音频（静音播放）
+            customTrackSelector.disableTrackType(C.TRACK_TYPE_TEXT);// 禁用字幕
+        }
     }
 
 
-
-
     public void setPreferredTextTrackTest() {
-        //显示字幕，但不指定语言，由播放器按默认规则选择字幕轨道
-        setPreferredTextTrack(true, null);
+        if (customTrackSelector != null) {
+            //显示字幕，但不指定语言，由播放器按默认规则选择字幕轨道
+            customTrackSelector.setPreferredTextTrack(true, null);
+        }
     }
 
     //==================释放资源=======================================================

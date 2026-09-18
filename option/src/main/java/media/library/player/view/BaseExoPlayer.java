@@ -265,7 +265,7 @@ class BaseExoPlayer extends PlayerDB {
     }
 
     //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
-    private CustomTrackSelector customTrackSelector;
+    protected CustomTrackSelector customTrackSelector;
     //true 使用arb
     private boolean isArb;
 
@@ -524,7 +524,7 @@ class BaseExoPlayer extends PlayerDB {
                 return;
             }
 
-            if (customTrackSelector!=null){
+            if (customTrackSelector != null) {
                 final int maxVideoBitrate = (int) (bitrateEstimate * 0.8);
                 customTrackSelector.setVideoBitrate(maxVideoBitrate);
             }
