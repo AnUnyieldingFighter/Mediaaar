@@ -19,6 +19,7 @@ import androidx.media3.common.Format;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
+import androidx.media3.common.TrackGroup;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
@@ -26,6 +27,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.RendererCapabilities;
 import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.source.LoadEventInfo;
@@ -60,20 +62,10 @@ class BaseExoPlayer extends PlayerDB {
     }
 
     //==========================初始化播放器=====================================
-    //true 使用arb
-    private boolean isArb;
+
     //true 强制启用 MediaCodec 异步队列
     private boolean forceAsyncQueueing;
 
-    public void setARB(boolean isArb) {
-        this.isArb = isArb;
-        runOnPlayerThread(new Runnable() {
-            @Override
-            public void run() {
-                applyTrackSelectorParameters();
-            }
-        });
-    }
 
     /**
      * 设置是否强制启用 MediaCodec 异步队列。
@@ -273,186 +265,46 @@ class BaseExoPlayer extends PlayerDB {
     }
 
     //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
-    //根据网络状况选择最佳码率轨道,音视频轨道选择组件
-    @OptIn(markerClass = UnstableApi.class)
-    private DefaultTrackSelector trackSelector;
+    private CustomTrackSelector customTrackSelector;
+    //true 使用arb
+    private boolean isArb;
+
+    public void setARB(boolean isArb) {
+        this.isArb = isArb;
+        if (customTrackSelector == null) {
+            return;
+        }
+        customTrackSelector.setIsArb(isArb);
+        runOnPlayerThread(new Runnable() {
+            @Override
+            public void run() {
+                customTrackSelector.applyTrackSelectorParameters();
+            }
+        });
+    }
 
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getPlayerTrackSelector() {
-        //控制多清晰度视频 怎么自动升降清晰度的。
-        if (trackSelector == null) {
-            // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
-            //minDurationForQualityIncreaseMs	切换到更高质量轨道所需的最小缓冲时长	点播：5-8k，直播：15k+
-            //maxDurationForQualityDecreaseMs	当缓冲时长低于此值时触发质量降低	波动网络：15k，稳定网络：30k
-            //minDurationToRetainAfterDiscardMs	切换高质量轨道时需保留的低质量缓冲最小时长	必须 > 质量提升阈值
-            //bandwidthFraction	带宽利用率系数（0-1），预留余量应对波动	弱网：0.5-0.6，优质网络：0.8-0.85
-            //bufferedFractionToLiveEdgeForQualityIncrease	直播场景中需缓冲至直播边缘的比例才能提升质量
-            //自定义Factory实现差异化配置
-            AdaptiveTrackSelection.Factory factoryTemp = new AdaptiveTrackSelection.Factory(
-                    8 * 1000,  // 质量提升阈值
-                    20 * 1000, // 质量降低阈值
-                    25 * 1000, // 保留缓冲
-                    0.8f  // 带宽利用率
-            );
-            //创建轨道选择器，并把这套 ABR 策略给它
-            trackSelector = new DefaultTrackSelector(playerContext, factoryTemp);
+        if (customTrackSelector == null) {
+            customTrackSelector = new CustomTrackSelector(this, playerContext);
         }
-        applyTrackSelectorParameters();
-        return trackSelector;
+        customTrackSelector.setIsArb(isArb);
+        return customTrackSelector.getPlayerTrackSelector();
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    private void applyTrackSelectorParameters() {
-        if (trackSelector == null) {
-            return;
-        }
-        DefaultTrackSelector.Parameters.Builder builder = trackSelector.buildUponParameters();
-        if (isArb) {
-            PlayerLog.d(tag, "开启 ABR 轨道限制：最大1080P，最大10Mbps");
-            //仅能在多轨道媒体源中，筛选出分辨率和码率低于设定值的备选
-            builder.setMaxVideoSize(1920, 1080);
-            builder.setMaxVideoBitrate(10 * 1024 * 1024);
-        } else {
-            //关闭 ABR 限制时恢复为不限制视频尺寸和码率，音轨/字幕切换仍然可用
-            builder.setMaxVideoSize(Integer.MAX_VALUE, Integer.MAX_VALUE);
-            builder.setMaxVideoBitrate(Integer.MAX_VALUE);
-        }
-        trackSelector.setParameters(builder);
-    }
-
-    // 按语言优先选择音轨/视频轨道 主要作用在多音轨视频里。
-    //比如一个视频里有多条音轨：
-    //中文音轨 zh
-    //英文音轨 en
-    //日文音轨 ja
-    //setPreferredAudioLanguage("zh"); 优先选择中文音轨
-    @OptIn(markerClass = UnstableApi.class)
-    protected void setPreferredAudioLanguage(final String... language) {
-        // 语言码：中文=zh, 英文=en, 日文=ja
-        runOnPlayerThread(new Runnable() {
-            @Override
-            public void run() {
-                if (trackSelector == null) {
-                    return;
-                }
-                //拿当前轨道选择参数，基于旧配置继续修改。
-                DefaultTrackSelector.Parameters.Builder paramsBuilder = trackSelector.buildUponParameters();
-                //只传一个语言
-                if (language.length == 1) {
-                    // 启用音画同步（默认开启）
-                    paramsBuilder.setPreferredAudioLanguage(language[0]);//这句一般意义不大，可以保留，但多数情况下不会起作用。音频语言才是核心。
-                    paramsBuilder.setPreferredVideoLanguage(language[0]);
-                } else {
-                    // 启用音画同步（默认开启）
-                    paramsBuilder.setPreferredAudioLanguages(language);
-                    paramsBuilder.setPreferredVideoLanguages(language);
-                }
-                DefaultTrackSelector.Parameters params = paramsBuilder.build();
-                trackSelector.setParameters(params);
-            }
-        });
-    }
-
-    //禁用视频 / 音频 / 字幕轨道
-    @OptIn(markerClass = UnstableApi.class)
-    protected void disableTrackType(final int trackType) {
-        Set<Integer> set = new HashSet<>();
-        set.add(trackType);
-    }
-
-    //禁用视频 / 音频 / 字幕轨道
-    @OptIn(markerClass = UnstableApi.class)
-    protected void disableTrackType(Set<Integer> trackTypes) {
-        runOnPlayerThread(new Runnable() {
-            @Override
-            public void run() {
-                if (trackSelector == null) {
-                    return;
-                }
-                //基于当前参数，设置“禁用这些轨道类型 trackType”。
-                TrackSelectionParameters params =
-                        trackSelector.buildUponParameters()
-                                .setDisabledTrackTypes(trackTypes) // 禁用指定轨道类型
-                                .build();
-                trackSelector.setParameters(params);
-            }
-        });
-    }
-
-    // “显示/隐藏字幕，并且可指定优先字幕语言”。
-    @OptIn(markerClass = UnstableApi.class)
-    protected void setPreferredTextTrack(final boolean showText, final String preferredLanguage) {
-        runOnPlayerThread(new Runnable() {
-            @Override
-            public void run() {
-                if (trackSelector == null) {
-                    return;
-                }
-                Set<Integer> set = new HashSet<>();
-                if (!showText) {
-                    set.add(C.TRACK_TYPE_TEXT);
-                }
-                DefaultTrackSelector.Parameters.Builder paramsBuilder =
-                        trackSelector.buildUponParameters()
-                                .setDisabledTrackTypes(set);  // 是否禁用字幕
-                if (!TextUtils.isEmpty(preferredLanguage)) {
-                    paramsBuilder.setPreferredTextLanguage(preferredLanguage); // 字幕优先语言
-                }
-                TrackSelectionParameters params = paramsBuilder.build();
-                trackSelector.setParameters(params);
-            }
-        });
-    }
-    @OptIn(markerClass = UnstableApi.class)
-    protected void setTrackLog() {
-        runOnPlayerThread(new Runnable() {
-            @Override
-            public void run() {
-                if (trackSelector == null) {
-                    return;
-                }
-                DefaultTrackSelector.Parameters params = trackSelector.getParameters();
-                MappingTrackSelector.MappedTrackInfo infos = trackSelector.getCurrentMappedTrackInfo();
-                if (infos == null) {
-                    return;
-                }
-                TrackGroupArray track = infos.getTrackGroups(0);
-                int length = track.length;
-                String str = params.toString();
-                PlayerLog.d(tag, "音频信息 length:" + length + " params:" + str);
-            }
-        });
-    }
     //=========================释放缓存====================================
-    //释放播放器中的缓存
+    //清空播放器本类持有的缓存/轨道选择器引用
     @OptIn(markerClass = UnstableApi.class)
     protected void setPlayerBuffRelease() {
-        if (trackSelector != null) {
-            //不要设置释放，会报错  DefaultTrackSelector is accessed on the wrong thread.
-            //trackSelector.release();
-            trackSelector = null;
-         /*   if (Looper.myLooper() == Looper.getMainLooper()) {
-                //已在主线程，直接执行
-                trackSelector.release();
-                trackSelector = null;
-
-            } else {
-                HandlerMedia.runInMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // 子线程，切换主线程
-                        trackSelector.release();
-                        trackSelector = null;
-                    }
-                });
-            }*/
-
+        //DefaultTrackSelector 由 ExoPlayer 持有，player.release() 时会自动调用 trackSelector.release()。
+        //这里不要手动调用 trackSelector.release()，否则如果当前线程不是播放器线程，会报：
+        //DefaultTrackSelector is accessed on the wrong thread.
+        if (customTrackSelector != null) {
+            customTrackSelector.setRelease();
+            customTrackSelector = null;
         }
-        if (buff != null) {
-            //buff.onReleased();
-            //buff.onReleased(player.is);
-            buff = null;
-        }
+        //DefaultLoadControl 不需要手动释放，清空引用即可，下次初始化播放器时重新创建。
+        buff = null;
     }
 
     //释放播放源中的缓存
@@ -671,21 +523,11 @@ class BaseExoPlayer extends PlayerDB {
             if (!isArb) {
                 return;
             }
-            final int maxVideoBitrate = (int) (bitrateEstimate * 0.8);
-            runOnPlayerThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (trackSelector == null) {
-                        return;
-                    }
-                    // 根据带宽调整ABR策略，保留20%余量
-                    DefaultTrackSelector.Parameters.Builder builder =
-                            trackSelector.buildUponParameters()
-                                    .setMaxVideoBitrate(maxVideoBitrate);
-                    trackSelector.setParameters(builder);
-                }
-            });
 
+            if (customTrackSelector!=null){
+                final int maxVideoBitrate = (int) (bitrateEstimate * 0.8);
+                customTrackSelector.setVideoBitrate(maxVideoBitrate);
+            }
         }
 
         @Override
