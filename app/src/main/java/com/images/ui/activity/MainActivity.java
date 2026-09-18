@@ -18,6 +18,7 @@ import media.library.images.config.entity.MediaEntity;
 import media.library.player.manager.DBManager;
 import media.library.player.utile.DeviceMediaCapabilityUtil;
 import media.library.player.video.act.TestVideoStartAct;
+import media.library.player.view.PlayerSupport;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //设置所有的缓存文件回到 可用状态
         DBManager.setCacheFileReleaseAll(this);
         DeviceMediaCapabilityUtil.test();
+        //
+        PlayerSupport.getInstance().printSupportedVideoResolutionInfo();
     }
 
 
