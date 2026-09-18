@@ -10,7 +10,6 @@ import java.util.Random;
 import androidx.annotation.OptIn;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.MimeTypes;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
@@ -71,18 +70,16 @@ class BaseMediaSource extends BaseExoPlayer {
                 .setAlbumTitle("示例专辑")
                 .setArtworkUri(Uri.parse(img1))
                 .build();*/
-        MediaItem.Builder builder = new MediaItem.Builder()
-                //.setMediaMetadata(mediaMetadata)
-                .setUri(videoUrl)
-                .setMediaId(videoUrl);
+        //创建 MediaItem：播放这个资源所需的一组配置
+        //根据播放源类型创建 MediaItem
+        MediaItem videoItem;
         if ("m3u8".equals(type)) {
-            builder.setMimeType(MimeTypes.APPLICATION_M3U8);
+            videoItem = MediaItemConfig.createHlsMediaItem(videoUrl);
         } else if ("flv".equals(type)) {
-            builder.setMimeType("video/x-flv");
+            videoItem = MediaItemConfig.createFlvMediaItem(videoUrl);
+        } else {
+            videoItem = MediaItemConfig.createBaseMediaItem(videoUrl);
         }
-        //字幕
-        //setSubtitle(builder);
-        MediaItem videoItem = builder.build();
         MediaSource mediaSource;
         PlayerLog.d(tag, "播放器 创建播放源 type:" + type + " url:" + videoUrl);
         switch (type) {
@@ -129,6 +126,7 @@ class BaseMediaSource extends BaseExoPlayer {
         }
         return mediaSource;
     }
+
 
     //创建普通文件流播放源
     @OptIn(markerClass = UnstableApi.class)
