@@ -27,16 +27,13 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.exoplayer.RendererCapabilities;
 import androidx.media3.exoplayer.SeekParameters;
 import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.source.LoadEventInfo;
 import androidx.media3.exoplayer.source.MediaLoadData;
-import androidx.media3.exoplayer.source.TrackGroupArray;
-import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
+
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
-import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
+
 import media.library.player.manager.PlayerLog;
 
 //设置播放器
@@ -47,6 +44,7 @@ class BaseExoPlayer extends PlayerDB {
 
     //
     protected String videoUrl;
+    protected String videoTag;
     protected final String tag = "播放器_CustomExoPlayer_";
     //true 发生错误
     protected boolean isError;
@@ -91,14 +89,14 @@ class BaseExoPlayer extends PlayerDB {
             player = null;
             setPlayerBuffRelease();
             setMediaSourceCacheRelease();
-            PlayerLog.d(tag, "播放器 重新构建 播放地址：" + videoUrl);
+            PlayerLog.d(tag, "播放器 重新构建 播放地址：videoTag=" + videoTag + "\nurl" + videoUrl);
         }
         if (player != null && isError) {
             player.release();
             player = null;
             setPlayerBuffRelease();
             setMediaSourceCacheRelease();
-            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：" + videoUrl);
+            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：videoTag=" + videoTag + "\nurl" + videoUrl);
         }
         isError = false;
         playerContext = context;

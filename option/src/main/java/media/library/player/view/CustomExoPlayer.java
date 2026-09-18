@@ -71,10 +71,19 @@ public class CustomExoPlayer extends BaseMediaSource {
      */
     @UnstableApi
     public void setPlayerVideo(Context context, String videoUrl, boolean isCache) {
+        setPlayerVideo(context, videoUrl, "", isCache);
+    }
+
+    /**
+     * @param videoUrl 播放器url
+     * @param isCache  true 可以缓存
+     */
+    @UnstableApi
+    public void setPlayerVideo(Context context, String videoUrl, String videoTag, boolean isCache) {
         isReady = false;
         //
         this.isUseCache = isCache;
-        this.videoUrl = videoUrl;
+        this.videoTag = videoTag;
         //
         initExoPlayer(context);
         //方式一 自己决定 URL 用什么 MediaSource 播
@@ -91,7 +100,6 @@ public class CustomExoPlayer extends BaseMediaSource {
                 .setMediaId(videoUrl).build();
         player.setMediaItem(videoItem);*/
     }
-
 
     //===================================测试中的用法=============================
     public void testTrackSelector() {
@@ -126,7 +134,7 @@ public class CustomExoPlayer extends BaseMediaSource {
             player = null;
         }
         setMediaSourceCacheRelease();
-        PlayerLog.d(tag, "播放器 释放全部资源：" + videoUrl);
+        PlayerLog.d(tag, "播放器 释放全部资源：videoTag=" + videoTag + "\nurl" + videoUrl);
     }
 
     //====================设置播放器的显示==================================================
