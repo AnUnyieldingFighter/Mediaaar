@@ -77,12 +77,18 @@ public class CustomExoPlayer extends BaseMediaSource {
         this.videoUrl = videoUrl;
         //
         initExoPlayer(context);
-        //方式一
+        //方式一 自己决定 URL 用什么 MediaSource 播
         MediaSource mediaSource = getMediaSource();
-        //
         player.setMediaSource(mediaSource);
-        //方式二
-        /*MediaItem videoItem = new MediaItem.Builder().setUri(videoUrl).setMediaId(videoUrl).build();
+        //方式二 是把 MediaItem 直接交给 ExoPlayer，让它自己根据 URI / MIME 猜怎么播。
+        //好处是简单 普通 mp4/m3u8 通常能播  适合不需要特殊控制的场景
+        //不好插入你自己的缓存逻辑
+        //不好针对直播关闭缓存
+        //不好针对不同协议做不同处理
+        //rtsp/flv/特殊 URL 可能识别不稳定
+       /* MediaItem videoItem = new MediaItem.Builder()
+                .setUri(videoUrl)
+                .setMediaId(videoUrl).build();
         player.setMediaItem(videoItem);*/
     }
 

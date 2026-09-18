@@ -80,6 +80,7 @@ class BaseMediaSource extends BaseExoPlayer {
         } else {
             videoItem = MediaItemConfig.createBaseMediaItem(videoUrl);
         }
+        //告诉 ExoPlayer “这个资源要怎么读取、解析、加载
         MediaSource mediaSource;
         PlayerLog.d(tag, "播放器 创建播放源 type:" + type + " url:" + videoUrl);
         switch (type) {
