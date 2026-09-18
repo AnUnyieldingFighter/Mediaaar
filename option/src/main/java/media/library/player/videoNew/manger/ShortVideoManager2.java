@@ -509,7 +509,7 @@ public class ShortVideoManager2 {
     class HandlerUi extends Handler {
         private void start() {
             removeMessages(1);
-            sendEmptyMessageDelayed(1, 1 * 1000);
+            sendEmptyMessageDelayed(1, 1 * 300);
         }
 
         private void stop() {
@@ -522,7 +522,7 @@ public class ShortVideoManager2 {
             switch (msg.what) {
                 case 1:
                     setUpdatePlayProgress(getCursorVideoFrg());
-                    sendEmptyMessageDelayed(1, 1 * 1000);
+                    sendEmptyMessageDelayed(1, 1 * 300);
                     break;
             }
         }

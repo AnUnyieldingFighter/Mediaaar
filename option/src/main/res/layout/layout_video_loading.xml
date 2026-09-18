@@ -39,7 +39,7 @@
 
         <TextView android:id="@id/exo_error_message"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/exo_error_message_height"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="@dimen/exo_error_message_margin_bottom"
             android:gravity="center"

@@ -55,14 +55,7 @@ public final class TestVideoStartAct extends Activity {
 
             }
         });
-        findViewById(R.id.tv_3).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //类似于短视频
 
-
-            }
-        });
         findViewById(R.id.tv_4).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
