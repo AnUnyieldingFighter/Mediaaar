@@ -15,6 +15,9 @@ import androidx.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import media.library.player.manager.PlayerLog;
 
@@ -115,7 +118,8 @@ public class PlayerVideoSupport {
             }
         } catch (Exception e) {
             result.parseSuccess = false;
-            result.errorMessage = e.getMessage();
+            result.sourceProbeInfo = buildSourceProbeInfo(context, videoUrl, requestHeaders);
+            result.errorMessage = buildReadErrorMessage(videoUrl, result.sourceProbeInfo, e);
         } finally {
             mediaExtractor.release();
         }
@@ -180,6 +184,7 @@ public class PlayerVideoSupport {
             );
         } catch (Exception e) {
             result.containerMimeType = null;
+            result.metadataReadErrorMessage = buildThrowableMessage(e);
         } finally {
             try {
                 retriever.release();
@@ -486,6 +491,191 @@ public class PlayerVideoSupport {
         } catch (Exception e) {
             return defaultValue;
         }
+    }
+
+    /**
+     * 组装 MediaExtractor 读取失败时更容易定位问题的错误信息。
+     */
+    private String buildReadErrorMessage(String videoUrl, String sourceProbeInfo, Exception exception) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(buildThrowableMessage(exception));
+        String hint = buildExtractorFailHint(videoUrl, sourceProbeInfo);
+        if (!TextUtils.isEmpty(hint)) {
+            builder.append("；可能原因=").append(hint);
+        }
+        if (!TextUtils.isEmpty(sourceProbeInfo)) {
+            builder.append("；数据源诊断=").append(sourceProbeInfo);
+        }
+        return builder.toString();
+    }
+
+    /**
+     * 打印异常类名、message 和 cause 链，比单纯 e.getMessage() 更明确。
+     */
+    private String buildThrowableMessage(Throwable throwable) {
+        if (throwable == null) {
+            return "未知异常";
+        }
+        StringBuilder builder = new StringBuilder();
+        Throwable temp = throwable;
+        int index = 0;
+        while (temp != null && index < 5) {
+            if (index > 0) {
+                builder.append(" <- cause: ");
+            }
+            builder.append(temp.getClass().getName());
+            if (!TextUtils.isEmpty(temp.getMessage())) {
+                builder.append(": ").append(temp.getMessage());
+            }
+            temp = temp.getCause();
+            index++;
+        }
+        return builder.toString();
+    }
+
+    /**
+     * 根据地址类型和探测结果给出更像人话的失败原因。
+     */
+    private String buildExtractorFailHint(String videoUrl, String sourceProbeInfo) {
+        String lowerUrl = videoUrl == null ? "" : videoUrl.toLowerCase(Locale.US);
+        String lowerProbe = sourceProbeInfo == null ? "" : sourceProbeInfo.toLowerCase(Locale.US);
+        Uri uri = Uri.parse(videoUrl);
+        String scheme = uri.getScheme();
+
+        if (lowerUrl.contains(".m3u8") || lowerProbe.contains("mpegurl")) {
+            return "该地址像 HLS/m3u8 播放列表，MediaExtractor 不能直接解析 HLS；播放器应走 HlsMediaSource";
+        }
+        if (lowerUrl.contains(".mpd") || lowerProbe.contains("dash+xml")) {
+            return "该地址像 DASH/mpd 播放列表，MediaExtractor 不能直接解析 DASH；播放器应走 DashMediaSource";
+        }
+        if ("rtsp".equalsIgnoreCase(scheme)) {
+            return "该地址是 RTSP，MediaExtractor 不能直接按本地媒体文件解析；播放器应走 RtspMediaSource";
+        }
+        if ("rtmp".equalsIgnoreCase(scheme) || "rtmps".equalsIgnoreCase(scheme)) {
+            return "该地址是 RTMP，MediaExtractor 不能直接解析；需要 RTMP DataSource 或服务端转 HLS/FLV";
+        }
+        if (lowerProbe.contains("http状态=") && !lowerProbe.contains("http状态=2")) {
+            return "网络请求没有返回 2xx，可能是鉴权、地址失效、重定向或服务器错误";
+        }
+        if (lowerProbe.contains("text/html")) {
+            return "服务端返回的是 HTML 页面，不是视频文件，常见于 403/404/鉴权页/防盗链页";
+        }
+        if (lowerProbe.contains("text/plain")) {
+            return "服务端返回的是文本内容，不是 MediaExtractor 可识别的视频容器";
+        }
+        if (lowerProbe.contains("文件存在=false")) {
+            return "本地文件不存在";
+        }
+        if (lowerProbe.contains("文件大小=0")) {
+            return "本地文件大小为 0";
+        }
+        if (lowerProbe.contains("content-type=") && !lowerProbe.contains("video/")
+                && !lowerProbe.contains("audio/")
+                && !lowerProbe.contains("application/octet-stream")
+                && !lowerProbe.contains("application/mp4")
+                && !lowerProbe.contains("quicktime")) {
+            return "Content-Type 看起来不是常见音视频容器";
+        }
+        return "MediaExtractor 没有找到可用的 Extractor，常见原因是容器格式不支持、地址返回的不是视频、缺少请求头/鉴权、或该地址属于 HLS/DASH/RTSP/RTMP 等流媒体协议";
+    }
+
+    /**
+     * 探测数据源基础信息。网络地址会发生一次请求，只在读取失败时调用。
+     */
+    private String buildSourceProbeInfo(
+            Context context,
+            String videoUrl,
+            @Nullable Map<String, String> requestHeaders) {
+        try {
+            Uri uri = Uri.parse(videoUrl);
+            String scheme = uri.getScheme();
+            StringBuilder builder = new StringBuilder();
+            builder.append("scheme=").append(TextUtils.isEmpty(scheme) ? "本地文件路径" : scheme);
+            builder.append(", 后缀=").append(getUrlSuffix(videoUrl));
+
+            if (TextUtils.isEmpty(scheme) || "file".equalsIgnoreCase(scheme)) {
+                String path = TextUtils.isEmpty(scheme) ? videoUrl : uri.getPath();
+                File file = TextUtils.isEmpty(path) ? null : new File(path);
+                builder.append(", 文件路径=").append(path);
+                builder.append(", 文件存在=").append(file != null && file.exists());
+                builder.append(", 是否文件=").append(file != null && file.isFile());
+                builder.append(", 文件大小=").append(file != null && file.exists() ? file.length() : -1);
+                return builder.toString();
+            }
+
+            if ("content".equalsIgnoreCase(scheme)) {
+                String type = context.getContentResolver().getType(uri);
+                builder.append(", ContentResolver类型=").append(type);
+                return builder.toString();
+            }
+
+            if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                return builder.append(", ").append(buildHttpProbeInfo(videoUrl, requestHeaders)).toString();
+            }
+
+            return builder.toString();
+        } catch (Exception e) {
+            return "数据源探测失败：" + buildThrowableMessage(e);
+        }
+    }
+
+    /**
+     * 探测 HTTP 响应状态和响应头。
+     */
+    private String buildHttpProbeInfo(String videoUrl, @Nullable Map<String, String> requestHeaders) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(videoUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(8000);
+            connection.setInstanceFollowRedirects(true);
+            connection.setRequestMethod("HEAD");
+            if (requestHeaders != null) {
+                for (Map.Entry<String, String> entry : requestHeaders.entrySet()) {
+                    if (entry != null && !TextUtils.isEmpty(entry.getKey()) && entry.getValue() != null) {
+                        connection.setRequestProperty(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+            int responseCode = connection.getResponseCode();
+            String contentType = connection.getContentType();
+            int contentLength = connection.getContentLength();
+            String acceptRanges = connection.getHeaderField("Accept-Ranges");
+            String location = connection.getHeaderField("Location");
+            return "HTTP状态=" + responseCode
+                    + ", Content-Type=" + contentType
+                    + ", Content-Length=" + contentLength
+                    + ", Accept-Ranges=" + acceptRanges
+                    + ", Location=" + location;
+        } catch (Exception e) {
+            return "HTTP探测失败=" + buildThrowableMessage(e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    /**
+     * 获取 URL 或文件路径后缀。
+     */
+    private String getUrlSuffix(String videoUrl) {
+        if (TextUtils.isEmpty(videoUrl)) {
+            return "未知";
+        }
+        String path = videoUrl;
+        int queryIndex = path.indexOf('?');
+        if (queryIndex >= 0) {
+            path = path.substring(0, queryIndex);
+        }
+        int slashIndex = path.lastIndexOf('/');
+        String name = slashIndex >= 0 ? path.substring(slashIndex + 1) : path;
+        int dotIndex = name.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == name.length() - 1) {
+            return "未知";
+        }
+        return name.substring(dotIndex + 1).toLowerCase(Locale.US);
     }
 
 }

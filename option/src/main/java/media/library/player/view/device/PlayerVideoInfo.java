@@ -14,6 +14,10 @@ public class PlayerVideoInfo {
     public boolean parseSuccess;
     //读取失败原因
     public String errorMessage;
+    //数据源诊断信息，例如协议、HTTP状态、Content-Type、文件是否存在等
+    public String sourceProbeInfo;
+    //MediaMetadataRetriever 读取失败原因
+    public String metadataReadErrorMessage;
     //容器 MIME，例如 video/mp4
     public String containerMimeType;
     //视频总时长，单位毫秒
@@ -94,6 +98,8 @@ public class PlayerVideoInfo {
                 + "视频地址='" + videoUrl + '\''
                 + "\n是否成功读取媒体信息=" + parseSuccess
                 + "\n读取失败原因='" + errorMessage + '\''
+                + "\n数据源诊断='" + sourceProbeInfo + '\''
+                + "\n元数据读取失败原因='" + metadataReadErrorMessage + '\''
                 + "\n容器类型='" + containerMimeType + '\''
                 + "\n视频总时长ms=" + durationMs
                 + "\n轨道总数=" + trackCount

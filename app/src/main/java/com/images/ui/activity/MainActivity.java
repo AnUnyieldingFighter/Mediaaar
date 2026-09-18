@@ -40,7 +40,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DeviceMediaCapabilityUtil.test();
         //
         PlayerDeviceSupport.getInstance().printSupportedVideoResolutionInfo();
-        PlayerVideoSupport.getInstance().printVideoSupportInfo(this,"https://nbc.vtnbo.com/nbc/msg/video/pro/17623972879492546.mp4",null);
+        String url1 = " https://nbc.vtnbo.com/nbc/msg/video/pro/17674882940931162.mp4";
+        //url1="https://nbc.vtnbo.com/nbc/msg/video/pro/17623972879492546.mp4";
+        PlayerVideoSupport.getInstance().printVideoSupportInfo(this, url1, null);
+
+
     }
 
 

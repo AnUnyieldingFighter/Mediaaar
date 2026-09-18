@@ -13,6 +13,8 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
@@ -448,7 +450,7 @@ class BaseExoPlayer extends PlayerDB {
             //Source error code:2002 codeName:ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT 网络连接失败
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
             //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
-            PlayerLog.d(tag, "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
+            PlayerLog.d(tag, buildPlayerErrorMessage(error));
             isError = true;
             isReady = false;
             switch (error.errorCode) {
@@ -471,6 +473,89 @@ class BaseExoPlayer extends PlayerDB {
                     //解码初始化失败
                     break;
             }
+        }
+
+        private String buildPlayerErrorMessage(PlaybackException error) {
+            if (error == null) {
+                return "发生错误：未知错误";
+            }
+            StringBuilder builder = new StringBuilder();
+            builder.append("发生错误：")
+                    .append(error.getMessage())
+                    .append(" code:")
+                    .append(error.errorCode)
+                    .append(" codeName:")
+                    .append(error.getErrorCodeName());
+
+            if (error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED) {
+                builder.append("\n真实失败原因：")
+                        .append(buildDecoderInitFailedReason(error.getMessage()));
+            }
+
+            Throwable cause = error.getCause();
+            if (cause != null) {
+                builder.append("\n底层异常：").append(buildThrowableMessage(cause));
+            }
+            return builder.toString();
+        }
+
+        private String buildDecoderInitFailedReason(String message) {
+            StringBuilder builder = new StringBuilder();
+            if (!TextUtils.isEmpty(message) && message.contains("NO_EXCEEDS_CAPABILITIES")) {
+                builder.append("视频轨道参数超出当前设备 MediaCodec 解码能力，不是 URL、缓存或 MediaSource 选择问题。");
+            } else {
+                builder.append("设备解码器初始化失败，可能是编码格式不支持、分辨率/码率过高、DRM不支持或解码器兼容问题。");
+            }
+
+            String formatInfo = extractDecoderFormatInfo(message);
+            if (!TextUtils.isEmpty(formatInfo)) {
+                builder.append(" ").append(formatInfo);
+            }
+            builder.append(" 建议服务端提供低清晰度/低码率版本，或转码为更通用的 H.264 1080P/标准4K、合理码率。");
+            return builder.toString();
+        }
+
+        private String extractDecoderFormatInfo(String message) {
+            if (TextUtils.isEmpty(message)) {
+                return null;
+            }
+            Pattern pattern = Pattern.compile(
+                    "Format\\([^,]*,\\s*[^,]*,\\s*([^,]*),\\s*([^,]*),\\s*([^,]*),\\s*([0-9-]+),\\s*[^,]*,\\s*\\[([0-9-]+),\\s*([0-9-]+),\\s*([0-9.\\-]+)");
+            Matcher matcher = pattern.matcher(message);
+            if (!matcher.find()) {
+                return null;
+            }
+            String containerMime = matcher.group(1);
+            String sampleMime = matcher.group(2);
+            String codec = matcher.group(3);
+            String bitrate = matcher.group(4);
+            String width = matcher.group(5);
+            String height = matcher.group(6);
+            String frameRate = matcher.group(7);
+            return "解析到失败格式：容器=" + containerMime
+                    + " 编码=" + sampleMime
+                    + " codec=" + codec
+                    + " 码率=" + bitrate + "bps"
+                    + " 分辨率=" + width + "x" + height
+                    + " 帧率=" + frameRate + "fps。";
+        }
+
+        private String buildThrowableMessage(Throwable throwable) {
+            StringBuilder builder = new StringBuilder();
+            Throwable temp = throwable;
+            int index = 0;
+            while (temp != null && index < 5) {
+                if (index > 0) {
+                    builder.append(" <- cause: ");
+                }
+                builder.append(temp.getClass().getName());
+                if (!TextUtils.isEmpty(temp.getMessage())) {
+                    builder.append(": ").append(temp.getMessage());
+                }
+                temp = temp.getCause();
+                index++;
+            }
+            return builder.toString();
         }
 
         @OptIn(markerClass = UnstableApi.class)
