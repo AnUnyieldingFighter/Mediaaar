@@ -1,10 +1,13 @@
 package com.images.ui.activity;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -14,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -21,10 +25,12 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.media3.ui.PlayerView;
 
 import com.media.option.R;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -870,4 +876,66 @@ public class CameraActivity extends AppCompatActivity
         }
         super.onDestroy();
     }
+
+    private ActivityResultLauncher<Intent> activityLauncher;
+
+    private void setActivityLauncherIntent() {
+        activityLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            Intent data = result.getData();
+                            if (data != null) {
+                                String value = data.getStringExtra("key");
+                                // 在这里处理返回的数据
+                            }
+                        }
+                    }
+                }
+        );
+        //启动
+        //Intent intent = new Intent(this, TargetActivity.class);
+        //intent.putExtra("name", "Tom");
+        //activityLauncher.launch(intent);
+        //返回
+        //Intent resultIntent = new Intent();
+        //resultIntent.putExtra("key", "返回的数据");
+        //setResult(Activity.RESULT_OK, resultIntent);
+        //finish();
+    }
+    private ActivityResultLauncher<Uri> takePictureLauncher;
+    private Uri photoUri;
+    private void setActivityLauncherIntent2() {
+        takePictureLauncher = registerForActivityResult(
+                new ActivityResultContracts.TakePicture(),
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean success) {
+                        if (success) {
+                            // 拍照成功，照片在 photoUri 里
+                            //imageView.setImageURI(photoUri);
+                        } else {
+                            // 用户取消或拍照失败
+                        }
+                    }
+                }
+        );
+        //启动 拍照
+        File photoFile = new File(
+                getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                "photo_" + System.currentTimeMillis() + ".jpg"
+        );
+        photoUri = FileProvider.getUriForFile(
+                this,
+                getPackageName() + ".fileprovider",
+                photoFile
+        );
+        takePictureLauncher.launch(photoUri);
+    }
+
+
 }
+
+
