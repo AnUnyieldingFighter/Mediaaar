@@ -100,6 +100,19 @@ public class MediaItemConfig {
                 .build();
     }
 
+    public void test() {
+        //createSubtitleMediaItem 的示例使用
+        String videoUrl = "https://xxx.com/test.mp4";
+        String subtitleUrl = "https://xxx.com/test.zh.vtt";
+
+        MediaItem mediaItem = MediaItemConfig.createSubtitleMediaItem(
+                videoUrl,
+                subtitleUrl,
+                MimeTypes.TEXT_VTT,
+                "zh"
+        );
+    }
+
     /**
      * 外挂字幕配置示例。
      *
@@ -109,8 +122,8 @@ public class MediaItemConfig {
      * ttml 使用 MimeTypes.APPLICATION_TTML。</p>
      */
     public static MediaItem createSubtitleMediaItem(String videoUrl, String subtitleUrl,
-            String subtitleMimeType,
-            String language) {
+                                                    String subtitleMimeType,
+                                                    String language) {
         List<MediaItem.SubtitleConfiguration> subtitleConfigurations = new ArrayList<>();
         MediaItem.SubtitleConfiguration subtitleConfiguration =
                 new MediaItem.SubtitleConfiguration.Builder(Uri.parse(subtitleUrl))
