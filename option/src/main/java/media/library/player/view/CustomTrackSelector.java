@@ -130,6 +130,7 @@ public class CustomTrackSelector {
     protected void disableTrackType(final int trackType) {
         Set<Integer> set = new HashSet<>();
         set.add(trackType);
+        disableTrackType(set);
     }
 
     //禁用视频 / 音频 / 字幕轨道
@@ -160,9 +161,11 @@ public class CustomTrackSelector {
                 if (trackSelector == null) {
                     return;
                 }
-                Set<Integer> set = new HashSet<>();
+                Set<Integer> set = new HashSet<>(trackSelector.getParameters().disabledTrackTypes);
                 if (!showText) {
                     set.add(C.TRACK_TYPE_TEXT);
+                } else {
+                    set.remove(C.TRACK_TYPE_TEXT);
                 }
                 DefaultTrackSelector.Parameters.Builder paramsBuilder =
                         trackSelector.buildUponParameters()
@@ -179,12 +182,15 @@ public class CustomTrackSelector {
     //限制播放器最多只能选择“码率不超过这个值”的视频轨道
     @OptIn(markerClass = UnstableApi.class)
     protected void setVideoBitrate(int maxVideoBitrate) {
-        if (trackSelector == null) {
+        if (maxVideoBitrate <= 0) {
             return;
         }
         runOnPlayerThread(new Runnable() {
             @Override
             public void run() {
+                if (trackSelector == null) {
+                    return;
+                }
                 // 根据带宽调整ABR策略，保留20%余量
                 DefaultTrackSelector.Parameters.Builder builder =
                         trackSelector.buildUponParameters()

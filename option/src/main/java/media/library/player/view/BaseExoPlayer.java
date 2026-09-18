@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceView;
 
+import com.images.imageselect.BuildConfig;
 import com.google.common.collect.ImmutableList;
 
 import java.util.HashSet;
@@ -40,7 +41,6 @@ import media.library.player.manager.PlayerLog;
 class BaseExoPlayer extends PlayerDB {
     protected Context playerContext;
     protected ExoPlayer player;
-
 
     //
     protected String videoUrl;
@@ -290,6 +290,47 @@ class BaseExoPlayer extends PlayerDB {
         return customTrackSelector.getPlayerTrackSelector();
     }
 
+    //打印当前轨道信息。详细轨道信息统一放到 CustomTrackSelector 中处理
+    protected void setTrackLog() {
+        if (customTrackSelector == null) {
+            PlayerLog.d(tag, "轨道信息：customTrackSelector为空");
+            return;
+        }
+        customTrackSelector.setTrackLog();
+    }
+
+    //按语言优先选择音轨
+    protected void setPreferredAudioLanguage(final String... language) {
+        if (customTrackSelector == null) {
+            return;
+        }
+        customTrackSelector.setPreferredAudioLanguage(language);
+    }
+
+    //禁用指定类型轨道，比如视频、音频、字幕
+    protected void disableTrackType(final int trackType) {
+        if (customTrackSelector == null) {
+            return;
+        }
+        customTrackSelector.disableTrackType(trackType);
+    }
+
+    //禁用指定类型轨道集合
+    protected void disableTrackType(Set<Integer> trackTypes) {
+        if (customTrackSelector == null) {
+            return;
+        }
+        customTrackSelector.disableTrackType(trackTypes);
+    }
+
+    //显示/隐藏字幕，并可指定字幕优先语言
+    protected void setPreferredTextTrack(final boolean showText, final String preferredLanguage) {
+        if (customTrackSelector == null) {
+            return;
+        }
+        customTrackSelector.setPreferredTextTrack(showText, preferredLanguage);
+    }
+
     //=========================释放缓存====================================
     //清空播放器本类持有的缓存/轨道选择器引用
     @OptIn(markerClass = UnstableApi.class)
@@ -432,30 +473,41 @@ class BaseExoPlayer extends PlayerDB {
             }
         }
 
+        @OptIn(markerClass = UnstableApi.class)
         @Override
         public void onTracksChanged(Tracks tracks) {
+            if (!BuildConfig.DEBUG) {
+                return;
+            }
             if (tracks == null) {
-                PlayerLog.d(tag, "无轨道信息1");
+                PlayerLog.d(tag, "轨道变化：无轨道信息");
                 return;
             }
             ImmutableList<Tracks.Group> trackGroups = tracks.getGroups();
             if (trackGroups == null || trackGroups.size() == 0) {
-                PlayerLog.d(tag, "无轨道信息1");
+                PlayerLog.d(tag, "轨道变化：无轨道信息");
                 return;
             }
 
+            PlayerLog.d(tag, "轨道变化：轨道组数量=" + trackGroups.size());
             for (int i = 0; i < trackGroups.size(); i++) {
                 Tracks.Group temp = trackGroups.get(i);
                 int length = temp.length;
                 int trackType = temp.getType();
-                PlayerLog.d(tag, "轨道" + i + "数量:" + length + " 类型：" + trackType);
+                PlayerLog.d(tag, "轨道组[" + i + "] 类型=" + getTrackTypeName(trackType) + " 轨道数量=" + length);
                 for (int j = 0; j < length; j++) {
                     boolean isSupported = temp.isTrackSupported(j);
                     boolean isSelected = temp.isTrackSelected(j);
                     Format format = temp.getTrackFormat(j);
-                    testFormat(format, j);
-                    // 处理轨道信息
-                    PlayerLog.d(tag, "轨道信息 " + j + " isSupported:" + isSupported + " isSelected：" + isSelected + " format:" + format);
+                    PlayerLog.d(tag, "轨道[" + i + "][" + j + "]"
+                            + " 支持=" + isSupported
+                            + " 选中=" + isSelected
+                            + " mime=" + (format == null ? "未知" : format.sampleMimeType)
+                            + " codecs=" + (format == null ? "未知" : format.codecs)
+                            + " bitrate=" + (format == null ? "未知" : format.bitrate)
+                            + " width=" + (format == null ? "未知" : format.width)
+                            + " height=" + (format == null ? "未知" : format.height)
+                            + " language=" + (format == null ? "未知" : format.language));
                 }
             }
 
@@ -463,40 +515,39 @@ class BaseExoPlayer extends PlayerDB {
         }
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    private void testFormat(Format format, int trackIndex) {
-        if (format == null) {
-            return;
+    private String getTrackTypeName(int trackType) {
+        switch (trackType) {
+            case C.TRACK_TYPE_AUDIO:
+                return "音频(" + trackType + ")";
+            case C.TRACK_TYPE_VIDEO:
+                return "视频(" + trackType + ")";
+            case C.TRACK_TYPE_TEXT:
+                return "字幕(" + trackType + ")";
+            case C.TRACK_TYPE_METADATA:
+                return "元数据(" + trackType + ")";
+            case C.TRACK_TYPE_IMAGE:
+                return "图片(" + trackType + ")";
+            case C.TRACK_TYPE_CAMERA_MOTION:
+                return "相机运动(" + trackType + ")";
+            case C.TRACK_TYPE_NONE:
+                return "无(" + trackType + ")";
+            case C.TRACK_TYPE_UNKNOWN:
+                return "未知(" + trackType + ")";
+            default:
+                return "其他(" + trackType + ")";
         }
-        // 通用参数
-        String mimeType = format.sampleMimeType;//编码类型
-        long bitrate = format.bitrate;//码率
-        float bitrateMbps = (float) bitrate / 1024 / 1024;
-        String codec = format.codecs;//编码细节
-        // 视频专属参数
-        Integer width = format.width;
-        Integer height = format.height;
-        Float frameRate = format.frameRate;//帧率
-        Integer rotation = format.rotationDegrees;//旋转角度
-        // 拼接分辨率字符串（避免空指针）
-        String resolution = (width != null && height != null) ? width + "x" + height : "未知分辨率";
-        // 拼接帧率字符串
-        String frameRateStr = (frameRate != null) ? frameRate + " fps" : "未知帧率";
-        // 拼接旋转角度字符串
-        String rotationStr = (rotation != null) ? rotation + "°" : "0°";
-        // 打印解析结果
-        String str = "视频轨道" + trackIndex + "  编码类型：" + mimeType + "  编码细节：" + codec +
-                "  分辨率：" + resolution + "  码率：" + String.format("%.2f Mbps", bitrateMbps) +
-                "  帧率：" + frameRateStr + "  旋转角度：" + rotationStr;
-        PlayerLog.d(tag, str);
-
     }
+
 
     @UnstableApi
     class ExoPlayerAnalyticsListener implements AnalyticsListener {
         @Override
         public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
             AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
+            if (loadEventInfo.loadDurationMs <= 0) {
+                PlayerLog.d(tag, "缓冲完成 下载速度: 未知 已加载字节=" + loadEventInfo.bytesLoaded + " 加载耗时=" + loadEventInfo.loadDurationMs);
+                return;
+            }
             // 记录下载速度
             long speedKbps = loadEventInfo.bytesLoaded * 8 / (loadEventInfo.loadDurationMs * 1000);
             PlayerLog.d(tag, "缓冲完成 下载速度:  " + speedKbps + "kbps");
@@ -522,6 +573,9 @@ class BaseExoPlayer extends PlayerDB {
                 return;
             }
 
+            if (bitrateEstimate <= 0) {
+                return;
+            }
             if (customTrackSelector != null) {
                 final int maxVideoBitrate = (int) (bitrateEstimate * 0.8);
                 customTrackSelector.setVideoBitrate(maxVideoBitrate);
