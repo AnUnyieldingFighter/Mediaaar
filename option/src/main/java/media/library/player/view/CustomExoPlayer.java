@@ -83,6 +83,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         isReady = false;
         //
         this.isUseCache = isCache;
+        this.videoUrl = videoUrl;
         this.videoTag = videoTag;
         //
         initExoPlayer(context);
