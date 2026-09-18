@@ -60,9 +60,23 @@ class BaseExoPlayer extends PlayerDB {
     //==========================初始化播放器=====================================
     //true 使用arb
     private boolean isArb;
+    //true 强制启用 MediaCodec 异步队列
+    private boolean forceAsyncQueueing;
 
     public void setARB(boolean isArb) {
         this.isArb = isArb;
+    }
+
+    /**
+     * 设置是否强制启用 MediaCodec 异步队列。
+     *
+     * <p>默认关闭。开启后可能减少部分高码率/高分辨率视频卡顿，
+     * 但也可能在部分机型上带来黑屏、花屏、seek 异常等兼容问题。</p>
+     *
+     * @param forceAsyncQueueing true 强制启用异步队列
+     */
+    public void setForceAsyncQueueing(boolean forceAsyncQueueing) {
+        this.forceAsyncQueueing = forceAsyncQueueing;
     }
 
     //是否已经初始化
@@ -97,23 +111,29 @@ class BaseExoPlayer extends PlayerDB {
         playerContext = context;
         if (player == null) {
             ExoPlayer.Builder builder = null;
-            //
+            //创建一个默认渲染器工厂
+            //视频渲染器
+            //音频渲染器
+            //字幕渲染器
+            //元数据渲染器
             DefaultRenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-            // 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
+            //允许使用扩展解码器 开启扩展解码器（FFmpeg），优先使用系统硬件解码，不支持时切换 FFmpeg
+            //EXTENSION_RENDERER_MODE_OFF     不用扩展解码器
+            //EXTENSION_RENDERER_MODE_PREFER  优先扩展解码器，比如优先 FFmpeg
             renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON);
             // 开启解码器降级策略，解码失败时自动切换备选解码器
+            //解码器失败时，允许尝试备用解码器。 比如设备上可能有多个 H.264 解码器：
+            //硬件解码器 A
+            //硬件解码器 B
+            //软件解码器
             renderersFactory.setEnableDecoderFallback(true);
             //
-            //ABR 不能在非主线程里加载
-            if (!isArb) {
-                //‌启用异步缓冲区排队
+            if (forceAsyncQueueing) {
+                //启用异步缓冲区排队
                 renderersFactory.forceEnableMediaCodecAsynchronousQueueing();
-                builder = new ExoPlayer.Builder(context);
-                builder.setRenderersFactory(renderersFactory);
-            } else {
-                builder = new ExoPlayer.Builder(context);
-                builder.setRenderersFactory(renderersFactory);
             }
+            builder = new ExoPlayer.Builder(context);
+            builder.setRenderersFactory(renderersFactory);
             //设置缓存
             builder.setLoadControl(getPlayerDefBuffer());
             // 动态码率切换（ABR）的核心组件，通过智能选择最优码率轨道来平衡播放流畅性和画质
@@ -213,20 +233,19 @@ class BaseExoPlayer extends PlayerDB {
             bandwidthMeter = new DefaultBandwidthMeter.Builder(playerContext).build();
         }
         if (buff == null) {
-            //减少缓冲区大小（单位：字节） 典型默认值（单位：毫秒）
+            //配置播放器内存缓冲策略，单位都是毫秒
             DefaultLoadControl.Builder build = new DefaultLoadControl.Builder();
-            build.setBufferDurationsMs(15000,  // 最小预留15s缓冲
-                    30000,  // 内存最多缓存30s视频
-                    2500,  // 预加载满2.5s即可开始播放
-                    5000  // 卡顿后需缓冲5s恢复
+            build.setBufferDurationsMs(
+                    15000,  // 最少希望缓冲15秒，低于这个值会继续加载
+                    30000,  // 最多缓冲30秒的媒体时长
+                    2500,   // 首次播放前至少缓冲2.5秒
+                    5000    // 卡顿重新缓冲后，至少缓冲5秒再恢复播放
             );
-            //限制播放器内存缓冲上限
+            //限制目标缓冲大小，单位是字节，用来控制内存占用
             build.setTargetBufferBytes(getTargetBufferBytes());
-            build.setPrioritizeTimeOverSizeThresholds(true); //优先时间阈值而非数据量阈值
-            //setBufferDurationsMs	时间（秒）	预加载多少秒视频
-            //setTargetBufferBytes	内存（字节）	最多占用多少内存
-            //只要有一个生效 就停止缓存 防止OOM
-            //禁止回退缓存 一般直播用
+            //true：优先按时间阈值控制缓冲；即使达到 targetBufferBytes，也更倾向先满足时间缓冲
+            build.setPrioritizeTimeOverSizeThresholds(true);
+            //设置后向缓冲。0表示不保留已播放内容，直播或低内存场景可用
             //build.setBackBuffer(0, false);
             DefaultLoadControl loadControl = build.build();
             buff = loadControl;
@@ -240,14 +259,14 @@ class BaseExoPlayer extends PlayerDB {
         int targetBufferBytes;
         String str = "";
         if (memoryClass <= 128) { // 低内存设备
-            str = "低内存设备 缓存3MB";
-            targetBufferBytes = 3 * 1024 * 1024; // 3MB
+            str = "低内存设备 缓存8MB";
+            targetBufferBytes = 8 * 1024 * 1024; // 8MB
         } else if (memoryClass <= 256) { // 中等内存设备
-            str = "中等内存设备 缓存6MB";
-            targetBufferBytes = 6 * 1024 * 1024; // 6MB
+            str = "中等内存设备 缓存16MB";
+            targetBufferBytes = 16 * 1024 * 1024; // 16MB
         } else { // 高内存设备
-            str = "高内存设备 缓存10MB";
-            targetBufferBytes = 10 * 1024 * 1024; // 10MB
+            str = "高内存设备 缓存32MB";
+            targetBufferBytes = 32 * 1024 * 1024; // 32MB
         }
         PlayerLog.d(tag, "内存等级：" + str + " memoryClass=" + memoryClass);
         return targetBufferBytes;
