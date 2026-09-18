@@ -935,6 +935,38 @@ public class CameraActivity extends AppCompatActivity
         takePictureLauncher.launch(photoUri);
     }
 
+    private ActivityResultLauncher<Uri> captureVideoLauncher;
+    private Uri videoUri;
+    private void setActivityLauncherIntent3() {
+        captureVideoLauncher = registerForActivityResult(
+                new ActivityResultContracts.CaptureVideo(),
+                new ActivityResultCallback<Boolean>() {
+                    @Override
+                    public void onActivityResult(Boolean success) {
+                        if (success) {
+                            // 录制成功，视频地址就是 videoUri
+                            // 比如播放：
+                            //videoView.setVideoURI(videoUri);
+                            //videoView.start();
+                        } else {
+                            // 用户取消或录制失败
+                        }
+                    }
+                }
+        );
+        //启动录制
+        File videoFile = new File(
+                getExternalFilesDir(Environment.DIRECTORY_MOVIES),
+                "video_" + System.currentTimeMillis() + ".mp4"
+        );
+
+        videoUri = FileProvider.getUriForFile(
+                this,
+                getPackageName() + ".fileprovider",
+                videoFile
+        );
+        captureVideoLauncher.launch(videoUri);
+    }
 
 }
 
