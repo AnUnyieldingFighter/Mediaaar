@@ -14,6 +14,7 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
+import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
@@ -23,6 +24,7 @@ import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
@@ -83,6 +85,11 @@ class BaseMediaSource extends BaseExoPlayer {
         //告诉 ExoPlayer “这个资源要怎么读取、解析、加载
         MediaSource mediaSource;
         PlayerLog.d(tag, "播放器 创建播放源 type:" + type + " url:" + videoUrl);
+        /*DefaultBandwidthMeter bandwidthMeter =
+                new DefaultBandwidthMeter.Builder(playerContext).build();
+        DefaultHttpDataSource.Factory httpFactory =
+                new DefaultHttpDataSource.Factory()
+                        .setTransferListener(bandwidthMeter);*/
         switch (type) {
             case "m3u8":
                 // hls链接 里面记录了一段段 .ts 分片视频的地址，播放器按顺序逐个加载、拼接播放，实现流式播放。
@@ -90,6 +97,7 @@ class BaseMediaSource extends BaseExoPlayer {
                 DataSource.Factory factory = null;
                 if (!isUseCache) {
                     factory = new DefaultDataSource.Factory(playerContext);
+                    //factory = new DefaultDataSource.Factory(playerContext,httpFactory);
                 } else {
                     setMediaSourceCacheRelease();
                     //构建缓存

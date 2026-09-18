@@ -95,7 +95,7 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     //===================================测试中的用法=============================
     public void testTrackSelector() {
-        testTrackLog();
+        setTrackLog();
         setPreferredAudioLanguage("zh");
         //setMaxVideoResolution(100, 100);
         //
@@ -104,78 +104,14 @@ public class CustomExoPlayer extends BaseMediaSource {
         disableTrackType(C.TRACK_TYPE_TEXT);// 禁用字幕
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    public void testTrackLog() {
-        DefaultTrackSelector.Parameters params = trackSelector.getParameters();
-        MappingTrackSelector.MappedTrackInfo infos = trackSelector.getCurrentMappedTrackInfo();
-        if (infos == null) {
-            return;
-        }
-        TrackGroupArray track = infos.getTrackGroups(0);
-        int length = track.length;
-        String str = params.toString();
-        PlayerLog.d(tag, "音频信息" + str);
+
+
+
+    public void setPreferredTextTrackTest() {
+        //显示字幕，但不指定语言，由播放器按默认规则选择字幕轨道
+        setPreferredTextTrack(true, null);
     }
 
-    // 主线程执行
-    @OptIn(markerClass = UnstableApi.class)
-    public void setPreferredAudioLanguage(String... language) {
-        // 语言码：中文=zh, 英文=en, 日文=ja
-        DefaultTrackSelector.Parameters.Builder paramsBuilder = trackSelector.buildUponParameters();
-        if (language.length == 1) {
-            // 启用音画同步（默认开启）
-            paramsBuilder.setPreferredAudioLanguage(language[0]);
-            paramsBuilder.setPreferredVideoLanguage(language[0]);
-        } else {
-            // 启用音画同步（默认开启）
-            paramsBuilder.setPreferredAudioLanguages(language);
-            paramsBuilder.setPreferredVideoLanguages(language);
-        }
-        DefaultTrackSelector.Parameters params = paramsBuilder.build();
-        trackSelector.setParameters(params);
-    }
-
-    //设置视频分辨率限制（如最大 720p）setMaxVideoResolution(1280, 720)
-    @OptIn(markerClass = UnstableApi.class)
-    public void setMaxVideoResolution(int maxWidth, int maxHeight) {
-        TrackSelectionParameters params = trackSelector.buildUponParameters().setMaxVideoSize(maxWidth, maxHeight)// 最大宽高：720p=1280x720
-                // .setLimitVideoSizeToDeviceSize(true) // 可选：限制为设备屏幕分辨率（避免超屏）无此方法
-                .build();
-        trackSelector.setParameters(params);
-    }
-
-    //禁用视频 / 音频 / 字幕轨道
-    @OptIn(markerClass = UnstableApi.class)
-    public void disableTrackType(int trackType) {
-        Set<Integer> set = new HashSet<>();
-        set.add(trackType);
-        TrackSelectionParameters params = trackSelector.buildUponParameters().setDisabledTrackTypes(set) // 禁用指定轨道类型
-                .build();
-        trackSelector.setParameters(params);
-    }
-
-    // 主线程执行 无此方法 setForceDisabledTrackTypes
-    @OptIn(markerClass = UnstableApi.class)
-    public void setPreferredTextTrack(boolean showText, String preferredLanguage) {
-        Set<Integer> set = new HashSet<>();
-        if (!showText) {
-            set.add(C.TRACK_TYPE_TEXT);
-        }
-        /*TrackSelectionParameters params = trackSelector.buildUponParameters()
-                .setPreferredTextLanguage(preferredLanguage) // 字幕优先语言
-                .setForceDisabledTrackTypes(set)  // 是否显示字幕
-                .build();
-        trackSelector.setParameters(params);*/
-    }
-
-    @OptIn(markerClass = UnstableApi.class)
-    public void setPreferredTextTrack() {
-        // 自适应码率（ABR）配置（Media3 内置，无需额外 Factory）
-        DefaultTrackSelector.Parameters.Builder params = trackSelector.buildUponParameters();
-        /*params.setMinDurationForQualityDecreaseMs()
-        params.setBandwidthFraction(0.8f); // 带宽利用率 80%
-        params .setMinDurationForQualityIncreaseMs(8000); // 8秒后提升画质*/
-    }
     //==================释放资源=======================================================
     //释放全部资源
     public void release() {
@@ -191,6 +127,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         setMediaSourceCacheRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：" + videoUrl);
     }
+
     //====================设置播放器的显示==================================================
     private PlayerView cachePlayerView;
 
