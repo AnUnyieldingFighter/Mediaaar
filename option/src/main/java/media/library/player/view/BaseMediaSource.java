@@ -4,6 +4,7 @@ import android.text.TextUtils;
 
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 import androidx.annotation.OptIn;
@@ -28,7 +29,23 @@ import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
 import media.library.utils.Md5Media;
 
-//设置/获取播放源
+/**
+ * 设置/获取播放源。
+ *
+ * <p>当前支持的播放源类型：</p>
+ * <ul>
+ *     <li>普通视频文件/普通 HTTP 文件流：mp4、mov、webm 等，走 ProgressiveMediaSource。</li>
+ *     <li>HLS/m3u8：可用于直播或点播，走 HlsMediaSource。</li>
+ *     <li>RTSP：常用于监控、摄像头、实时流，走 RtspMediaSource。</li>
+ *     <li>HTTP-FLV/.flv：常用于直播拉流，走 ProgressiveMediaSource，不走缓存。</li>
+ * </ul>
+ *
+ * <p>当前不支持的播放源类型：</p>
+ * <ul>
+ *     <li>RTMP/RTMPS：media3-datasource-rtmp 依赖的 librtmp-jni.so 不支持 16KB page size，暂不接入。</li>
+ *     <li>WebRTC：不是 ExoPlayer MediaSource 体系，需要单独接 WebRTC SDK、信令、PeerConnection。</li>
+ * </ul>
+ */
 class BaseMediaSource extends BaseExoPlayer {
     //tru 开启缓存
     protected boolean isUseCache;
@@ -44,15 +61,7 @@ class BaseMediaSource extends BaseExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     protected MediaSource getMediaSource() {
-        String type = "";
-        /* if (videoUrl.endsWith("m3u8")) {
-            // hls链接
-        } else if (videoUrl.startsWith("rtsp")) {
-            // rtsp链接
-        } else if (videoUrl.startsWith("rtmp")) {
-            // rtmp链接
-        } else {
-        }*/
+        String type = getMediaSourceType(videoUrl);
         //媒体元数据描述 不知道用法
         /*MediaMetadata mediaMetadata = new MediaMetadata.Builder()
                 .setTitle("示例标题")
@@ -64,16 +73,22 @@ class BaseMediaSource extends BaseExoPlayer {
                 .build();*/
         MediaItem.Builder builder = new MediaItem.Builder()
                 //.setMediaMetadata(mediaMetadata)
-                .setMimeType(MimeTypes.VIDEO_MP4)// 设置较低分辨率
                 .setUri(videoUrl)
                 .setMediaId(videoUrl);
+        if ("m3u8".equals(type)) {
+            builder.setMimeType(MimeTypes.APPLICATION_M3U8);
+        } else if ("flv".equals(type)) {
+            builder.setMimeType("video/x-flv");
+        }
         //字幕
         //setSubtitle(builder);
         MediaItem videoItem = builder.build();
         MediaSource mediaSource;
+        PlayerLog.d(tag, "播放器 创建播放源 type:" + type + " url:" + videoUrl);
         switch (type) {
             case "m3u8":
                 // hls链接 里面记录了一段段 .ts 分片视频的地址，播放器按顺序逐个加载、拼接播放，实现流式播放。
+                //m3u8 / HLS：可以直播，也可以点播
                 DataSource.Factory factory = null;
                 if (!isUseCache) {
                     factory = new DefaultDataSource.Factory(playerContext);
@@ -95,42 +110,86 @@ class BaseMediaSource extends BaseExoPlayer {
                 break;
             case "rtsp":
                 // rtsp链接 传输实时音视频流，主打直播、监控、摄像头画面。
+                //常见于摄像头、监控、局域网实时视频。 大多数场景是实时流。
                 mediaSource = new RtspMediaSource.Factory().createMediaSource(videoItem);
                 break;
+            case "flv":
+                // HTTP-FLV 常用于直播拉流，本质是 HTTP 长连接传输 FLV 数据。
+                // 这里使用 ProgressiveMediaSource，由 Media3 的 extractor 解析 FLV。
+                mediaSource = createProgressiveMediaSource(videoItem, false);
+                break;
             case "rtmp":
-                // rtmp链接 实时消息传输协议，早年主流的直播推 / 拉流协议 主要用于音视频直播，分为推流（主播上传画面到服务器）、拉流（观众播放）
+                //通常用于直播，尤其推流
+                //rtmp链接 实时消息传输协议，早年主流的直播推 / 拉流协议 主要用于音视频直播，分为推流（主播上传画面到服务器）、拉流（观众播放）
                 //mediaSource = new ProgressiveMediaSource.Factory(new RtmpDataSource.Factory()).createMediaSource(videoItem);
-                //break;
             default:
-                //ProgressiveMediaSource 处理数据源 并异步加载
-                DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
                 // 其他链接（http开头或https开头的普通视频链接）
-                if (!isUseCache) {
-                    //默认的  无缓存
-                    DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager).createMediaSource(videoItem);
-                } else {
-                    setMediaSourceCacheRelease();
-                    //构建缓存
-                    simpleCache = createSimpleCache();
-                    //自动缓存到磁盘，预加载 / 二次播放直接读本地
-                    CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
-                            .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
-                            //更适合网络视频
-                            //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
-                            //缓存出错时自动回退到原始源
-                            //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
-                            //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
-                            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-                    //构建 MediaSource（支持 DRM + 缓存）
-                    mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
-                            .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
-                            .createMediaSource(videoItem);
-                }
+                mediaSource = createProgressiveMediaSource(videoItem, isUseCache);
                 break;
         }
         return mediaSource;
+    }
+
+    //创建普通文件流播放源
+    @OptIn(markerClass = UnstableApi.class)
+    private MediaSource createProgressiveMediaSource(MediaItem videoItem, boolean useCache) {
+        //ProgressiveMediaSource 处理数据源 并异步加载
+        DrmSessionManager drmSessionManager = DrmSessionManager.DRM_UNSUPPORTED;
+        MediaSource mediaSource;
+        if (!useCache) {
+            //默认的  无缓存
+            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
+            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                    .createMediaSource(videoItem);
+
+        } else {
+            setMediaSourceCacheRelease();
+            //构建缓存
+            simpleCache = createSimpleCache();
+            //自动缓存到磁盘，预加载 / 二次播放直接读本地
+            CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
+                    .setCache(simpleCache)
+                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                    //更适合网络视频
+                    //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
+                    //缓存出错时自动回退到原始源
+                    //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
+                    //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
+                    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+            //构建 MediaSource（支持 DRM + 缓存）
+            mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+                    .createMediaSource(videoItem);
+
+        }
+        return mediaSource;
+    }
+
+    //识别播放源类型
+    private String getMediaSourceType(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "progressive";
+        }
+        String lowerUrl = url.toLowerCase(Locale.US);
+        String urlWithoutQuery = lowerUrl;
+        int queryIndex = urlWithoutQuery.indexOf("?");
+        if (queryIndex >= 0) {
+            urlWithoutQuery = urlWithoutQuery.substring(0, queryIndex);
+        }
+        if (urlWithoutQuery.endsWith(".m3u8") || lowerUrl.contains(".m3u8?")) {
+            return "m3u8";
+        }
+        if (lowerUrl.startsWith("rtsp://")) {
+            return "rtsp";
+        }
+        if (lowerUrl.startsWith("rtmp://") || lowerUrl.startsWith("rtmps://")) {
+            return "rtmp";
+        }
+        if (urlWithoutQuery.endsWith(".flv") || lowerUrl.contains(".flv?")) {
+            return "flv";
+        }
+        return "progressive";
     }
 
     @UnstableApi
