@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -45,6 +46,10 @@ public class CameraActivity extends AppCompatActivity
     private ImageView photoPreviewView;
     private PlayerView playerView;
     private View focusIndicatorView;
+    private View exposureIndicatorView;
+    private View exposureTrackView;
+    private View exposureThumbView;
+    private TextView exposureTextView;
     private TextView statusText;
     private Button recordButton;
     private Button pauseButton;
@@ -61,6 +66,17 @@ public class CameraActivity extends AppCompatActivity
     private boolean movedAfterDown;
     private boolean recordingPaused;
     private int focusAnimationToken;
+    private boolean focusTouching;
+    private boolean focusHoldingExisting;
+    private boolean focusDisappearing;
+    private boolean multiPointerGesture;
+    private long downTime;
+    private int tapTouchSlop;
+    private int focusStartExposureIndex;
+    private float pendingFocusX;
+    private float pendingFocusY;
+    private int pendingFocusToken = -1;
+    private boolean pendingFocusTriggered;
 
 
     /**
@@ -83,6 +99,10 @@ public class CameraActivity extends AppCompatActivity
         photoPreviewView = findViewById(R.id.camera_photo_preview);
         playerView = findViewById(R.id.camera_player);
         focusIndicatorView = findViewById(R.id.camera_focus_indicator);
+        exposureIndicatorView = findViewById(R.id.camera_exposure_indicator);
+        exposureTrackView = findViewById(R.id.camera_exposure_track);
+        exposureThumbView = findViewById(R.id.camera_exposure_thumb);
+        exposureTextView = findViewById(R.id.camera_exposure_text);
         statusText = findViewById(R.id.camera_status);
         recordButton = findViewById(R.id.camera_record);
         pauseButton = findViewById(R.id.camera_pause);
@@ -91,6 +111,7 @@ public class CameraActivity extends AppCompatActivity
         resetPreviewButton = findViewById(R.id.camera_reset_preview);
         switchCameraButton = findViewById(R.id.camera_switch);
         flashButton = findViewById(R.id.camera_flash);
+        tapTouchSlop = ViewConfiguration.get(this).getScaledTouchSlop() * 2;
 
         recordButton.setOnClickListener(this);
         pauseButton.setOnClickListener(this);
@@ -138,21 +159,75 @@ public class CameraActivity extends AppCompatActivity
             case MotionEvent.ACTION_DOWN:
                 downX = event.getX();
                 downY = event.getY();
+                downTime = event.getEventTime();
                 movedAfterDown = false;
+                multiPointerGesture = false;
+                focusTouching = isFocusIndicatorShowing();
+                focusHoldingExisting = focusTouching;
+                if (focusTouching && operationCamera != null) {
+                    focusStartExposureIndex = operationCamera.getExposureCompensationIndex();
+                    if (focusDisappearing) {
+                        holdExistingFocusIndicator();
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                movedAfterDown = true;
+                multiPointerGesture = true;
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (Math.abs(event.getX() - downX) > 20
-                        || Math.abs(event.getY() - downY) > 20) {
+                if (event.getPointerCount() > 1 || scaleGestureDetector.isInProgress()) {
                     movedAfterDown = true;
+                    multiPointerGesture = true;
+                    return;
+                }
+                if (isMoveOutsideTapSlop(event)) {
+                    movedAfterDown = true;
+                }
+                if (focusTouching
+                        && operationCamera != null
+                        && Math.abs(event.getY() - downY) > tapTouchSlop) {
+                    int exposureIndex = operationCamera.setExposureByVerticalDrag(
+                            downY,
+                            event.getY(),
+                            previewView.getHeight(),
+                            focusStartExposureIndex
+                    );
+                    updateExposureIndicator(operationCamera.getExposurePercent(exposureIndex));
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                if (!movedAfterDown
-                        && !scaleGestureDetector.isInProgress()
-                        && operationCamera != null) {
-                    showFocusAnimation(event.getX(), event.getY());
-                    operationCamera.focusAt(event.getX(), event.getY());
+                if (isClickGesture(event) && operationCamera != null) {
+                    resetFocusIndicatorForNewFocus();
+                    focusTouching = true;
+                    focusHoldingExisting = false;
+                    focusStartExposureIndex = operationCamera.getExposureCompensationIndex();
+                    int animationToken = showFocusAnimation(event.getX(), event.getY());
+                    showExposureIndicator(
+                            event.getX(),
+                            event.getY(),
+                            operationCamera.getExposurePercent(focusStartExposureIndex)
+                    );
+                    if (animationToken != -1) {
+                        setPendingFocus(animationToken, event.getX(), event.getY());
+                    }
+                } else {
+                    if (focusTouching && focusHoldingExisting) {
+                        focusTouching = false;
+                        focusHoldingExisting = false;
+                        finishFocusAnimation();
+                        break;
+                    }
+                    focusTouching = false;
+                    focusHoldingExisting = false;
                 }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+                if (focusTouching && focusHoldingExisting) {
+                    finishFocusAnimation();
+                }
+                focusTouching = false;
+                focusHoldingExisting = false;
                 break;
             default:
                 break;
@@ -160,13 +235,86 @@ public class CameraActivity extends AppCompatActivity
     }
 
     /**
+     * 判断当前手势是否是短点击，只有短点击才触发聚焦和方框。
+     */
+    private boolean isClickGesture(MotionEvent event) {
+        long duration = event.getEventTime() - downTime;
+        return !movedAfterDown
+                && !multiPointerGesture
+                && duration < ViewConfiguration.getLongPressTimeout();
+    }
+
+    /**
+     * 判断手指移动是否已经超过点击允许范围。
+     */
+    private boolean isMoveOutsideTapSlop(MotionEvent event) {
+        float moveX = event.getX() - downX;
+        float moveY = event.getY() - downY;
+        return moveX * moveX + moveY * moveY > tapTouchSlop * tapTouchSlop;
+    }
+
+    /**
+     * 判断聚焦框当前是否已经显示。
+     */
+    private boolean isFocusIndicatorShowing() {
+        return focusIndicatorView != null && focusIndicatorView.getVisibility() == View.VISIBLE;
+    }
+
+    /**
+     * 已有聚焦框时再次按住，接管当前动画并保持显示。
+     */
+    private void holdExistingFocusIndicator() {
+        int animationToken = ++focusAnimationToken;
+        clearPendingFocus();
+        if (focusIndicatorView != null) {
+            focusIndicatorView.animate().cancel();
+            focusIndicatorView.setVisibility(View.VISIBLE);
+            focusIndicatorView.setAlpha(1.0f);
+            focusIndicatorView.setScaleX(1.0f);
+            focusIndicatorView.setScaleY(1.0f);
+        }
+        if (exposureIndicatorView != null
+                && exposureIndicatorView.getVisibility() == View.VISIBLE) {
+            exposureIndicatorView.animate().cancel();
+            exposureIndicatorView.setAlpha(1.0f);
+            exposureIndicatorView.setScaleX(1.0f);
+            exposureIndicatorView.setScaleY(1.0f);
+        }
+        keepFocusIndicatorVisible(animationToken);
+    }
+
+    /**
+     * 新一次点击聚焦前，取消旧聚焦框和亮度指示器的动画状态。
+     */
+    private void resetFocusIndicatorForNewFocus() {
+        focusAnimationToken++;
+        clearPendingFocus();
+        focusDisappearing = false;
+        if (focusIndicatorView != null) {
+            focusIndicatorView.animate().cancel();
+            focusIndicatorView.setVisibility(View.GONE);
+            focusIndicatorView.setAlpha(1.0f);
+            focusIndicatorView.setScaleX(1.0f);
+            focusIndicatorView.setScaleY(1.0f);
+        }
+        if (exposureIndicatorView != null) {
+            exposureIndicatorView.animate().cancel();
+            exposureIndicatorView.setVisibility(View.GONE);
+            exposureIndicatorView.setAlpha(1.0f);
+            exposureIndicatorView.setScaleX(1.0f);
+            exposureIndicatorView.setScaleY(1.0f);
+        }
+    }
+
+    /**
      * 显示点击对焦的绿色缩放框动画。
      */
-    private void showFocusAnimation(float x, float y) {
+    private int showFocusAnimation(float x, float y) {
         if (focusIndicatorView == null || previewView == null) {
-            return;
+            return -1;
         }
         final int animationToken = ++focusAnimationToken;
+        focusDisappearing = false;
 
         int size = focusIndicatorView.getWidth();
         if (size <= 0) {
@@ -174,6 +322,9 @@ public class CameraActivity extends AppCompatActivity
         }
 
         focusIndicatorView.animate().cancel();
+        if (exposureIndicatorView != null) {
+            exposureIndicatorView.animate().cancel();
+        }
         focusIndicatorView.setVisibility(View.VISIBLE);
         focusIndicatorView.setAlpha(1.0f);
         focusIndicatorView.setScaleX(1.65f);
@@ -203,33 +354,170 @@ public class CameraActivity extends AppCompatActivity
                                 .withEndAction(new Runnable() {
                                     @Override
                                     public void run() {
-                                        startFocusBlinkAnimation(animationToken);
+                                        if (animationToken != focusAnimationToken) {
+                                            return;
+                                        }
+                                        startFocusBlinkAnimation(animationToken, true);
                                     }
                                 })
                                 .start();
                     }
                 })
                 .start();
+        return animationToken;
+    }
+
+    /**
+     * 记录本次动画对应的待聚焦坐标。
+     */
+    private void setPendingFocus(int animationToken, float x, float y) {
+        pendingFocusToken = animationToken;
+        pendingFocusX = x;
+        pendingFocusY = y;
+        pendingFocusTriggered = false;
+    }
+
+    /**
+     * 清空待聚焦状态。
+     */
+    private void clearPendingFocus() {
+        pendingFocusToken = -1;
+        pendingFocusTriggered = false;
+        pendingFocusX = 0;
+        pendingFocusY = 0;
+    }
+
+    /**
+     * 显示聚焦框旁边的亮度指示器。
+     */
+    private void showExposureIndicator(float focusX, float focusY, int exposurePercent) {
+        if (exposureIndicatorView == null || previewView == null) {
+            return;
+        }
+
+        int focusSize = focusIndicatorView == null ? dpToPx(76) : focusIndicatorView.getWidth();
+        if (focusSize <= 0) {
+            focusSize = dpToPx(76);
+        }
+        int indicatorWidth = exposureIndicatorView.getWidth();
+        if (indicatorWidth <= 0) {
+            indicatorWidth = dpToPx(42);
+        }
+        int indicatorHeight = exposureIndicatorView.getHeight();
+        if (indicatorHeight <= 0) {
+            indicatorHeight = dpToPx(128);
+        }
+
+        float targetX = previewView.getLeft() + focusX + focusSize / 2.0f + dpToPx(12);
+        float targetY = previewView.getTop() + focusY - indicatorHeight / 2.0f;
+        float maxX = previewView.getRight() - indicatorWidth - dpToPx(8);
+        float minX = previewView.getLeft() + dpToPx(8);
+        float maxY = previewView.getBottom() - indicatorHeight - dpToPx(8);
+        float minY = previewView.getTop() + dpToPx(8);
+
+        if (targetX > maxX) {
+            targetX = previewView.getLeft() + focusX - focusSize / 2.0f - indicatorWidth - dpToPx(12);
+        }
+        if (targetX < minX) {
+            targetX = minX;
+        }
+        if (targetY < minY) {
+            targetY = minY;
+        }
+        if (targetY > maxY) {
+            targetY = maxY;
+        }
+
+        exposureIndicatorView.animate().cancel();
+        exposureIndicatorView.setVisibility(View.VISIBLE);
+        exposureIndicatorView.setAlpha(1.0f);
+        exposureIndicatorView.setX(targetX);
+        exposureIndicatorView.setY(targetY);
+        exposureIndicatorView.bringToFront();
+        updateExposureIndicator(exposurePercent);
+    }
+
+    /**
+     * 更新亮度百分比和竖向滑块位置。
+     */
+    private void updateExposureIndicator(int exposurePercent) {
+        if (exposureTextView != null) {
+            exposureTextView.setText(exposurePercent + "%");
+        }
+        if (exposureTrackView == null || exposureThumbView == null) {
+            return;
+        }
+
+        int trackHeight = exposureTrackView.getHeight();
+        if (trackHeight <= 0) {
+            trackHeight = dpToPx(92);
+        }
+        int thumbHeight = exposureThumbView.getHeight();
+        if (thumbHeight <= 0) {
+            thumbHeight = dpToPx(5);
+        }
+
+        int percent = exposurePercent;
+        if (percent < 0) {
+            percent = 0;
+        }
+        if (percent > 100) {
+            percent = 100;
+        }
+
+        float movableHeight = trackHeight - thumbHeight;
+        float targetTranslationY = -movableHeight * percent / 100.0f;
+        exposureThumbView.setTranslationY(targetTranslationY);
+    }
+
+    /**
+     * 手指离开屏幕后结束聚焦框动画。
+     */
+    private void finishFocusAnimation() {
+        if (focusIndicatorView == null || focusIndicatorView.getVisibility() != View.VISIBLE) {
+            return;
+        }
+        int animationToken = ++focusAnimationToken;
+        clearPendingFocus();
+        focusIndicatorView.animate().cancel();
+        focusIndicatorView.setAlpha(1.0f);
+        if (exposureIndicatorView != null
+                && exposureIndicatorView.getVisibility() == View.VISIBLE) {
+            exposureIndicatorView.animate().cancel();
+            exposureIndicatorView.setAlpha(1.0f);
+        }
+        fadeOutFocusIndicator(animationToken);
     }
 
     /**
      * 聚焦框定格后快速闪烁，用来提示聚焦动作完成。
      */
-    private void startFocusBlinkAnimation(final int animationToken) {
-        blinkFocusIndicator(animationToken, 0);
+    private void startFocusBlinkAnimation(final int animationToken, boolean disappearAfterBlink) {
+        blinkFocusIndicator(animationToken, 0, disappearAfterBlink);
     }
 
     /**
-     * 执行单次聚焦框闪烁，连续闪烁 3 次后消失。
+     * 执行单次聚焦框闪烁，连续闪烁 3 次。
      */
-    private void blinkFocusIndicator(final int animationToken, final int blinkCount) {
+    private void blinkFocusIndicator(
+            final int animationToken,
+            final int blinkCount,
+            final boolean disappearAfterBlink) {
         if (animationToken != focusAnimationToken || focusIndicatorView == null) {
             return;
         }
         if (blinkCount >= 3) {
-            fadeOutFocusIndicator(animationToken);
+            if (disappearAfterBlink) {
+                fadeOutFocusIndicator(animationToken);
+            } else {
+                keepFocusIndicatorVisible(animationToken);
+            }
             return;
         }
+        if (blinkCount == 1) {
+            triggerPendingFocus(animationToken);
+        }
+
         focusIndicatorView.animate()
                 .alpha(0.35f)
                 .setStartDelay(blinkCount == 0 ? 260 : 0)
@@ -247,7 +535,11 @@ public class CameraActivity extends AppCompatActivity
                                 .withEndAction(new Runnable() {
                                     @Override
                                     public void run() {
-                                        blinkFocusIndicator(animationToken, blinkCount + 1);
+                                        blinkFocusIndicator(
+                                                animationToken,
+                                                blinkCount + 1,
+                                                disappearAfterBlink
+                                        );
                                     }
                                 })
                                 .start();
@@ -257,12 +549,46 @@ public class CameraActivity extends AppCompatActivity
     }
 
     /**
+     * 在聚焦框第 2 次闪烁时真正触发 CameraX 聚焦。
+     */
+    private void triggerPendingFocus(int animationToken) {
+        if (operationCamera == null
+                || pendingFocusTriggered
+                || pendingFocusToken != animationToken) {
+            return;
+        }
+        pendingFocusTriggered = true;
+        operationCamera.focusAt(pendingFocusX, pendingFocusY);
+    }
+
+    /**
+     * 手指没有离开屏幕时，聚焦框闪烁完成后保持显示。
+     */
+    private void keepFocusIndicatorVisible(int animationToken) {
+        if (animationToken != focusAnimationToken || focusIndicatorView == null) {
+            return;
+        }
+        focusIndicatorView.setVisibility(View.VISIBLE);
+        focusIndicatorView.setAlpha(1.0f);
+        focusDisappearing = false;
+        if (exposureIndicatorView != null
+                && exposureIndicatorView.getVisibility() == View.VISIBLE) {
+            exposureIndicatorView.setAlpha(1.0f);
+        }
+    }
+
+    /**
      * 聚焦框完成提示后淡出消失。
      */
     private void fadeOutFocusIndicator(final int animationToken) {
         if (animationToken != focusAnimationToken || focusIndicatorView == null) {
             return;
         }
+        if (focusHoldingExisting) {
+            keepFocusIndicatorVisible(animationToken);
+            return;
+        }
+        focusDisappearing = true;
         focusIndicatorView.animate()
                 .alpha(0.0f)
                 .setStartDelay(180)
@@ -274,9 +600,27 @@ public class CameraActivity extends AppCompatActivity
                             return;
                         }
                         focusIndicatorView.setVisibility(View.GONE);
+                        focusDisappearing = false;
                     }
                 })
                 .start();
+        if (exposureIndicatorView != null
+                && exposureIndicatorView.getVisibility() == View.VISIBLE) {
+            exposureIndicatorView.animate()
+                    .alpha(0.0f)
+                    .setStartDelay(180)
+                    .setDuration(180)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (animationToken != focusAnimationToken || exposureIndicatorView == null) {
+                                return;
+                            }
+                            exposureIndicatorView.setVisibility(View.GONE);
+                        }
+                    })
+                    .start();
+        }
     }
 
     /**
@@ -363,7 +707,7 @@ public class CameraActivity extends AppCompatActivity
         //开启后，停止录像保存完成会直接在当前页面播放刚录好的视频。
         operationCamera.setAutoPlayRecordedVideo(true);
         operationCamera.bindPlayerView(playerView);
-        operationCamera.bind(this, previewView);
+        operationCamera.initView(this, previewView);
         updateCameraOptionButtons();
     }
 

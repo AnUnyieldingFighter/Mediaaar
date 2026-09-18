@@ -37,6 +37,50 @@
         android:focusable="false"
         android:visibility="gone" />
 
+    <LinearLayout
+        android:id="@+id/camera_exposure_indicator"
+        android:layout_width="42dp"
+        android:layout_height="128dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/camera_exposure_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#99000000"
+            android:paddingLeft="4dp"
+            android:paddingTop="2dp"
+            android:paddingRight="4dp"
+            android:paddingBottom="2dp"
+            android:text="50%"
+            android:textColor="#FFFFFF"
+            android:textSize="11sp" />
+
+        <FrameLayout
+            android:layout_width="24dp"
+            android:layout_height="92dp"
+            android:layout_marginTop="6dp">
+
+            <View
+                android:id="@+id/camera_exposure_track"
+                android:layout_width="3dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/camera_exposure_track_bg" />
+
+            <View
+                android:id="@+id/camera_exposure_thumb"
+                android:layout_width="22dp"
+                android:layout_height="5dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:background="@drawable/camera_exposure_thumb_bg" />
+        </FrameLayout>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/camera_status"
         android:layout_width="wrap_content"
