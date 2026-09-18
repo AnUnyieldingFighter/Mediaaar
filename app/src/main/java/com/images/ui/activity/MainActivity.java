@@ -19,6 +19,7 @@ import media.library.player.manager.DBManager;
 import media.library.player.utile.DeviceMediaCapabilityUtil;
 import media.library.player.video.act.TestVideoStartAct;
 import media.library.player.view.device.PlayerDeviceSupport;
+import media.library.player.view.device.PlayerVideoSupport;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DeviceMediaCapabilityUtil.test();
         //
         PlayerDeviceSupport.getInstance().printSupportedVideoResolutionInfo();
+        PlayerVideoSupport.getInstance().printVideoSupportInfo(this,"https://nbc.vtnbo.com/nbc/msg/video/pro/17623972879492546.mp4",null);
     }
 
 
