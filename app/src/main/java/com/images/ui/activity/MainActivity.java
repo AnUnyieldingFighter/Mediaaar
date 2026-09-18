@@ -18,7 +18,7 @@ import media.library.images.config.entity.MediaEntity;
 import media.library.player.manager.DBManager;
 import media.library.player.utile.DeviceMediaCapabilityUtil;
 import media.library.player.video.act.TestVideoStartAct;
-import media.library.player.view.PlayerSupport;
+import media.library.player.view.device.PlayerDeviceSupport;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DBManager.setCacheFileReleaseAll(this);
         DeviceMediaCapabilityUtil.test();
         //
-        PlayerSupport.getInstance().printSupportedVideoResolutionInfo();
+        PlayerDeviceSupport.getInstance().printSupportedVideoResolutionInfo();
     }
 
 

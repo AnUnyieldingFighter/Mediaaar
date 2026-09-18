@@ -1,8 +1,10 @@
-package media.library.player.view;
+package media.library.player.view.device;
 
+import android.content.res.Resources;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.util.Range;
 
 import androidx.annotation.Nullable;
@@ -22,7 +24,7 @@ import media.library.player.manager.PlayerLog;
  * 例如 video/avc、video/hevc、video/x-vnd.on2.vp9。
  * 注意：video/mp4 是容器类型，不是解码器支持的视频编码类型。</p>
  */
-public class PlayerSupport {
+public class PlayerDeviceSupport {
 
     private static final String TAG = "PlayerSupport";
 
@@ -35,21 +37,21 @@ public class PlayerSupport {
             {7680, 4320}
     };
 
-    private static volatile PlayerSupport playerSupport;
+    private static volatile PlayerDeviceSupport playerSupport;
 
-    private List<VideoSupportInfo> supportedVideoSupportInfoList;
+    private List<DeviceSupportInfo> supportedVideoSupportInfoList;
 
-    private PlayerSupport() {
+    private PlayerDeviceSupport() {
     }
 
     /**
      * 获取播放器支持能力单例。
      */
-    public static PlayerSupport getInstance() {
+    public static PlayerDeviceSupport getInstance() {
         if (playerSupport == null) {
-            synchronized (PlayerSupport.class) {
+            synchronized (PlayerDeviceSupport.class) {
                 if (playerSupport == null) {
-                    playerSupport = new PlayerSupport();
+                    playerSupport = new PlayerDeviceSupport();
                 }
             }
         }
@@ -61,8 +63,13 @@ public class PlayerSupport {
      * 打印当前设备支持的视频编码和分辨率信息。
      */
     public void printSupportedVideoResolutionInfo() {
-        List<VideoSupportInfo> infoList = getSupportedVideoResolutionInfo();
-        for (VideoSupportInfo info : infoList) {
+        DisplayMetrics displayMetrics = Resources.getSystem().getDisplayMetrics();
+        PlayerLog.d(
+                TAG,
+                "本设备屏幕分辨率：" + displayMetrics.widthPixels + "x" + displayMetrics.heightPixels
+        );
+        List<DeviceSupportInfo> infoList = getSupportedVideoResolutionInfo();
+        for (DeviceSupportInfo info : infoList) {
             PlayerLog.d(TAG, info.toString());
         }
     }
@@ -70,7 +77,7 @@ public class PlayerSupport {
     /**
      * 获取当前设备支持的视频编码分辨率信息。
      */
-    public List<VideoSupportInfo> getSupportedVideoResolutionInfo() {
+    public List<DeviceSupportInfo> getSupportedVideoResolutionInfo() {
         if (supportedVideoSupportInfoList == null) {
             supportedVideoSupportInfoList = querySupportedVideoResolutionInfo();
         }
@@ -93,8 +100,8 @@ public class PlayerSupport {
      */
     private List<String> getSupportedVideoMimeTypes() {
         List<String> mimeTypes = new ArrayList<>();
-        List<VideoSupportInfo> supportInfoList = getSupportedVideoResolutionInfo();
-        for (VideoSupportInfo supportInfo : supportInfoList) {
+        List<DeviceSupportInfo> supportInfoList = getSupportedVideoResolutionInfo();
+        for (DeviceSupportInfo supportInfo : supportInfoList) {
             mimeTypes.add(supportInfo.supportedVideoMimeType);
         }
         return mimeTypes;
@@ -125,8 +132,8 @@ public class PlayerSupport {
     /**
      * 查询当前设备支持的视频编码和分辨率信息。
      */
-    private List<VideoSupportInfo> querySupportedVideoResolutionInfo() {
-        List<VideoSupportInfo> result = new ArrayList<>();
+    private List<DeviceSupportInfo> querySupportedVideoResolutionInfo() {
+        List<DeviceSupportInfo> result = new ArrayList<>();
         List<String> mimeTypes = querySupportedVideoMimeTypes();
         for (String mimeType : mimeTypes) {
             result.add(buildVideoSupportInfo(mimeType));
@@ -137,7 +144,7 @@ public class PlayerSupport {
     /**
      * 生成指定视频编码类型的分辨率支持数据。
      */
-    private VideoSupportInfo buildVideoSupportInfo(String mimeType) {
+    private DeviceSupportInfo buildVideoSupportInfo(String mimeType) {
         int minWidth = -1;
         int maxWidth = -1;
         int minHeight = -1;
@@ -176,7 +183,7 @@ public class PlayerSupport {
             addSupportedCommonResolutions(videoCapabilities, supportedCommonResolutions);
         }
 
-        return new VideoSupportInfo(
+        return new DeviceSupportInfo(
                 mimeType,
                 minWidth,
                 maxWidth,
@@ -206,7 +213,7 @@ public class PlayerSupport {
     }
 
     /**
-     * 添加设备支持的常见分辨率。
+     * 添加该视频编码类型支持的常见分辨率。
      */
     private void addSupportedCommonResolutions(
             MediaCodecInfo.VideoCapabilities videoCapabilities,

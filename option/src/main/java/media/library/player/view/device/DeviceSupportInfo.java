@@ -1,4 +1,4 @@
-package media.library.player.view;
+package media.library.player.view.device;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 视频编码支持信息。
  */
-public class VideoSupportInfo {
+public class DeviceSupportInfo {
     //支持的视频编码 MIME 类型，例如 video/avc、video/hevc
     public final String supportedVideoMimeType;
     //支持的最小宽度
@@ -17,12 +17,12 @@ public class VideoSupportInfo {
     public final int minHeight;
     //支持的最大高度
     public final int maxHeight;
-    //设备支持的常见分辨率
+    //该视频编码类型支持的常见分辨率
     public final List<String> commonResolutions;
     //支持该编码的解码器名称
     public final List<String> decoderNames;
 
-    public VideoSupportInfo(
+    public DeviceSupportInfo(
             String supportedVideoMimeType,
             int minWidth,
             int maxWidth,
@@ -45,7 +45,7 @@ public class VideoSupportInfo {
                 + "视频编码类型='" + supportedVideoMimeType + '\''
                 + ", 支持的宽度=" + minWidth + "-" + maxWidth
                 + ", 支持的高度=" + minHeight + "-" + maxHeight
-                + ", 设备支持的常见分辨率=" + commonResolutions
+                + ", 该视频编码类型支持的常见分辨率=" + commonResolutions
                 + ", 支持该编码的解码器名称=" + decoderNames
                 + '}';
     }
