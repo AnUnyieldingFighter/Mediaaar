@@ -70,6 +70,9 @@
             android:name="com.images.ui.activity.CameraActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name="com.images.ui.activity.CameraPreviewActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name="com.images.ui.activity.PdfActivity"
             android:screenOrientation="portrait" />
         <activity
