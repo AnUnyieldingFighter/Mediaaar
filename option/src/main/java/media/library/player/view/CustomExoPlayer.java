@@ -85,6 +85,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         this.isUseCache = isCache;
         this.videoUrl = videoUrl;
         this.videoTag = videoTag;
+        watchStatistics.setVideoUrl(videoUrl);
         //
         initExoPlayer(context);
         //方式一 自己决定 URL 用什么 MediaSource 播
@@ -100,6 +101,10 @@ public class CustomExoPlayer extends BaseMediaSource {
                 .setUri(videoUrl)
                 .setMediaId(videoUrl).build();
         player.setMediaItem(videoItem);*/
+    }
+
+    public VideoWatchStatistics getWatchStatistics() {
+        return watchStatistics;
     }
 
     //===================================测试中的用法=============================
@@ -135,6 +140,7 @@ public class CustomExoPlayer extends BaseMediaSource {
             player = null;
         }
         setMediaSourceCacheRelease();
+        watchStatistics.setRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：videoTag=" + videoTag + "\nurl" + videoUrl);
     }
 

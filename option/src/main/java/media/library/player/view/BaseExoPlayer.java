@@ -41,6 +41,8 @@ import media.library.player.manager.PlayerLog;
 
 //设置播放器
 class BaseExoPlayer extends PlayerDB {
+    //观看统计
+    protected   VideoWatchStatistics watchStatistics = new VideoWatchStatistics();
     protected Context playerContext;
     protected ExoPlayer player;
 
