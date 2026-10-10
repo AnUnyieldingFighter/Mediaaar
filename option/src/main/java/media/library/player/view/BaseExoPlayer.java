@@ -42,7 +42,7 @@ import media.library.player.manager.PlayerLog;
 //设置播放器
 class BaseExoPlayer extends PlayerDB {
     //观看统计
-    protected   VideoWatchStatistics watchStatistics = new VideoWatchStatistics();
+    protected VideoWatchStatistics watchStatistics = new VideoWatchStatistics();
     protected Context playerContext;
     protected ExoPlayer player;
 
@@ -397,6 +397,7 @@ class BaseExoPlayer extends PlayerDB {
                     break;
                 case Player.STATE_ENDED:
                     //播放结束
+                    watchStatistics.setVideoEnd(1);
                     break;
                 default:
 
@@ -417,6 +418,7 @@ class BaseExoPlayer extends PlayerDB {
             switch (reason) {
                 case Player.DISCONTINUITY_REASON_AUTO_TRANSITION:
                     // 循环播放
+                    watchStatistics.setVideoEnd(2);
                     break;
                 case Player.DISCONTINUITY_REASON_SEEK:
                     // 用户进行了快进或快退操作
@@ -432,7 +434,7 @@ class BaseExoPlayer extends PlayerDB {
         @Override
         public void onIsPlayingChanged(boolean isPlaying) {
             PlayerLog.d(tag, "播放中/播放停止   播放中：" + isPlaying);
-
+            watchStatistics.setPlaying(isPlaying);
         }
 
         @Override
@@ -453,6 +455,7 @@ class BaseExoPlayer extends PlayerDB {
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
             //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
             PlayerLog.d(tag, buildPlayerErrorMessage(error));
+            watchStatistics.setPlaying(false);
             isError = true;
             isReady = false;
             switch (error.errorCode) {

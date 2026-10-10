@@ -43,21 +43,32 @@ public final class VideoWatchStatistics {
         isPlaying = playing;
     }
 
-    //一次播放完成，记录这是第几次完成以及本次观看时长
-    public void setVideoEnd() {
-        if (isEnd) {
-            return;
+    /**
+     * 一次播放完成，记录这是第几次完成以及本次观看时长。
+     *
+     * @param endType 1：单纯播放结束；2：循环播放结束
+     */
+    public void setVideoEnd(int endType) {
+        switch (endType) {
+            case 1:
+                //单纯播放结束，先停止计时
+                setPlaying(false);
+                if (!isEnd) {
+                    videoEndNum.add(videoEndNum.size() + 1);
+                    videoLookTimes.add(videoCurrentLookTime);
+                }
+                isEnd = true;
+                break;
+            case 2:
+                //循环播放结束，播放器仍在继续播放
+                addLookTime();
+                videoEndNum.add(videoEndNum.size() + 1);
+                videoLookTimes.add(videoCurrentLookTime);
+                videoCurrentLookTime = 0;
+                break;
+            default:
+                break;
         }
-        addLookTime();
-        videoEndNum.add(videoEndNum.size() + 1);
-        videoLookTimes.add(videoCurrentLookTime);
-        isEnd = true;
-    }
-
-    //循环播放进入下一次，保留总记录并重新统计本次观看时长
-    public void setVideoNext() {
-        videoCurrentLookTime = 0;
-        isEnd = false;
     }
 
     public String getVideoUrl() {
