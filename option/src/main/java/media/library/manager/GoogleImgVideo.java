@@ -88,6 +88,7 @@ public class GoogleImgVideo {
         for (int i = 0; i < uris.size(); i++) {
             Uri uri = uris.get(i);
             try {
+                //持久化url
                 int flag = Intent.FLAG_GRANT_READ_URI_PERMISSION;
                 context.getContentResolver().takePersistableUriPermission(uri, flag);
             } catch (Exception e) {
@@ -119,6 +120,7 @@ public class GoogleImgVideo {
         selectOneImgVideo(true, type);
     }
 
+    //"image/*"、"video/*"
     public void setSingleChoice(String mediaTypeStr) {
         if (pickMedia == null) {
             return;
@@ -135,6 +137,7 @@ public class GoogleImgVideo {
         selectOneImgVideo(false, type);
     }
 
+    //"image/*"、"video/*"
     public void setMultipleChoice(String mediaTypeStr) {
         if (pickMultipleMedia == null) {
             return;
