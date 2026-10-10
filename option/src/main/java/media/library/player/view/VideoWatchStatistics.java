@@ -56,6 +56,7 @@ public final class VideoWatchStatistics {
                 if (!isEnd) {
                     videoEndNum.add(videoEndNum.size() + 1);
                     videoLookTimes.add(videoCurrentLookTime);
+                    videoCurrentLookTime = 0;
                 }
                 isEnd = true;
                 break;
@@ -88,6 +89,9 @@ public final class VideoWatchStatistics {
      * 没有对应完成记录时，返回当前这次播放截至现在的观看时长。
      */
     public long getVideoLookTime(int endNum) {
+        if (endNum < 1) {
+            return 0;
+        }
         int index = endNum - 1;
         if (index >= 0 && index < videoLookTimes.size()) {
             return videoLookTimes.get(index);

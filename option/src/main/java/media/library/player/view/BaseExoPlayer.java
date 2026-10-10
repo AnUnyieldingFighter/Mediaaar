@@ -89,6 +89,8 @@ class BaseExoPlayer extends PlayerDB {
     @OptIn(markerClass = UnstableApi.class)
     protected void initExoPlayer(Context context) {
         if (player != null && playerContext != null && playerContext != context) {
+            //Context 改变需要重建播放器，重建期间不计入观看时长
+            watchStatistics.setPlaying(false);
             player.release();
             player = null;
             setPlayerBuffRelease();
