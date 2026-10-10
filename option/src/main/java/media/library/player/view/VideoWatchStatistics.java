@@ -83,6 +83,22 @@ public final class VideoWatchStatistics {
         return new ArrayList<>(videoLookTimes);
     }
 
+    /**
+     * 获取指定完成播放次数的观看时长，完成次数从 1 开始。
+     * 没有对应完成记录时，返回当前这次播放截至现在的观看时长。
+     */
+    public long getVideoLookTime(int endNum) {
+        int index = endNum - 1;
+        if (index >= 0 && index < videoLookTimes.size()) {
+            return videoLookTimes.get(index);
+        }
+        if (isPlaying) {
+            return videoCurrentLookTime
+                    + Math.max(0, SystemClock.elapsedRealtime() - videoStartLookTime);
+        }
+        return videoCurrentLookTime;
+    }
+
     private boolean isPlaying;
 
     //获取总观看时长，正在播放的这一段也包含在内
