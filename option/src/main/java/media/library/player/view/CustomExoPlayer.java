@@ -219,8 +219,8 @@ public class CustomExoPlayer extends BaseMediaSource {
         if (player.isPlaying()) {
             player.pause();
             //
-            long currentPosition = player.getCurrentPosition();
-            long duration = player.getDuration();
+            long currentPosition = getCurrentPosition();
+            long duration = getDuration();
             dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
             //
         } else {
@@ -271,14 +271,30 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     }
 
-    //当前播放进度
+    //当前播放进度 毫秒
     public long getCurrentPosition() {
-        return player.getCurrentPosition();
+        if (player == null) {
+            return -2;
+        }
+        long currentPosition = player.getCurrentPosition();
+        if (currentPosition == C.TIME_UNSET) {
+            // 媒体还没加载好 / 直播流，没有进度
+            currentPosition = -1;
+        }
+        return currentPosition;
     }
 
-    //总时长
+    //总时长 毫秒
     public long getDuration() {
-        return player.getDuration();
+        if (player == null) {
+            return -2;
+        }
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET) {
+            // 媒体还没加载好 / 直播流，没有总时长
+            duration = -1;
+        }
+        return duration;
     }
 
     public boolean isPlayerPaused() {
