@@ -111,7 +111,6 @@ public class CustomExoPlayer extends BaseMediaSource {
     public void release() {
         setPlayerViewRelease();
         setControlViewRelease();
-        setExternalListenersRelease();
 
         if (player != null) {
             player.release();

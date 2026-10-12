@@ -385,7 +385,7 @@ class BaseExoPlayer extends PlayerDB {
     //==========================监听=================================================
     class ExoPlayerListener implements Player.Listener {
 
-
+        @OptIn(markerClass = UnstableApi.class)
         @Override
         public void onPlaybackStateChanged(int playbackState) {
             Player.Listener.super.onPlaybackStateChanged(playbackState);
@@ -403,9 +403,11 @@ class BaseExoPlayer extends PlayerDB {
                     isError = false;
                     if (isMute != null) {
                         if (isMute) {
-                            player.setVolume(0);
+                            //player.setVolume(0);
+                            player.mute();
                         } else {
-                            player.setVolume(1);
+                            //player.setVolume(1);
+                            player.unmute();
                         }
                         isMute = null;
                     }
