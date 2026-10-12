@@ -55,7 +55,7 @@ class BaseExoPlayer extends PlayerDB {
     //true 发生错误
     protected boolean isError;
     //true 静音 在播放器准备完成之前 可以设置
-    protected boolean isMute;
+    protected Boolean isMute;
     //true 准备好了
     protected boolean isReady;
     //设置倍数
@@ -401,11 +401,13 @@ class BaseExoPlayer extends PlayerDB {
                     setVideoDuration();
                     isReady = true;
                     isError = false;
-                    if (isMute) {
-                        isMute = false;
-                        if (player != null) {
+                    if (isMute != null) {
+                        if (isMute) {
                             player.setVolume(0);
+                        } else {
+                            player.setVolume(1);
                         }
+                        isMute = null;
                     }
                     break;
                 case Player.STATE_ENDED:
@@ -705,6 +707,7 @@ class BaseExoPlayer extends PlayerDB {
             new Handler(playerLooper).post(runnable);
         }
     }
+
     //数据库取得本地或网络视频总大小后，同步更新当前视频的观看统计
     @Override
     protected void onDbVideoFileSizeChanged(long sizeKb, String sizeStr) {

@@ -190,6 +190,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         }
         cachePlayerControlView = playerControlView;
     }
+
     //清理  缓存的视图
     @OptIn(markerClass = UnstableApi.class)
     private void setControlViewRelease() {
@@ -198,6 +199,7 @@ public class CustomExoPlayer extends BaseMediaSource {
             cachePlayerControlView = null;
         }
     }
+
     //========================================操作方法======================
     //准备
     public void prepare() {
@@ -262,18 +264,17 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     //设置静音
     public void setMute(boolean isMute) {
-        int playbackState = player.getPlaybackState();
-        if (playbackState == Player.STATE_READY || player.isPlaying()) {
-            this.isMute = false;
-            if (isMute) {
-                player.setVolume(0);
-            } else {
-                player.setVolume(1);
+        if (player != null) {
+            int playbackState = player.getPlaybackState();
+            if (playbackState == Player.STATE_READY || player.isPlaying()) {
+                if (isMute) {
+                    player.setVolume(0);
+                } else {
+                    player.setVolume(1);
+                }
             }
-        } else {
-            this.isMute = isMute;
         }
-
+        this.isMute = isMute;
     }
 
     //当前播放进度 毫秒
