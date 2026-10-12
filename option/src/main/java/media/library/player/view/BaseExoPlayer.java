@@ -104,7 +104,7 @@ class BaseExoPlayer extends PlayerDB {
             player = null;
             setPlayerBuffRelease();
             setMediaSourceCacheRelease();
-            PlayerLog.d(tag, "播放器发生错误 重新构建 播放地址：videoTag=" + videoTag + "\nurl" + videoUrl);
+            PlayerLog.d(tag, "播放器发生错误 重新构建/加载播放 播放地址：videoTag=" + videoTag + "\nurl" + videoUrl);
         }
         isError = false;
         playerContext = context;
