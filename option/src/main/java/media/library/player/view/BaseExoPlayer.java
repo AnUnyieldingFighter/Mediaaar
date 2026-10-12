@@ -705,4 +705,9 @@ class BaseExoPlayer extends PlayerDB {
             new Handler(playerLooper).post(runnable);
         }
     }
+    //数据库取得本地或网络视频总大小后，同步更新当前视频的观看统计
+    @Override
+    protected void onDbVideoFileSizeChanged(long sizeKb, String sizeStr) {
+        watchStatistics.setVideoFileSize(sizeKb, sizeStr);
+    }
 }

@@ -109,10 +109,9 @@ public class CustomExoPlayer extends BaseMediaSource {
     //==================释放资源=======================================================
     //释放全部资源
     public void release() {
-        if (cachePlayerView != null) {
-            cachePlayerView.setPlayer(null);
-            cachePlayerView = null;
-        }
+        setPlayerViewRelease();
+        setControlViewRelease();
+
         if (player != null) {
             player.release();
             setPlayerBuffRelease();
@@ -121,6 +120,10 @@ public class CustomExoPlayer extends BaseMediaSource {
         setMediaSourceCacheRelease();
         watchStatistics.setRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：videoTag=" + videoTag + "\nurl" + videoUrl);
+        isReady = false;
+        isError = false;
+        videoUrl = null;
+        videoTag = null;
     }
 
     //====================设置播放器的显示==================================================
@@ -187,7 +190,14 @@ public class CustomExoPlayer extends BaseMediaSource {
         }
         cachePlayerControlView = playerControlView;
     }
-
+    //清理  缓存的视图
+    @OptIn(markerClass = UnstableApi.class)
+    private void setControlViewRelease() {
+        if (cachePlayerControlView != null) {
+            cachePlayerControlView.setPlayer(null);
+            cachePlayerControlView = null;
+        }
+    }
     //========================================操作方法======================
     //准备
     public void prepare() {

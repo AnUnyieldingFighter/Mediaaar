@@ -281,7 +281,12 @@ class PlayerDB {
         if (sizeKb < 0) {
             return;
         }
-        MediaRoom.geVideoDb(context).updateVideoFileSize(videoUrl, sizeKb,
-                Formatter.formatShortFileSize(context, sizeKb * 1024));
+        String sizeStr = Formatter.formatShortFileSize(context, sizeKb * 1024);
+        MediaRoom.geVideoDb(context).updateVideoFileSize(videoUrl, sizeKb, sizeStr);
+        onDbVideoFileSizeChanged(sizeKb, sizeStr);
+    }
+
+    //视频大小写入数据库后，同步通知当前播放器更新内存中的统计数据
+    protected void onDbVideoFileSizeChanged(long sizeKb, String sizeStr) {
     }
 }

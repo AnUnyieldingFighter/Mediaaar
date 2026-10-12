@@ -101,6 +101,15 @@ public class BaseStats {
         return sizeStr;
     }
 
+    //设置视频文件总大小，单位 KB，并同步保存用于显示的大小文本
+    public void setVideoFileSize(long sizeKb, String sizeStr) {
+        if (sizeKb < 0) {
+            return;
+        }
+        this.sizeKb = sizeKb;
+        this.sizeStr = sizeStr;
+    }
+
     //获取本次读取的数据库记录编号
     public int getIndexId() {
         return indexId;
@@ -135,9 +144,10 @@ public class BaseStats {
     public String getVideoCachePath() {
         return videoCachePath;
     }
-    public void setVideoCachePath(String videoCachePath){
-        this.videoCachePath=videoCachePath;
-        videoCacheType=0;
+
+    public void setVideoCachePath(String videoCachePath) {
+        this.videoCachePath = videoCachePath;
+        videoCacheType = 0;
     }
 
     //获取读取数据库时的缓存引用状态，不代表实时状态
