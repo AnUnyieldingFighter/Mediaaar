@@ -111,6 +111,7 @@ public class CustomExoPlayer extends BaseMediaSource {
     public void release() {
         setPlayerViewRelease();
         setControlViewRelease();
+        setExternalListenersRelease();
 
         if (player != null) {
             player.release();
@@ -263,15 +264,20 @@ public class CustomExoPlayer extends BaseMediaSource {
     }
 
     //设置静音
+    @OptIn(markerClass = UnstableApi.class)
     public void setMute(boolean isMute) {
         if (player != null) {
             int playbackState = player.getPlaybackState();
             if (playbackState == Player.STATE_READY || player.isPlaying()) {
                 if (isMute) {
-                    player.setVolume(0);
+                    //player.setVolume(0);
+                    player.mute();
                 } else {
-                    player.setVolume(1);
+                    //player.setVolume(1);
+                    player.unmute();
                 }
+                //player.setDeviceMuted(true);  // 设备静音
+                //player.setDeviceMuted(false); // 取消设备静音
             }
         }
         this.isMute = isMute;
