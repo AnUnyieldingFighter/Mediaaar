@@ -11,7 +11,6 @@ import android.view.SurfaceView;
 import com.images.imageselect.BuildConfig;
 import com.google.common.collect.ImmutableList;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,8 +24,6 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.Timeline;
-import androidx.media3.common.TrackGroup;
-import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
@@ -39,11 +36,12 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
 
 import media.library.player.manager.PlayerLog;
+import media.library.player.videoNew.stats.VideoWatchStats;
 
 //设置播放器
 class BaseExoPlayer extends PlayerDB {
     //观看统计
-    protected VideoWatchStatistics watchStatistics = new VideoWatchStatistics();
+    protected VideoWatchStats watchStatistics = new VideoWatchStats();
     protected Context playerContext;
     protected ExoPlayer player;
     //数据源的传输监听，用于统计缓冲期间的网络下载和本地读取速度

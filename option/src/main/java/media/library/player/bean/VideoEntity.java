@@ -24,11 +24,11 @@ public class VideoEntity {
     public String sizeStr;//文件大小展示文本，例如 12.50 MB
     public int videoWidth;//	视频宽度
     public int videoHeight;//	视频高度
-    public int videoType;//1 视频  2 短视频  3 短剧
+    public int videoType;//未使用：尚未赋业务值，仅初始化为 0；1 视频  2 短视频  3 短剧
 
-    public String other1;//其它1
-    public String other2;//其它2
-    public String other3;//其它3
+    public String other1;//未使用：其它1，当前无赋值逻辑
+    public String other2;//未使用：其它2，当前无赋值逻辑
+    public String other3;//未使用：其它3，当前无赋值逻辑
 
     public boolean isLook;//true 看过
     public long lookTime;//最后观看记录时间，时间戳毫秒，不是累计观看时长

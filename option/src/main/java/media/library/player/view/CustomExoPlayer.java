@@ -6,43 +6,20 @@ import android.text.TextUtils;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.MimeTypes;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
-import androidx.media3.database.StandaloneDatabaseProvider;
-import androidx.media3.datasource.DataSource;
-import androidx.media3.datasource.DefaultDataSource;
-import androidx.media3.datasource.cache.CacheDataSource;
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
-import androidx.media3.datasource.cache.NoOpCacheEvictor;
-import androidx.media3.datasource.cache.SimpleCache;
-import androidx.media3.exoplayer.SeekParameters;
-import androidx.media3.exoplayer.drm.DrmSessionManager;
-import androidx.media3.exoplayer.hls.HlsMediaSource;
-import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
-import androidx.media3.exoplayer.source.ProgressiveMediaSource;
-import androidx.media3.exoplayer.source.TrackGroupArray;
-import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
-import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import androidx.media3.ui.PlayerControlView;
 import androidx.media3.ui.PlayerView;
 
-import java.io.File;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
+import media.library.player.videoNew.stats.VideoWatchStats;
 import media.library.utils.FileUtil;
-import media.library.utils.Md5Media;
 
 //        exoPlayer = new CustomExoPlayer();
 //        exoPlayer.setPlayerVideo(act, videoUrl, true);
@@ -105,7 +82,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         player.setMediaItem(videoItem);*/
     }
 
-    public VideoWatchStatistics getWatchStatistics() {
+    public VideoWatchStats getWatchStatistics() {
         return watchStatistics;
     }
 

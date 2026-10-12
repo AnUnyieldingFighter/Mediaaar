@@ -276,7 +276,9 @@ class BaseMediaSource extends BaseExoPlayer {
                 watchStatistics.setReadDB(entity);
                 break;
             }
-            watchStatistics.setReadDB(datas.get(0));
+            if (cacheDir == null) {
+                watchStatistics.setReadDB(datas.get(0));
+            }
         }
         if (cacheDir == null) {
             cacheDir = createCacheDir(datas == null ? 0 : datas.size());
@@ -284,6 +286,7 @@ class BaseMediaSource extends BaseExoPlayer {
                 cacheDir.mkdirs();
             }
             dbVideoAdd(playerContext, videoUrl, cacheDir);
+            watchStatistics.setVideoCachePath(cacheDir.getPath());
             PlayerLog.d(tag + "缓存地址", "新建 url:" + videoUrl + "\npath:" + cacheDir.getPath());
         } else {
             PlayerLog.d(tag + "缓存地址", "取得 url:" + videoUrl + "\npath:" + cacheDir.getPath());
