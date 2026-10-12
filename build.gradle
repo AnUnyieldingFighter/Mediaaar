@@ -9,16 +9,14 @@ buildscript {
     repositories {
 
        // jcenter()
-        mavenCentral()
+        //优先使用 Google 与镜像仓库，避免 JitPack 访问 Maven Central 时触发 429 限流
         google()
-
         maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/google")) }
         maven { url = (uri("https://maven.aliyun.com/repository/public")) }
         maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/jcenter")) }
-
         maven { url = (uri("https://maven.aliyun.com/nexus/content/groups/public/")) }
-
-        maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/gradle-plugin'")) }
+        maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/gradle-plugin")) }
+        mavenCentral()
         maven { url = (uri("https://jitpack.io")) }
 
     }
@@ -35,16 +33,14 @@ buildscript {
 allprojects {
     repositories {
         //jcenter()
-        mavenCentral()
+        //优先使用 Google 与镜像仓库，Maven Central 作为后备仓库
         google()
-
         maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/google")) }
         maven { url = (uri("https://maven.aliyun.com/repository/public")) }
         maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/jcenter")) }
-
         maven { url = (uri("https://maven.aliyun.com/nexus/content/groups/public/")) }
-
-        maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/gradle-plugin'")) }
+        maven { url = (uri("https://maven.aliyun.com/nexus/content/repositories/gradle-plugin")) }
+        mavenCentral()
         maven { url = (uri("https://jitpack.io")) }
     }
     tasks.withType(Javadoc) {
