@@ -21,6 +21,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import media.library.player.manager.MorePlayerManager;
 import media.library.player.manager.PlayerLog;
 import media.library.player.videoNew.able.OnVideoLoading;
+import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.videoNew.adapter.VideoPagerAdapter3;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
 import media.library.player.videoNew.frg2.VideoFrg1;
@@ -351,6 +352,16 @@ public class ShortVideoManager2 {
         viewPagerView.setCurrentItem(index - 1, true);
     }
 
+    //frgExit 退出了这个页面,frgEnter
+    public void setPageChange(VideoBaseFrg0 frgExit, VideoBaseFrg0 frgEnter) {
+        if (activity instanceof OnVideoOperate2) {
+            ((OnVideoOperate2) activity).setPageChange(frgExit, frgEnter);
+        }
+        if (fragment instanceof OnVideoOperate2) {
+            ((OnVideoOperate2) fragment).setPageChange(frgExit, frgEnter);
+        }
+    }
+
     /**
      * 预加载上一页
      */
@@ -458,11 +469,16 @@ public class ShortVideoManager2 {
         setPageVideoPre(frg, index);
     }
 
+    //当前页面
+    private VideoBaseFrg0 cursorFrg;
 
     class OnPageChange extends ViewPager2.OnPageChangeCallback {
         @Override
         public void onPageSelected(int position) {
             super.onPageSelected(position);
+            VideoBaseFrg0 temp = getCursorVideoFrg();
+            setPageChange(cursorFrg, temp);
+            cursorFrg = temp;
             if (isDel) {
                 //删除 有自己的与加载逻辑
                 isDel = false;

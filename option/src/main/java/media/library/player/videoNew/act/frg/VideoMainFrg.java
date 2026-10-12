@@ -17,6 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.media3.common.Player;
+import androidx.media3.ui.PlayerView;
 import androidx.viewpager2.widget.ViewPager2;
 import media.library.player.bean.TestVideoUrl;
 import media.library.player.bean.VideoPlayVo;
@@ -246,9 +248,13 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
 
     @Override
-    public void recordDuration(String id, int pageIndex, long pro, long total) {
-        //进度回调
+    public void recordDuration(String id, int pageIndex, long pro, long total, CustomExoPlayer customExoPlayer, Player player, PlayerView playerView) {
 
+    }
+
+    @Override
+    public void setPageChange(VideoBaseFrg0 frgExit, VideoBaseFrg0 frgEnter) {
+        Log.d("切换 退出：" + (frgExit != null), "切换 进入" + (frgEnter != null));
     }
 
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null
