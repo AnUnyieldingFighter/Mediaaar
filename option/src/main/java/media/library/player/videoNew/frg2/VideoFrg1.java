@@ -35,8 +35,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     protected OnVideoOperate2 videoOperate2 = null;
     protected int pageIndex = -1;
     protected String videoUrl;
-    //当前播放源是否已经回调过准备完成
-    private boolean hasReadyCallback;
     //true 横屏
     protected Boolean isVideoHorizontalScreen = false;
     //true 添加到缓存
@@ -146,7 +144,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         //更换 播放url
         PlayerLog.d("去初始化/更新播放源 ",
                 "------- index=" + this.pageIndex + " 更新 pageIndex=" + pageIndex + " videoUrl:" + videoUrl);
-        hasReadyCallback = false;
         initExoPlayer();
     }
 
@@ -341,11 +338,10 @@ public class VideoFrg1 extends VideoBaseFrg0 {
 
     //当前播放源准备完成后只回调一次；用于补齐预加载完成后进入页面的回调
     protected void setPlayerReadyCallback() {
-        if (hasReadyCallback || exoPlayer == null
+        if (exoPlayer == null
                 || exoPlayer.getPlaybackState() != Player.STATE_READY) {
             return;
         }
-        hasReadyCallback = true;
         onPLReadyCompleted();
         setPlayerProgress(1);
     }
@@ -475,7 +471,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             //Source error code:2007 codeName:ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED  不允许明文传输
             //发生错误：Source error code:2002 codeName:ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT 网络连接失败
             PlayerLog.d("视频播放", "发生错误：" + error.getMessage() + " code:" + error.errorCode + " codeName:" + error.getErrorCodeName());
-            hasReadyCallback = false;
             onPLPlayerError(error);
 
         }
