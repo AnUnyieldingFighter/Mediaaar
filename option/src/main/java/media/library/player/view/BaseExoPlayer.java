@@ -160,14 +160,7 @@ class BaseExoPlayer extends PlayerDB {
 
     }
 
-    //发生错误后重试播放
-    public void retry() {
-        if (player == null || !isError) {
-            return;
-        }
-        player.prepare();
-        isError = false;
-    }
+
 
     public boolean isError() {
         return isError;

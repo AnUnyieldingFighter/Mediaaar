@@ -86,6 +86,19 @@ public class CustomExoPlayer extends BaseMediaSource {
         return watchStatistics;
     }
 
+    //发生错误后重试播放
+    @OptIn(markerClass = UnstableApi.class)
+    public void retry() {
+        if (player == null || !isError) {
+            return;
+        }
+        if (cachePlayerView != null) {
+            cachePlayerView.setCustomErrorMessage(null);
+        }
+        player.prepare();
+        isError = false;
+    }
+
     //===================================测试中的用法=============================
     public void testTrackSelector() {
         if (customTrackSelector != null) {
