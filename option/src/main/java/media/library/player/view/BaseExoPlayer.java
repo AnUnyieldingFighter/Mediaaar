@@ -19,6 +19,8 @@ import java.util.regex.Pattern;
 import androidx.annotation.OptIn;
 import androidx.media3.common.C;
 import androidx.media3.common.Format;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
@@ -383,6 +385,7 @@ class BaseExoPlayer extends PlayerDB {
             switch (playbackState) {
                 case Player.STATE_IDLE:
                     //即播放器停止和播放失败时的状态。
+                    dbSaveVideoHistory(playerContext, videoUrl, player);
                     break;
                 case Player.STATE_BUFFERING:
                     // 正在缓冲 state=
@@ -390,7 +393,7 @@ class BaseExoPlayer extends PlayerDB {
                     break;
                 case Player.STATE_READY:
                     // 准备就绪，可以播放
-                    updateVideoDuration();
+                    setVideoDuration();
                     isReady = true;
                     isError = false;
                     if (isMute) {
@@ -402,6 +405,7 @@ class BaseExoPlayer extends PlayerDB {
                     break;
                 case Player.STATE_ENDED:
                     //播放结束
+                    dbSaveVideoHistory(playerContext, videoUrl, player);
                     watchStatistics.setVideoEnd(1);
                     break;
                 default:
@@ -413,7 +417,7 @@ class BaseExoPlayer extends PlayerDB {
 
         @Override
         public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
-            //接收播放意图改变
+            //接收播放意图改变；暂停进度由 CustomExoPlayer.setPause() 直接保存
         }
 
         @Override
@@ -442,6 +446,23 @@ class BaseExoPlayer extends PlayerDB {
             watchStatistics.setPlaying(isPlaying);
         }
 
+        //媒体提供标题、描述、封面或自定义标识时更新数据库，缺失字段保留原值
+        @Override
+        public void onMediaMetadataChanged(MediaMetadata mediaMetadata) {
+            MediaItem mediaItem = player == null ? null : player.getCurrentMediaItem();
+            if (mediaItem != null) {
+                dbSetVideoMetadata(playerContext, videoUrl, mediaItem.mediaId, mediaMetadata);
+            }
+        }
+
+        //切换媒体时也读取标识和配置元数据，兼容元数据没有变化而不触发上一回调的情况
+        @Override
+        public void onMediaItemTransition(MediaItem mediaItem, int reason) {
+            if (mediaItem != null) {
+                dbSetVideoMetadata(playerContext, videoUrl, mediaItem.mediaId, mediaItem.mediaMetadata);
+            }
+        }
+
         @Override
         public void onVideoSizeChanged(VideoSize videoSize) {
             PlayerLog.d(tag, "视频大小  width：" + videoSize.width + " height:" + videoSize.height);
@@ -456,11 +477,11 @@ class BaseExoPlayer extends PlayerDB {
         //播放时间线变化时，尝试更新视频总时长
         @Override
         public void onTimelineChanged(Timeline timeline, int reason) {
-            updateVideoDuration();
+            setVideoDuration();
         }
 
         //视频时长更新到统计里
-        private void updateVideoDuration() {
+        private void setVideoDuration() {
             long duration = -1;
             if (player != null) {
                 duration = player.getDuration();
@@ -469,6 +490,8 @@ class BaseExoPlayer extends PlayerDB {
                 }
             }
             watchStatistics.setVideoDuration(duration);
+            //数据库只接收有效时长，保留上面现有的统计赋值方式
+            dbSetVideoDuration(playerContext, videoUrl, duration);
         }
 
         @OptIn(markerClass = UnstableApi.class)
@@ -481,6 +504,7 @@ class BaseExoPlayer extends PlayerDB {
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
             //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
             PlayerLog.d(tag, buildPlayerErrorMessage(error));
+            dbSaveVideoHistory(playerContext, videoUrl, player);
             watchStatistics.setPlaying(false);
             isError = true;
             isReady = false;
@@ -658,8 +682,24 @@ class BaseExoPlayer extends PlayerDB {
     @UnstableApi
     class ExoPlayerAnalyticsListener implements AnalyticsListener {
         @Override
+        public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
+            if (player == null) {
+                return;
+            }
+            long bufferedPosition = player.getBufferedPosition();
+            long currentPosition = player.getCurrentPosition();
+            PlayerLog.d(tag, "缓冲开始:  播放位置=" + currentPosition + " 缓存=" + bufferedPosition);
+        }
+        //加载中途取消也可能已有响应头，可以读取总大小，但不把已下载字节当成总大小
+        @Override
+        public void onLoadCanceled(EventTime eventTime, LoadEventInfo info, MediaLoadData data) {
+            dbSaveLoadedFileSize(playerContext, videoUrl, player, info, data);
+        }
+
+        @Override
         public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
             AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
+            dbSaveLoadedFileSize(playerContext, videoUrl, player, loadEventInfo, mediaLoadData);
             if (loadEventInfo.loadDurationMs <= 0) {
                 PlayerLog.d(tag, "缓冲完成 下载速度: 未知 已加载字节=" + loadEventInfo.bytesLoaded + " 加载耗时=" + loadEventInfo.loadDurationMs);
                 return;
@@ -673,22 +713,11 @@ class BaseExoPlayer extends PlayerDB {
         }
 
         @Override
-        public void onLoadStarted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, int retryCount) {
-            if (player == null) {
-                return;
-            }
-            long bufferedPosition = player.getBufferedPosition();
-            long currentPosition = player.getCurrentPosition();
-            PlayerLog.d(tag, "缓冲开始:  播放位置=" + currentPosition + " 缓存=" + bufferedPosition);
-        }
-
-        @Override
         public void onBandwidthEstimate(EventTime eventTime, int totalLoadTimeMs, long totalBytesLoaded, long bitrateEstimate) {
             PlayerLog.d(tag, "缓冲 带宽:  总加载时长=" + totalLoadTimeMs + " 总加载字节=" + totalBytesLoaded + " 带宽估计值(dps)=" + bitrateEstimate);
             if (!isArb) {
                 return;
             }
-
             if (bitrateEstimate <= 0) {
                 return;
             }

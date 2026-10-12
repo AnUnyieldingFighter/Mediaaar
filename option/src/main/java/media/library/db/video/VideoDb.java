@@ -45,6 +45,27 @@ public class VideoDb {
         return getDao().updateVideoSize(videoUrl, videoWidth, videoHeight);
     }
 
+    //确保当前视频有可更新的信息记录
+    public void ensureVideoRecord(String videoUrl) {
+        getDao().ensureVideoRecord(videoUrl, System.currentTimeMillis());
+    }
+
+    //保存已知视频总时长，单位毫秒
+    public void updateVideoDuration(String videoUrl, long duration) {
+        getDao().updateVideoDuration(videoUrl, duration);
+    }
+
+    //保存文件大小及用于展示的大小文本
+    public void updateVideoFileSize(String videoUrl, long sizeKb, String sizeStr) {
+        getDao().updateVideoFileSize(videoUrl, sizeKb, sizeStr);
+    }
+
+    //保存有明确来源的媒体标识、标题、描述和封面地址
+    public void updateVideoMetadata(String videoUrl, String videoIds, String title,
+                                    String description, String artworkUrl) {
+        getDao().updateVideoMetadata(videoUrl, videoIds, title, description, artworkUrl);
+    }
+
     public void delete(VideoEntity data) {
         getDao().delete(data);
     }

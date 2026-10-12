@@ -240,7 +240,7 @@ class BaseMediaSource extends BaseExoPlayer {
 
     //获取缓存文件
     private File getCacheFile() {
-        List<VideoEntity> datas = getDBVideoCache(playerContext, videoUrl);
+        List<VideoEntity> datas = dbGetVideoCache(playerContext, videoUrl);
         File cacheDir = null;
         if (datas != null && datas.size() > 0) {
             for (int i = 0; i < datas.size(); i++) {

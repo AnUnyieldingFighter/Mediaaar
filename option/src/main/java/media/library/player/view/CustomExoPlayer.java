@@ -90,6 +90,8 @@ public class CustomExoPlayer extends BaseMediaSource {
         initExoPlayer(context);
         //方式一 自己决定 URL 用什么 MediaSource 播
         MediaSource mediaSource = getMediaSource();
+        //播放源建立后只初始化一次记录，后续回调直接更新
+        dbInitVideoInfo(playerContext, videoUrl);
         player.setMediaSource(mediaSource);
         //方式二 是把 MediaItem 直接交给 ExoPlayer，让它自己根据 URI / MIME 猜怎么播。
         //好处是简单 普通 mp4/m3u8 通常能播  适合不需要特殊控制的场景
@@ -201,14 +203,10 @@ public class CustomExoPlayer extends BaseMediaSource {
         player.prepare();
     }
 
-    @Deprecated
-    public void pause() {
-        player.pause();
-    }
 
     @Deprecated
-    public void play() {
-        player.play();
+    public void pause() {
+        setPause();
     }
 
     //设置暂停
@@ -218,14 +216,18 @@ public class CustomExoPlayer extends BaseMediaSource {
         }
         if (player.isPlaying()) {
             player.pause();
-            //
-            long currentPosition = getCurrentPosition();
-            long duration = getDuration();
-            dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
-            //
         } else {
             player.setPlayWhenReady(false);
         }
+        //暂停时直接保存进度，缓冲期间暂停也保存
+        long currentPosition = getCurrentPosition();
+        long duration = getDuration();
+        dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
+    }
+
+    @Deprecated
+    public void play() {
+        player.play();
     }
 
     //设置持续播放/继续播放
@@ -343,7 +345,7 @@ public class CustomExoPlayer extends BaseMediaSource {
         int width = videoSize.width;
         int height = videoSize.height;
         if (width <= 0 && height <= 0) {
-            List<VideoEntity> datas = getDBVideoSize(playerContext, videoUrl);
+            List<VideoEntity> datas = dbGetVideoSize(playerContext, videoUrl);
             if (datas != null && datas.size() > 0) {
                 VideoEntity entity = datas.get(0);
                 if (entity.videoWidth > 0 && entity.videoHeight > 0) {
