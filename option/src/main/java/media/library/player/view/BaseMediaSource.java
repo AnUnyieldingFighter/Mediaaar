@@ -15,6 +15,7 @@ import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.FileDataSource;
 import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
 import androidx.media3.datasource.cache.NoOpCacheEvictor;
@@ -54,6 +55,8 @@ class BaseMediaSource extends BaseExoPlayer {
     //==========================设置播放源========================================
     @OptIn(markerClass = UnstableApi.class)
     public void setMediaSource(MediaSource mediaSource) {
+        //外部播放源的传输监听未知，默认不启用测速
+        bufferTransferListener.setSpeedAvailable(false);
         player.setMediaSource(mediaSource);
     }
 
@@ -63,6 +66,8 @@ class BaseMediaSource extends BaseExoPlayer {
     @OptIn(markerClass = UnstableApi.class)
     protected MediaSource getMediaSource() {
         String type = getMediaSourceType(videoUrl);
+        //普通文件流和 HLS 在下方绑定传输监听；RTSP 没有接入这套测速
+        bufferTransferListener.setSpeedAvailable(!"rtsp".equals(type));
         //媒体元数据描述 不知道用法
         /*MediaMetadata mediaMetadata = new MediaMetadata.Builder()
                 .setTitle("示例标题")
@@ -96,7 +101,8 @@ class BaseMediaSource extends BaseExoPlayer {
                 //m3u8 / HLS：可以直播，也可以点播
                 DataSource.Factory factory = null;
                 if (!isUseCache) {
-                    factory = new DefaultDataSource.Factory(playerContext);
+                    factory = new DefaultDataSource.Factory(playerContext)
+                            .setTransferListener(bufferTransferListener);
                     //factory = new DefaultDataSource.Factory(playerContext,httpFactory);
                 } else {
                     setMediaSourceCacheRelease();
@@ -104,7 +110,10 @@ class BaseMediaSource extends BaseExoPlayer {
                     simpleCache = createSimpleCache();
                     factory = new CacheDataSource.Factory()
                             .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
+                                    .setTransferListener(bufferTransferListener))
+                            .setCacheReadDataSourceFactory(new FileDataSource.Factory()
+                                    .setListener(bufferTransferListener))
                             //更适合网络视频
                             //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
                             //缓存出错时自动回退到原始源
@@ -145,7 +154,8 @@ class BaseMediaSource extends BaseExoPlayer {
         MediaSource mediaSource;
         if (!useCache) {
             //默认的  无缓存
-            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext);
+            DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(playerContext)
+                    .setTransferListener(bufferTransferListener);
             mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                     .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
                     .createMediaSource(videoItem);
@@ -157,7 +167,10 @@ class BaseMediaSource extends BaseExoPlayer {
             //自动缓存到磁盘，预加载 / 二次播放直接读本地
             CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
                     .setCache(simpleCache)
-                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext))
+                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
+                            .setTransferListener(bufferTransferListener))
+                    .setCacheReadDataSourceFactory(new FileDataSource.Factory()
+                            .setListener(bufferTransferListener))
                     //更适合网络视频
                     //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
                     //缓存出错时自动回退到原始源
