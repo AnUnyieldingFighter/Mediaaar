@@ -117,6 +117,7 @@ public class CustomExoPlayer extends BaseMediaSource {
             setPlayerBuffRelease();
             player = null;
         }
+        setVideoSurfaceRelease();
         setMediaSourceCacheRelease();
         watchStatistics.setRelease();
         PlayerLog.d(tag, "播放器 释放全部资源：videoTag=" + videoTag + "\nurl" + videoUrl);
@@ -254,9 +255,6 @@ public class CustomExoPlayer extends BaseMediaSource {
     //比较播放的url是否相同
     public boolean isEqualVideoPlay(String url) {
         if (TextUtils.isEmpty(url)) {
-            return false;
-        }
-        if (isError) {
             return false;
         }
         return url.equals(videoUrl);

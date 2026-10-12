@@ -144,7 +144,7 @@ class BaseExoPlayer extends PlayerDB {
             ExoPlayerAnalyticsListener bufferListener = new ExoPlayerAnalyticsListener(this);
             bufferTransferListener = bufferListener;
             player.addAnalyticsListener(bufferListener);
-            setVideoSurface(surface);
+            restoreVideoSurface();
             addListener(listener);
             addAnalyticsListener(analyticsListener);
             onNewPlayer();
@@ -160,23 +160,72 @@ class BaseExoPlayer extends PlayerDB {
 
     }
 
+    //发生错误后重试播放
+    public void retry() {
+        if (player == null || !isError) {
+            return;
+        }
+        player.prepare();
+        isError = false;
+    }
+
+    public boolean isError() {
+        return isError;
+    }
+
     //=====================================设置幕布==========================
     private Surface surface;
+    private SurfaceView surfaceView;
 
     public void setVideoSurface(Surface surface) {
-        if (surface == null) {
-            return;
-        }
+        SurfaceView oldSurfaceView = this.surfaceView;
+        this.surface = surface;
+        this.surfaceView = null;
         if (player == null) {
-            this.surface = surface;
             return;
         }
-        this.surface = null;
-        player.setVideoSurface(surface);
+        if (oldSurfaceView != null) {
+            player.clearVideoSurfaceView(oldSurfaceView);
+        }
+        if (surface == null) {
+            player.clearVideoSurface();
+        } else {
+            player.setVideoSurface(surface);
+        }
     }
 
     public void setVideoSurfaceView(SurfaceView surfaceView) {
-        player.setVideoSurfaceView(surfaceView);
+        SurfaceView oldSurfaceView = this.surfaceView;
+        this.surfaceView = surfaceView;
+        this.surface = null;
+        if (player == null) {
+            return;
+        }
+        if (oldSurfaceView != null && oldSurfaceView != surfaceView) {
+            player.clearVideoSurfaceView(oldSurfaceView);
+        }
+        if (surfaceView == null) {
+            if (oldSurfaceView == null) {
+                player.clearVideoSurface();
+            }
+        } else if (oldSurfaceView != surfaceView) {
+            player.setVideoSurfaceView(surfaceView);
+        }
+    }
+
+    //播放器重新创建后恢复原来的画面输出
+    private void restoreVideoSurface() {
+        if (surfaceView != null) {
+            player.setVideoSurfaceView(surfaceView);
+        } else if (surface != null) {
+            player.setVideoSurface(surface);
+        }
+    }
+
+    //最终释放播放器时清空画面引用
+    protected void setVideoSurfaceRelease() {
+        surface = null;
+        surfaceView = null;
     }
 
     //===============================设置添加/取消监听===========================
