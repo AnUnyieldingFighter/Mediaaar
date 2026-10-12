@@ -161,7 +161,6 @@ class BaseExoPlayer extends PlayerDB {
     }
 
 
-
     public boolean isError() {
         return isError;
     }
@@ -229,7 +228,7 @@ class BaseExoPlayer extends PlayerDB {
             return;
         }
         if (isError) {
-            //发生错误时 会重新创建播放播，重新创建时用
+            //错误后可能直接重试，也可能重建播放器：当前播放器和待重建播放器都要保留监听
             this.listener = listener;
             return;
         }
@@ -243,6 +242,7 @@ class BaseExoPlayer extends PlayerDB {
 
 
     public void removeListener(Player.Listener listener) {
+        this.listener = null;
         if (player == null) {
             return;
         }

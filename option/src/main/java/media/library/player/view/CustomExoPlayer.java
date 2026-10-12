@@ -174,6 +174,8 @@ public class CustomExoPlayer extends BaseMediaSource {
     protected void onNewPlayer() {
         super.onNewPlayer();
         if (cachePlayerView != null) {
+            //播放器重建后清除上一次播放失败留下的错误文案
+            cachePlayerView.setCustomErrorMessage(null);
             cachePlayerView.setPlayer(player);
         }
         if (cachePlayerControlView != null) {

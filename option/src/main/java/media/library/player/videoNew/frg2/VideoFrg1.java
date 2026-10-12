@@ -131,7 +131,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             if (isSame) {
                 boolean isError = exoPlayer.isError();
                 if (isError) {
-
+                    exoPlayer.setPlayerView(playerView);
                     exoPlayer.retry();
                     return;
                 }
