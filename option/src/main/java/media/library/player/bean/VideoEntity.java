@@ -20,7 +20,7 @@ public class VideoEntity {
     public long pro;//历史播放进度，单位毫秒，只在暂停、完成或停止时更新
     public long total;//视频总时长，单位毫秒
     public long recordTime;//记录创建时间，时间戳毫秒
-    public long sizeMb;//文件总大小，沿用原字段单位 KB（1024 字节），不是已下载或已缓存大小
+    public long sizeKb;//文件总大小，沿用原字段单位 KB（1024 字节），不是已下载或已缓存大小
     public String sizeStr;//文件大小展示文本，例如 12.50 MB
     public int videoWidth;//	视频宽度
     public int videoHeight;//	视频高度

@@ -13,7 +13,7 @@ import media.library.player.bean.VideoEntity;
 /**
  * @author 86134
  */
-@Database(entities = {MediaEntity.class, VideoEntity.class}, version = 8, exportSchema = false)
+@Database(entities = {MediaEntity.class, VideoEntity.class}, version = 9, exportSchema = false)
 public abstract class BaseDatabase extends RoomDatabase {
     public abstract MediaDao mediaDao();
 

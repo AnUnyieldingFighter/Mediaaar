@@ -39,7 +39,7 @@ public interface VideoDao {
 
     //即使关闭文件缓存，也建立视频信息记录；同一地址已有记录时不重复插入
     @Query("INSERT INTO tab_video (videoUrl, recordTime, videoCacheType, videoCacheTime, "
-            + "pro, total, sizeMb, videoWidth, videoHeight, videoType, isLook, lookTime) "
+            + "pro, total, sizeKb, videoWidth, videoHeight, videoType, isLook, lookTime) "
             + "SELECT :videoUrl, :recordTime, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 "
             + "WHERE NOT EXISTS (SELECT 1 FROM tab_video WHERE videoUrl = :videoUrl)")
     void ensureVideoRecord(String videoUrl, long recordTime);
@@ -49,8 +49,8 @@ public interface VideoDao {
     int updateVideoDuration(String videoUrl, long total);
 
     //保存文件大小，sizeMb 沿用原字段约定，单位为 KB（1024 字节）
-    @Query("UPDATE tab_video SET sizeMb = :sizeKb, sizeStr = :sizeStr WHERE videoUrl = :videoUrl "
-            + "AND (sizeMb != :sizeKb OR sizeStr IS NULL OR sizeStr != :sizeStr)")
+    @Query("UPDATE tab_video SET sizeKb = :sizeKb, sizeStr = :sizeStr WHERE videoUrl = :videoUrl "
+            + "AND (sizeKb != :sizeKb OR sizeStr IS NULL OR sizeStr != :sizeStr)")
     int updateVideoFileSize(String videoUrl, long sizeKb, String sizeStr);
 
     //元数据缺失时保留原值，不用空值清除调用方已保存的业务信息
