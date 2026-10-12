@@ -335,6 +335,10 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     @OptIn(markerClass = UnstableApi.class)
     protected void onPLPlayerError(PlaybackException error) {
         playerView.setCustomErrorMessage(PlayerErrorMessageUtil.getPlayerErrorUiMessage(error));
+        if (isResume) {
+            //发生错误之后 要重新添加监听 会与 exoPlayer.addListener(playerListener); 重复
+            exoPlayer.addListener(playerListener);
+        }
     }
 
 

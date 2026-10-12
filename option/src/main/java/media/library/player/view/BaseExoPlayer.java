@@ -186,6 +186,11 @@ class BaseExoPlayer extends PlayerDB {
         if (listener == null) {
             return;
         }
+        if (isError) {
+            //发生错误时 会重新创建播放播，重新创建时用
+            this.listener = listener;
+            return;
+        }
         if (player == null) {
             this.listener = listener;
             return;
