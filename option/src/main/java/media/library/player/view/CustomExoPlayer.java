@@ -135,20 +135,32 @@ public class CustomExoPlayer extends BaseMediaSource {
             //旧视图  清空播放器
             cachePlayerView.setPlayer(null);
         }
-        /*if (cachePlayerControlView != null) {
-            //旧控制器  清空播放器
-            cachePlayerControlView.setPlayer(null);
-        }*/
         //新视图  设置播放器
-        playerView.setPlayer(player);
+        if (playerView != null) {
+            playerView.setPlayer(player);
+        }
         this.cachePlayerView = playerView;
     }
+
 
     //清理  缓存的视图
     public void setPlayerViewRelease() {
         if (cachePlayerView != null) {
             cachePlayerView.setPlayer(null);
             cachePlayerView = null;
+        }
+    }
+
+    //创建了新的播放器
+    @OptIn(markerClass = UnstableApi.class)
+    @Override
+    protected void onNewPlayer() {
+        super.onNewPlayer();
+        if (cachePlayerView != null) {
+            cachePlayerView.setPlayer(player);
+        }
+        if (cachePlayerControlView != null) {
+            cachePlayerControlView.setPlayer(player);
         }
     }
 
@@ -170,7 +182,9 @@ public class CustomExoPlayer extends BaseMediaSource {
             cachePlayerControlView.setPlayer(null);
         }
         //新控制器  设置播放器
-        playerControlView.setPlayer(player);
+        if (playerControlView != null) {
+            playerControlView.setPlayer(player);
+        }
         cachePlayerControlView = playerControlView;
     }
 

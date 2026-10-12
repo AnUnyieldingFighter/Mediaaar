@@ -147,11 +147,17 @@ class BaseExoPlayer extends PlayerDB {
             setVideoSurface(surface);
             addListener(listener);
             addAnalyticsListener(analyticsListener);
+            onNewPlayer();
         }
         if (videoSpeed != null) {
             player.setPlaybackSpeed(videoSpeed);
             videoSpeed = null;
         }
+    }
+
+    //创建了新的播放器
+    protected void onNewPlayer() {
+
     }
 
     //=====================================设置幕布==========================
