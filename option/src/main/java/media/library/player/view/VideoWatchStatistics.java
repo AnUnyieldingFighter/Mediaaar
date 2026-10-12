@@ -10,6 +10,10 @@ import java.util.ArrayList;
  */
 public final class VideoWatchStatistics {
     private String videoUrl = "";
+    private long videoDuration;//视频总时长，单位毫秒，0 表示尚未获取
+    private long videoProgress;//当前播放进度，单位毫秒
+    private int videoHeight;//视频高度，单位像素
+    private int videoWidth;//视频宽度，单位像素
     private ArrayList<Integer> videoEndNum = new ArrayList<>();//完成次数
     private ArrayList<Long> videoLookTimes = new ArrayList<>();//每次完成的观看时长，单位毫秒
     private long videoAllLookTime;//总观看时长，单位毫秒
@@ -20,6 +24,7 @@ public final class VideoWatchStatistics {
     private String tag2 = "";//额外参数
     private String tag3 = "";//额外参数
     private String tag4 = "";//额外参数
+
 
 
     //设置播放地址，地址改变时清空原来的统计
@@ -104,6 +109,10 @@ public final class VideoWatchStatistics {
         videoAllLookTime = 0;
         videoCurrentLookTime = 0;
         videoStartLookTime = 0;
+        videoDuration = 0;
+        videoProgress = 0;
+        videoHeight = 0;
+        videoWidth = 0;
         isPlaying = false;
         isEnd = false;
         //
@@ -119,6 +128,46 @@ public final class VideoWatchStatistics {
         clearData();
     }
     //===============================外部用方法
+
+    //获取视频总时长，单位毫秒，尚未获取时返回 0
+    public long getVideoDuration() {
+        return videoDuration;
+    }
+
+    //设置视频总时长，单位毫秒，未知或负数时保存为 0
+    public void setVideoDuration(long videoDuration) {
+        this.videoDuration = Math.max(0, videoDuration);
+    }
+
+    //获取当前播放进度，单位毫秒
+    public long getVideoProgress() {
+        return videoProgress;
+    }
+
+    //设置当前播放进度，单位毫秒，负数时保存为 0
+    public void setVideoProgress(long videoProgress) {
+        this.videoProgress = Math.max(0, videoProgress);
+    }
+
+    //获取视频高度，单位像素
+    public int getVideoHeight() {
+        return videoHeight;
+    }
+
+    //设置视频高度，单位像素，未知或负数时保存为 0
+    public void setVideoHeight(int videoHeight) {
+        this.videoHeight = Math.max(0, videoHeight);
+    }
+
+    //获取视频宽度，单位像素
+    public int getVideoWidth() {
+        return videoWidth;
+    }
+
+    //设置视频宽度，单位像素，未知或负数时保存为 0
+    public void setVideoWidth(int videoWidth) {
+        this.videoWidth = Math.max(0, videoWidth);
+    }
 
     //获取总观看时长，正在播放的这一段也包含在内
     public long getVideoAllLookTime() {

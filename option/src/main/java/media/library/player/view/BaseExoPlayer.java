@@ -22,6 +22,7 @@ import androidx.media3.common.Format;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
+import androidx.media3.common.Timeline;
 import androidx.media3.common.TrackGroup;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.common.Tracks;
@@ -375,6 +376,7 @@ class BaseExoPlayer extends PlayerDB {
     //==========================监听=================================================
     class ExoPlayerListener implements Player.Listener {
 
+
         @Override
         public void onPlaybackStateChanged(int playbackState) {
             Player.Listener.super.onPlaybackStateChanged(playbackState);
@@ -388,6 +390,7 @@ class BaseExoPlayer extends PlayerDB {
                     break;
                 case Player.STATE_READY:
                     // 准备就绪，可以播放
+                    updateVideoDuration();
                     isReady = true;
                     isError = false;
                     if (isMute) {
@@ -442,9 +445,30 @@ class BaseExoPlayer extends PlayerDB {
         @Override
         public void onVideoSizeChanged(VideoSize videoSize) {
             PlayerLog.d(tag, "视频大小  width：" + videoSize.width + " height:" + videoSize.height);
+            //视频尺寸变化时，将播放器返回的宽高保存到观看统计，单位像素
+            watchStatistics.setVideoWidth(videoSize.width);
+            watchStatistics.setVideoHeight(videoSize.height);
             if (!TextUtils.isEmpty(videoUrl)) {
                 dbSetVideoSize(playerContext, videoUrl, videoSize);
             }
+        }
+
+        //播放时间线变化时，尝试更新视频总时长
+        @Override
+        public void onTimelineChanged(Timeline timeline, int reason) {
+            updateVideoDuration();
+        }
+
+        //视频时长更新到统计里
+        private void updateVideoDuration() {
+            long duration = -1;
+            if (player != null) {
+                duration = player.getDuration();
+                if (duration == C.TIME_UNSET) {
+                    duration = -1;
+                }
+            }
+            watchStatistics.setVideoDuration(duration);
         }
 
         @OptIn(markerClass = UnstableApi.class)

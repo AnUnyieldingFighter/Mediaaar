@@ -275,27 +275,31 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         int playbackState = temp.getPlaybackState();
         PlayerLog.d("播放进度", "当前播放进度   playbackState=" + playbackState);
         if (playbackState == Player.STATE_READY) {
-            onPLplayerUpdate(false);
+            setPlayerProgress(2);
         }
     }
     //===========================监听回调======================
 
-    //计算播放进度 isPlayEnd true:播放结束
-    private void onPLplayerUpdate(boolean isPlayEnd) {
+    /**
+     * 根据触发类型更新播放进度。
+     *
+     * @param type 1：准备完成；2：定时器获取进度；3：位置跳跃；10：播放完成  11 循环播放完成
+     */
+    protected void setPlayerProgress(int type) {
         if (exoPlayer == null) {
             return;
         }
         long currentPosition = exoPlayer.getCurrentPosition();
         long duration = exoPlayer.getDuration();
-        if (isPlayEnd) {
+        if (type == 10) {
             currentPosition = duration;
         }
-        PlayerLog.d("播放进度", "当前播放进度   " + currentPosition + " / " + duration);
-        onPLplayerProgress(currentPosition, duration);
+        PlayerLog.d("播放进度", "类型=" + type + " 当前播放进度   " + currentPosition + " / " + duration);
+        onPlayerProgress(currentPosition, duration, type);
     }
 
     //视频播放进度
-    protected void onPLplayerProgress(long currentPosition, long duration) {
+    protected void onPlayerProgress(long currentPosition, long duration, int type) {
 
     }
 
@@ -325,12 +329,12 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     }
 
     //播放完成 isLoop：true 是循环
-    protected void onPLplayerCompleted(boolean isLoop) {
+    protected void onPLPlayerCompleted(boolean isLoop) {
     }
 
     @OptIn(markerClass = UnstableApi.class)
     protected void onPLPlayerError(PlaybackException error) {
-        playerView.setCustomErrorMessage( PlayerErrorMessageUtil.getPlayerErrorUiMessage(error));
+        playerView.setCustomErrorMessage(PlayerErrorMessageUtil.getPlayerErrorUiMessage(error));
     }
 
 
@@ -352,11 +356,11 @@ public class VideoFrg1 extends VideoBaseFrg0 {
                 case Player.STATE_READY:
                     PlayerLog.d("视频播放", "播放状态 准备就绪，可以播放 state=" + playbackState);
                     onPLReadyCompleted();
-                    onPLplayerUpdate(false);
+                    setPlayerProgress(1);
                     break;
                 case Player.STATE_ENDED:
-                    onPLplayerUpdate(true);
-                    onPLplayerCompleted(false);
+                    onPLPlayerCompleted(false);
+                    setPlayerProgress(10);
                     PlayerLog.d("视频播放", "播放状态 播放结束 state=" + playbackState);
                     break;
                 default:
@@ -372,26 +376,59 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             PlayerLog.d("视频播放", "接收播放意图  playWhenReady=" + playWhenReady + "  reason=" + reason);
         }
 
+        /**
+         * 播放位置发生不连续变化时，根据原因更新进度。
+         * oldPosition 是变化前的位置，newPosition 是变化后的位置。
+         */
         @Override
         public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
             Player.Listener.super.onPositionDiscontinuity(oldPosition, newPosition, reason);
             // 位置跳跃，例如快进或快退
             switch (reason) {
                 case Player.DISCONTINUITY_REASON_AUTO_TRANSITION:
-                    // 循环播放
-                    onPLplayerUpdate(true);
-                    onPLplayerCompleted(true);
+                    //自动切换播放段，包括循环、下一条媒体和广告切换；当前单视频按循环完成处理
+                    onPLPlayerCompleted(true);
+                    setPlayerProgress(11);
+                    PlayerLog.d("视频播放", "位置跳跃，循环播放 reason=" + reason);
                     break;
                 case Player.DISCONTINUITY_REASON_SEEK:
-                    // 用户进行了快进或快退操作
+                    //主动跳转播放位置，例如快进、快退或调用 seekTo()
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，例如快进或快退 reason=" + reason);
                     break;
                 case Player.DISCONTINUITY_REASON_SEEK_ADJUSTMENT:
-                    // 由于缓冲或其他原因，播放位置被自动调整
+                    //请求的位置无法精确到达，播放器调整跳转位置
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，请求的位置无法精确到达，播放器调整跳转位置 reason=" + reason);
                     break;
-                // 其他原因...
+                case Player.DISCONTINUITY_REASON_SKIP:
+                    //跳过一个播放段，例如跳过广告
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，跳过一个播放段，例如跳过广告 reason=" + reason);
+                    break;
+                case Player.DISCONTINUITY_REASON_REMOVE:
+                    //当前播放段从播放时间线中被移除，引起位置变化
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，当前播放段从播放时间线中被移除，引起位置变化 reason=" + reason);
+                    break;
+                case Player.DISCONTINUITY_REASON_INTERNAL:
+                    //播放器或播放源内部引起的位置变化
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，播放器或播放源内部引起的位置变化 reason=" + reason);
+                    break;
+                case Player.DISCONTINUITY_REASON_SILENCE_SKIP:
+                    //启用跳过静音后，跳过音频中的静音片段
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，跳过音频中的静音片段 reason=" + reason);
+                    break;
+                default:
+                    //为后续版本新增的位置变化原因保留进度更新处理
+                    setPlayerProgress(3);
+                    PlayerLog.d("视频播放", "位置跳跃，其他原因 reason=" + reason);
+                    break;
             }
-            PlayerLog.d("视频播放", "位置跳跃，例如快进或快退 reason" + reason);
-            onPLplayerUpdate(false);
+
+
         }
 
         @Override
