@@ -70,11 +70,18 @@ class PlayerDB {
             // 媒体还没加载好 / 直播流，没有进度
             progress = -1;
         }
-        dbUpdateVideoPro(context, videoUrl, progress, player.getDuration());
+        long duration = player.getDuration();
+        if (duration == C.TIME_UNSET) {
+            duration = -1;
+        }
+        dbUpdateVideoPro(context, videoUrl, progress, duration);
     }
 
     //更新播放进度
     protected void dbUpdateVideoPro(Context context, String videoUrl, long currentPosition, long duration) {
+        if (duration <= 0) {
+            return;
+        }
         long time = new Date().getTime();
         MediaRoom.geVideoDb(context).updateVideoLookHis(videoUrl, currentPosition, duration, time);
 
@@ -177,7 +184,8 @@ class PlayerDB {
                         return getVideoSizeKb(cursor.getLong(sizeIndex));
                     }
                 }
-            } catch (SecurityException | IllegalArgumentException | UnsupportedOperationException exception) {
+            } catch (SecurityException | IllegalArgumentException |
+                     UnsupportedOperationException exception) {
                 PlayerLog.d("视频数据库", "无法查询本地视频大小：" + exception.getMessage());
             }
         }
