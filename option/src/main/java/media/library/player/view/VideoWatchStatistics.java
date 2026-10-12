@@ -5,6 +5,8 @@ import android.text.TextUtils;
 
 import java.util.ArrayList;
 
+import media.library.player.bean.VideoEntity;
+
 /**
  * 统计当前播放地址的实际观看时长。
  */
@@ -24,7 +26,6 @@ public final class VideoWatchStatistics {
     private String tag2 = "";//额外参数
     private String tag3 = "";//额外参数
     private String tag4 = "";//额外参数
-
 
 
     //设置播放地址，地址改变时清空原来的统计
@@ -239,6 +240,11 @@ public final class VideoWatchStatistics {
 
     public void setTag4(String tag4) {
         this.tag4 = tag4;
+    }
+
+    //=============读取数据库的数据
+    public void setReadDB(VideoEntity videoEntity) {
+
     }
 
 

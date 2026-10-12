@@ -273,8 +273,10 @@ class BaseMediaSource extends BaseExoPlayer {
                 }
                 cacheDir = candidate;
                 dbSetVideoCacheUse(playerContext, cacheDir);
+                watchStatistics.setReadDB(entity);
                 break;
             }
+            watchStatistics.setReadDB(datas.get(0));
         }
         if (cacheDir == null) {
             cacheDir = createCacheDir(datas == null ? 0 : datas.size());

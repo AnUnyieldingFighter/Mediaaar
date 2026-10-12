@@ -2,7 +2,9 @@ package media.library.player.view;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.OpenableColumns;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 
@@ -58,9 +60,9 @@ class PlayerDB {
         MediaRoom.geVideoDb(context).updateVideoMetadata(videoUrl, id, title, description, artworkUrl);
     }
 
-    //完成或停止时保存进度；释放或更换地址前由调用方先暂停或停止旧视频
+    //完成或停止时保存进度，播放失败不记录；释放或更换地址前由调用方先暂停或停止旧视频
     protected void dbSaveVideoHistory(Context context, String videoUrl, Player player) {
-        if (player == null || TextUtils.isEmpty(videoUrl)) {
+        if (player == null || player.getPlayerError() != null || TextUtils.isEmpty(videoUrl)) {
             return;
         }
         long progress = player.getCurrentPosition();
@@ -144,7 +146,11 @@ class PlayerDB {
         }
         Uri uri = Uri.parse(videoUrl);
         String scheme = uri.getScheme();
-        if (scheme == null || "file".equalsIgnoreCase(scheme)) {
+        if (scheme == null) {
+            //没有 URI scheme 时，videoUrl 就是普通文件路径，不能再通过 Uri.getPath() 解析
+            File file = new File(videoUrl);
+            return file.isFile() ? getVideoSizeKb(file.length()) : -1;
+        } else if ("file".equalsIgnoreCase(scheme)) {
             String path = uri.getPath();
             if (path != null) {
                 File file = new File(path);
@@ -160,6 +166,19 @@ class PlayerDB {
                 }
             } catch (IOException | SecurityException exception) {
                 PlayerLog.d("视频数据库", "无法获取本地视频大小：" + exception.getMessage());
+            }
+
+            //部分 ContentProvider 不提供 AssetFileDescriptor 长度，改从 OpenableColumns.SIZE 查询
+            try (Cursor cursor = context.getContentResolver().query(
+                    uri, new String[]{OpenableColumns.SIZE}, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                    if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) {
+                        return getVideoSizeKb(cursor.getLong(sizeIndex));
+                    }
+                }
+            } catch (SecurityException | IllegalArgumentException | UnsupportedOperationException exception) {
+                PlayerLog.d("视频数据库", "无法查询本地视频大小：" + exception.getMessage());
             }
         }
         return -1;

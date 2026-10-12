@@ -388,7 +388,6 @@ class BaseExoPlayer extends PlayerDB {
             switch (playbackState) {
                 case Player.STATE_IDLE:
                     //即播放器停止和播放失败时的状态。
-                    dbSaveVideoHistory(playerContext, videoUrl, player);
                     break;
                 case Player.STATE_BUFFERING:
                     //缓冲状态和速度日志由 AnalyticsListener 统一打印
@@ -506,7 +505,7 @@ class BaseExoPlayer extends PlayerDB {
             //Source error code:2004 codeName:ERROR_CODE_IO_BAD_HTTP_STATUS   404 地址错误
             //Unexpected runtime error code:1004 codeName:ERROR_CODE_FAILED_RUNTIME_CHECK //意外错误
             PlayerLog.d(tag, buildPlayerErrorMessage(error));
-            dbSaveVideoHistory(playerContext, videoUrl, player);
+            //播放失败不保存观看历史，避免未播放成功的视频被记录为已观看
             watchStatistics.setPlaying(false);
             isError = true;
             isReady = false;

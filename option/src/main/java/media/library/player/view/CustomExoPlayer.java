@@ -219,10 +219,12 @@ public class CustomExoPlayer extends BaseMediaSource {
         } else {
             player.setPlayWhenReady(false);
         }
-        //暂停时直接保存进度，缓冲期间暂停也保存
-        long currentPosition = getCurrentPosition();
-        long duration = getDuration();
-        dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
+        //暂停时直接保存进度，缓冲期间暂停也保存；播放失败后暂停不记录历史
+        if (!isError && player.getPlayerError() == null) {
+            long currentPosition = getCurrentPosition();
+            long duration = getDuration();
+            dbUpdateVideoPro(playerContext, videoUrl, currentPosition, duration);
+        }
     }
 
     @Deprecated
