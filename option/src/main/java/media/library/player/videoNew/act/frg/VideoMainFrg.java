@@ -248,7 +248,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
 
     @Override
-    public void recordDuration(String id, int pageIndex, long pro, long total, CustomExoPlayer customExoPlayer, Player player, PlayerView playerView) {
+    public void recordDuration(String id, int pageIndex, long pro, long total, CustomExoPlayer customExoPlayer, Player player, PlayerView playerView, int type) {
 
     }
 
