@@ -274,7 +274,7 @@ public class VideoFrg extends VideoBaseFrg {
             return;
         }
         int playbackState = temp.getPlaybackState();
-        PlayerLog.d("播放进度", "当前播放进度   playbackState=" + playbackState);
+        PlayerLog.d("播放进度", "当前播放进度2   playbackState=" + playbackState);
         if (playbackState == Player.STATE_READY) {
             updatePlaybackStatus(false);
         }

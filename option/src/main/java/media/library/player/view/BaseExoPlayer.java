@@ -222,14 +222,10 @@ class BaseExoPlayer extends PlayerDB {
 
     //===============================设置添加/取消监听===========================
     private Player.Listener listener;
+    //发生错误之后，如果没有调用 retry 时，会重新创建播放器，要重新 设置监听 (listener与analyticsListener)
 
     public void addListener(Player.Listener listener) {
         if (listener == null) {
-            return;
-        }
-        if (isError) {
-            //错误后可能直接重试，也可能重建播放器：当前播放器和待重建播放器都要保留监听
-            this.listener = listener;
             return;
         }
         if (player == null) {
@@ -249,8 +245,9 @@ class BaseExoPlayer extends PlayerDB {
         player.removeListener(listener);
     }
 
-    AnalyticsListener analyticsListener;
+    private AnalyticsListener analyticsListener;
 
+    //发生错误之后，如果没有调用 retry 时，会重新创建播放器，要重新 设置监听 (listener与analyticsListener)
     public void addAnalyticsListener(AnalyticsListener listener) {
         if (listener == null) {
             return;

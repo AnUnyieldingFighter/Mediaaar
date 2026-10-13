@@ -281,7 +281,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             return;
         }
         int playbackState = temp.getPlaybackState();
-        PlayerLog.d("播放进度", "当前播放进度   playbackState=" + playbackState);
+        PlayerLog.d("播放进度", "当前播放进度1   playbackState=" + playbackState);
         if (playbackState == Player.STATE_READY) {
             setPlayerProgress(2);
         }
@@ -302,7 +302,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         if (type == 10) {
             currentPosition = duration;
         }
-        PlayerLog.d("播放进度", "类型=" + type + " 当前播放进度   " + currentPosition + " / " + duration);
+        PlayerLog.d("播放进度", "类型=" + type + " 当前播放进度3   " + currentPosition + " / " + duration);
         onPlayerProgress(currentPosition, duration, type);
     }
 
