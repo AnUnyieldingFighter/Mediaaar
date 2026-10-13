@@ -104,6 +104,8 @@ public final class VideoWatchStats extends BaseStats {
         videoStartLookTime = now;
     }
 
+
+
     //清空当前播放地址的统计
     private void clearData() {
         videoEndNum.clear();
@@ -130,6 +132,19 @@ public final class VideoWatchStats extends BaseStats {
     public void setRelease() {
         videoUrl = "";
         clearData();
+    }
+    /**
+     * 重置本次观看记录：清空总观看时长、当前轮观看时长、完成次数和每次完成的观看时长。
+     * 保留视频地址、视频信息和额外参数，不改变当前播放状态。
+     * 正在播放时从重置时刻重新计时，暂停或缓冲时仍不计时。
+     */
+    public void resetWatchStats() {
+        videoEndNum.clear();
+        videoLookTimes.clear();
+        videoAllLookTime = 0;
+        videoCurrentLookTime = 0;
+        videoStartLookTime = isPlaying ? SystemClock.elapsedRealtime() : 0;
+        isEnd = false;
     }
     //===============================外部用方法
     //获取总观看时长，正在播放的这一段也包含在内
@@ -163,12 +178,12 @@ public final class VideoWatchStats extends BaseStats {
 
     //完成次数
     public ArrayList<Integer> getVideoEndNum() {
-        return new ArrayList<>(videoEndNum);
+        return videoEndNum;
     }
 
     //每次完成的观看时长，单位毫秒
     public ArrayList<Long> getVideoLookTimes() {
-        return new ArrayList<>(videoLookTimes);
+        return videoLookTimes;
     }
 
     //获取数据库扩展字段 1
@@ -219,7 +234,6 @@ public final class VideoWatchStats extends BaseStats {
     public void setTag4(String tag4) {
         this.tag4 = tag4;
     }
-
 
 
 }
