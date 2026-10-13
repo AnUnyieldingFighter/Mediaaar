@@ -19,7 +19,7 @@ public interface OnVideoOperate2 {
 
     //记录观看时长
     void recordDuration(String id, int pageIndex, long pro, long total, CustomExoPlayer customExoPlayer,
-                        Player player, PlayerView playerView);
+                        Player player, PlayerView playerView,int type);
 
 
     //pageIndex  拉指定页的数据 isPre :true 预记载
