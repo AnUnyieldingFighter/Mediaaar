@@ -26,7 +26,6 @@ import media.library.player.videoNew.able.OnVideoData2;
 import media.library.player.videoNew.able.OnVideoLoading;
 import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
-import media.library.player.videoNew.frg2.VideoFrg1;
 import media.library.player.videoNew.frg2.VideoFrg11;
 import media.library.player.videoNew.manger.ShortVideoManager2;
 import media.library.player.view.CustomExoPlayer;
@@ -235,11 +234,18 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
     //=====================视频数据，播放 操作接口======================================
 
+    /** 根据页面对象获取播放器。 */
     @Override
-    public CustomExoPlayer getExoPlayer(Integer pageIndex, String videoUrl) {
-        CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(pageIndex);
+    public CustomExoPlayer getExoPlayer(Fragment frg, Integer pageIndex, String videoUrl) {
+        CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(frg);
         customExoPlayer.setARB(true);
         return customExoPlayer;
+    }
+
+    /** 页面销毁时移除对应关系并释放播放器。 */
+    @Override
+    public void setDelFrg(Fragment frg) {
+        videoPlaysManager.setDelFrg(frg);
     }
 
     @Override

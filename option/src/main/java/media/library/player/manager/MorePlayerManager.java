@@ -10,7 +10,9 @@ import media.library.player.view.CustomExoPlayer;
 public class MorePlayerManager {
     private final HashMap<Fragment, CustomExoPlayer> players = new HashMap<>();
 
-    /** 获取页面对应的播放器，不存在时创建。 */
+    /**
+     * 获取页面对应的播放器，不存在时创建。
+     */
     public CustomExoPlayer getCustomExoPlayer(Fragment frg) {
         CustomExoPlayer temp = players.get(frg);
         if (temp == null) {
@@ -23,19 +25,25 @@ public class MorePlayerManager {
     //释放全部资源
     public void setExoPlayerRelease() {
         for (CustomExoPlayer player : players.values()) {
-            player.release();
+            if (player != null) {
+                player.setPlayerViewRelease();
+                player.release();
+            }
         }
         players.clear();
         customExoPlayer = null;
     }
 
-    /** 移除页面对应的播放器并释放资源。 */
+    /**
+     * 移除页面对应的播放器并释放资源。
+     */
     public void setDelExoPlayer(Fragment frg) {
         CustomExoPlayer player = players.remove(frg);
         if (player != null) {
             if (customExoPlayer == player) {
                 customExoPlayer = null;
             }
+            player.setPlayerViewRelease();
             player.release();
         }
     }

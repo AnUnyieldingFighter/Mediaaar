@@ -153,7 +153,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         //
         isVideoHorizontalScreen = false;
         //
-        exoPlayer = videoOperate2.getExoPlayer(pageIndex, videoUrl);
+        exoPlayer = videoOperate2.getExoPlayer(this, pageIndex, videoUrl);
         exoPlayer.setPlayerVideo(act, videoUrl, isUseCache);
         //
         exoPlayer.setPlayerView(playerView);
@@ -229,16 +229,23 @@ public class VideoFrg1 extends VideoBaseFrg0 {
 
     @Override
     public void onDestroy() {
-        if (exoPlayer != null) {
-            exoPlayer.setPlayerViewRelease();
-            exoPlayer = null;
+        //通知管理器移除当前页面的播放器，包括尚未绑定到页面的预加载播放器。
+        if (videoOperate2 != null) {
+            videoOperate2.setDelFrg(this);
         }
+        exoPlayer = null;
         super.onDestroy();
         PlayerLog.d("frg_", "onDestroy " + pageIndex + " video:" + videoUrl);
     }
 
     @Override
     public void onDestroyView() {
+        //解绑旧播放视图，播放器保留到 onDestroy 再释放。
+        if (exoPlayer != null) {
+            exoPlayer.setPlayerViewRelease();
+        }
+        playerView = null;
+        tvIndex = null;
         super.onDestroyView();
         //视图不可见  Fragment实例还在
         PlayerLog.d("frg_", "onDestroyView " + pageIndex + " video:" + videoUrl);

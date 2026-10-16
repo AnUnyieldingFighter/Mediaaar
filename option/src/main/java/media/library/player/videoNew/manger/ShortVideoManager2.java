@@ -241,8 +241,17 @@ public class ShortVideoManager2 {
     //获取播放器
     public CustomExoPlayer getExoPlayer(Integer pageIndex) {
         PlayerLog.d("播放视频", "更新  urlIndexs  index:" + pageIndex);
-        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(getCursorFrg(pageIndex));
-        return exoPlayer;
+        return getExoPlayer(getCursorFrg(pageIndex));
+    }
+
+    /** 根据页面对象获取对应的播放器。 */
+    public CustomExoPlayer getExoPlayer(Fragment frg) {
+        return getPlayerManager().getCustomExoPlayer(frg);
+    }
+
+    /** 移除页面与播放器的对应关系，并释放播放器。 */
+    public void setDelFrg(Fragment frg) {
+        getPlayerManager().setDelExoPlayer(frg);
     }
 
     //获取当前的播放器
@@ -317,7 +326,7 @@ public class ShortVideoManager2 {
             }
         }
         //移除并释放被删除页面的播放器。
-        getPlayerManager().setDelExoPlayer(getCursorFrg(index));
+        setDelFrg(getCursorFrg(index));
         //删除一个frg再补一个frg。
         adapter.removeFrg(index, getFrg());
         if (adapter.getDataSize() == 0) {
