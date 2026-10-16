@@ -27,8 +27,13 @@ public interface OnVideoOperate2 {
                         Player player, PlayerView playerView, int type);
 
 
-    //pageIndex  拉指定页的数据 isPre :true 预记载
-    VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre);
+    /**
+     * 获取指定页面的播放数据。
+     * @param pageIndex 页面索引，包含独立插入的广告页。
+     * @param isPre true 为预加载。
+     * @param isAd true 为独立插入的广告，false 为原视频列表中的视频。
+     */
+    VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre, boolean isAd);
 
     //已成功添加淘容器里
     void onFrgAttach(Fragment frg);

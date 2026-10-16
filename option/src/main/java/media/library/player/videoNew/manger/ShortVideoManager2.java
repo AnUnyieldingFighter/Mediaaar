@@ -150,10 +150,15 @@ public class ShortVideoManager2 {
         viewPagerView.setUserInputEnabled(isSlide);
     }
 
-    //更新数据数量
+    //更新视频数据数量，不包含独立插入的广告页。
     public void setUpdateDataSize(int dataSzie) {
         adapter.setDataSize(dataSzie);
 
+    }
+
+    /** 获取页面对应的原视频列表索引，广告页或无效位置返回 -1。 */
+    public int getVideoDataIndex(int pageIndex) {
+        return adapter.getVideoDataIndex(pageIndex);
     }
 
     //跳转指定页面，并且获取对象
@@ -323,9 +328,44 @@ public class ShortVideoManager2 {
         exoPlayer.setRepeatMode(Player.REPEAT_MODE_ALL);
     }
 
-    //再指定位置加入一个frg
+    /**
+     * 在指定页面位置插入独立 Fragment，例如广告，不修改原视频列表，不参与七个视频页的复用。
+     * index 从 0 开始，传入 getResumeIndex() + 1 即插在当前页之后，也可以追加到末尾。
+     * 插入时保持当前页面和播放状态；需要删除时调用 delFrgPlay(广告当前所在的页面索引)。
+     */
     public void addFrg(int index, VideoBaseFrg0 frg) {
-
+        if (adapter == null || viewPagerView == null || frg == null) {
+            return;
+        }
+        int size = adapter.getDataSize();
+        if (index < 0 || index > size || frg.isAdded() || adapter.containsFrg(frg)) {
+            return;
+        }
+        int currentIndex = getResumeIndex();
+        viewPagerView.unregisterOnPageChangeCallback(onPageChange);
+        try {
+            mapFrg.clear();
+            if (frg instanceof VideoFrg11) {
+                ((VideoFrg11) frg).setAd(true);
+            }
+            adapter.addFrg(index, frg);
+            if (size > 0 && index <= currentIndex) {
+                //先对齐页码，再通知刷新，保持当前 Fragment 和播放器不变。
+                viewPagerView.setCurrentItem(currentIndex + 1, false);
+            }
+            adapter.notifyDataSetChanged();
+            if (size == 0) {
+                VideoBaseFrg0 currentFrg = getCursorVideoFrg();
+                setPageChange(cursorFrg, currentFrg);
+                cursorFrg = currentFrg;
+                setVideoPlay(0);
+            } else {
+                setPageLoadNext();
+                setPageLoadUp();
+            }
+        } finally {
+            viewPagerView.registerOnPageChangeCallback(onPageChange);
+        }
     }
 
     /**
@@ -338,7 +378,8 @@ public class ShortVideoManager2 {
     }
 
     /**
-     * 删除指定页的数据；删除当前页时切换视频，删除其他页时保留当前视频。
+     * 删除指定页；视频页需先删除业务数据，广告页只删除页面，不操作原视频列表。
+     * 删除当前页时切换页面，删除其他页时保留当前视频。
      */
     public void delFrgPlay(int index) {
         int size = adapter.getDataSize();
@@ -352,6 +393,9 @@ public class ShortVideoManager2 {
             mapFrg.clear();
             if (index != currentIndex) {
                 //非当前frg
+                if (adapter.isInsertedFrg(index)) {
+                    setDelFrg(getCursorFrg(index));
+                }
                 adapter.removeData(index, currentIndex);
                 if (index < currentIndex) {
                     viewPagerView.setCurrentItem(currentIndex - 1, false);
@@ -366,9 +410,15 @@ public class ShortVideoManager2 {
             VideoBaseFrg0 frg = getCursorFrg(index);
             setVideoPause(frg);
             setDelFrg(frg);
-            //按循环顺序前移，使下一页的 Fragment 对应删除后的当前索引。
-            adapter.removeFrg(index, getFrg());
+            if (adapter.isInsertedFrg(index)) {
+                //广告页直接移除，不调整视频复用池。
+                adapter.removeData(index, currentIndex);
+            } else {
+                //按循环顺序前移，使下一视频页对应删除后的索引。
+                adapter.removeFrg(index, getFrg());
+            }
             if (adapter.getDataSize() == 0) {
+                adapter.notifyDataSetChanged();
                 setPageChange(cursorFrg, null);
                 cursorFrg = null;
                 return;
@@ -376,6 +426,7 @@ public class ShortVideoManager2 {
             //还有下一条时保持原索引；删除末条时转到上一条。
             currentIndex = Math.min(index, adapter.getDataSize() - 1);
             viewPagerView.setCurrentItem(currentIndex, false);
+            adapter.notifyDataSetChanged();
             VideoBaseFrg0 currentFrg = getCursorVideoFrg();
             if (cursorFrg != currentFrg) {
                 setPageChange(cursorFrg, currentFrg);

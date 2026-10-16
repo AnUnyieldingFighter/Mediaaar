@@ -99,7 +99,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 if (videos.size() == 0) {
                     return;
                 }
-                int resumeIndex = videoPlaysManager.getResumeIndex();
+                int resumeIndex = videoPlaysManager.getVideoDataIndex(videoPlaysManager.getResumeIndex());
                 int dataNum = (videos.size() - 1);
                 if (resumeIndex != dataNum) {
                     return;
@@ -129,11 +129,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             public void onClick(View v) {
                 //删除一个视频
                 int resumeIndex = videoPlaysManager.getResumeIndex();
-                if (videos.size() == 0) {
+                if (videoPlaysManager.getCursorVideoFrg() == null) {
                     return;
                 }
-                Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(resumeIndex));
-                videos.remove(resumeIndex);
+                int videoIndex = videoPlaysManager.getVideoDataIndex(resumeIndex);
+                if (videoIndex >= 0) {
+                    Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(videoIndex));
+                    videos.remove(videoIndex);
+                }
                 videoPlaysManager.delFrgPlay();
             }
         });
@@ -289,21 +292,26 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     @Override
     public void setPageChange(VideoBaseFrg0 frgExit, VideoBaseFrg0 frgEnter) {
-        viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
+        viewEmpty.setVisibility(frgEnter == null ? View.VISIBLE : View.GONE);
         Log.d("切换 退出：" + (frgExit != null), "切换 进入" + (frgEnter != null));
     }
 
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null
     @Override
-    public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre) {
-        var index = pageIndex;
+    public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre, boolean isAd) {
+        if (isAd) {
+            //在这里单独提供广告的播放数据；示例暂未配置广告视频。
+            return null;
+        }
+        //页面索引包含广告，读取原视频列表前先转换；广告页不读取视频数据。
+        int index = videoPlaysManager.getVideoDataIndex(pageIndex);
         //数据删除或刷新后，旧索引可能已超出范围。
         if (videos == null || index < 0 || index >= videos.size()) {
             return null;
         }
         String videoUrl = videos.get(index);
         VideoPlayVo vo = new VideoPlayVo();
-        vo.pageIndex = index;
+        vo.pageIndex = pageIndex;
         vo.url = videoUrl;
         vo.id = "-1";
         return vo;

@@ -8,6 +8,13 @@ import media.library.player.manager.PlayerLog;
 
 public class VideoFrg11 extends VideoFrg1 {
 
+    //true 为独立插入的广告页，不参与原视频页面的复用。
+    private boolean isAd;
+
+    /** 设置当前页面是否为独立插入的广告页。 */
+    public void setAd(boolean isAd) {
+        this.isAd = isAd;
+    }
 
     /** 页面恢复时，获取当前页的数据并播放。 */
     @Override
@@ -23,14 +30,14 @@ public class VideoFrg11 extends VideoFrg1 {
      */
     public void setVideoDataPre(int index) {
         PlayerLog.d("视频播放 预加加载", "pageIndex=" + index);
-        setVideoData(videoOperate2.getVideoPlayData(index, true), true);
+        setVideoData(videoOperate2.getVideoPlayData(index, true, isAd), true);
     }
 
     /** 获取当前显示页面的数据并播放，不使用上次加载时保存的索引。 */
     public void setVideoDataPlay() {
         int index = videoOperate2.getResumeIndex();
         PlayerLog.d("视频播放 加载播放", "pageIndex=" + index);
-        setVideoData(videoOperate2.getVideoPlayData(index, false), false);
+        setVideoData(videoOperate2.getVideoPlayData(index, false, isAd), false);
     }
 
     /**

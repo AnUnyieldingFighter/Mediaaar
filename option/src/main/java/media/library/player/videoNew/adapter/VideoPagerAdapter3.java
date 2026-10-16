@@ -3,6 +3,7 @@ package media.library.player.videoNew.adapter;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.TreeMap;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -12,6 +13,8 @@ import media.library.player.videoNew.frg2.VideoBaseFrg0;
 
 public class VideoPagerAdapter3 extends FragmentStateAdapter {
     private ArrayList<VideoBaseFrg0> frgs = new ArrayList<>();
+    //独立插入的广告页，键为页面索引，不参与视频页面复用。
+    private final TreeMap<Integer, VideoBaseFrg0> insertedFrgs = new TreeMap<>();
     //数据数量
     private int dataSize;
     //true 无限翻页
@@ -63,11 +66,13 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     public void setFrgs(ArrayList<VideoBaseFrg0> frgs) {
+        insertedFrgs.clear();
         this.frgs = frgs;
         this.dataSize = frgs.size();
     }
 
     public void setData(ArrayList<VideoBaseFrg0> frgs) {
+        insertedFrgs.clear();
         this.frgs = frgs;
         this.dataSize = frgs.size();
         notifyDataSetChanged();
@@ -79,7 +84,11 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
 
 
     private VideoBaseFrg0 getFrg(int position) {
-        int index = position % frgs.size();
+        VideoBaseFrg0 inserted = insertedFrgs.get(position);
+        if (inserted != null) {
+            return inserted;
+        }
+        int index = getVideoDataIndex(position) % frgs.size();
         VideoBaseFrg0 frg = frgs.get(index);
         return frg;
     }
@@ -90,20 +99,28 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     /**
-     * 删除当前页，并按循环顺序前移后续页面，末位补入新页面。
+     * 删除当前视频页，并按循环顺序前移后续视频页面，末位补入新页面。
+     * 调用方对齐当前页码后，再通知刷新。
      */
     public void removeFrg(int position, VideoBaseFrg0 frg) {
-        int index = position % frgs.size();
+        int index = getVideoDataIndex(position) % frgs.size();
         for (int i = 0; i < frgs.size() - 1; i++) {
             int slot = (index + i) % frgs.size();
             frgs.set(slot, frgs.get((slot + 1) % frgs.size()));
         }
         frgs.set((index + frgs.size() - 1) % frgs.size(), frg);
         this.dataSize -= 1;
-        notifyDataSetChanged();
+        shiftInsertedFrgs(position + 1, -1);
     }
 
     public void removeFrg(Fragment frgDel, VideoBaseFrg0 frg) {
+        for (Integer position : new ArrayList<>(insertedFrgs.keySet())) {
+            if (insertedFrgs.get(position) == frgDel) {
+                removeData(position, position);
+                notifyDataSetChanged();
+                return;
+            }
+        }
         frgs.remove(frgDel);
         if (frg != null) {
             frgs.add(frg);
@@ -113,14 +130,56 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     /**
+     * 插入独立页面，不改变视频数据数量和原有七个视频页面的复用顺序。
+     * 调用方对齐当前页码后，再通知刷新。
+     */
+    public void addFrg(int position, VideoBaseFrg0 frg) {
+        shiftInsertedFrgs(position, 1);
+        insertedFrgs.put(position, frg);
+    }
+
+    /** 判断页面是否为独立插入的广告页。 */
+    public boolean isInsertedFrg(int position) {
+        return insertedFrgs.containsKey(position);
+    }
+
+    /** 判断对象是否已在视频复用池或独立页面中，避免重复使用同一个 Fragment。 */
+    public boolean containsFrg(VideoBaseFrg0 frg) {
+        return frgs.contains(frg) || insertedFrgs.containsValue(frg);
+    }
+
+    /** 将页面索引转换为原视频列表索引，广告页或无效位置返回 -1。 */
+    public int getVideoDataIndex(int position) {
+        if (position < 0 || position >= getDataSize() || isInsertedFrg(position)) {
+            return -1;
+        }
+        return position - insertedFrgs.headMap(position).size();
+    }
+
+    /** 插入或删除页面时，统一调整后面广告页的索引。 */
+    private void shiftInsertedFrgs(int fromPosition, int offset) {
+        ArrayList<Integer> positions = new ArrayList<>(insertedFrgs.tailMap(fromPosition).keySet());
+        if (offset > 0) {
+            Collections.reverse(positions);
+        }
+        for (Integer position : positions) {
+            VideoBaseFrg0 frg = insertedFrgs.remove(position);
+            insertedFrgs.put(position + offset, frg);
+        }
+    }
+
+    /**
      * 删除非当前页的数据；删除前面的数据时，将当前 Fragment 对应的槽位前移一位。
      * 调用方对齐当前页码后，再调用 notifyDataSetChanged 刷新。
      */
     public void removeData(int position, int currentPosition) {
-        if (position < currentPosition) {
-            Collections.rotate(frgs, -1);
+        if (insertedFrgs.remove(position) == null) {
+            if (position < currentPosition) {
+                Collections.rotate(frgs, -1);
+            }
+            this.dataSize -= 1;
         }
-        this.dataSize -= 1;
+        shiftInsertedFrgs(position + 1, -1);
     }
 
     public int getFrgSize() {
@@ -128,7 +187,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     public int getDataSize() {
-        return dataSize;
+        return dataSize + insertedFrgs.size();
     }
 
     @NonNull
@@ -146,11 +205,16 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
 
     // 可选：让 Adapter 知道这个 Fragment 是哪个
     public VideoBaseFrg0 getFragmentAt(int pos) {
-        return frgs.get(pos % frgs.size());
+        return getFrg(pos);
     }
 
     @Override
     public boolean containsItem(long itemId) {
+        for (VideoBaseFrg0 frg : insertedFrgs.values()) {
+            if (frg.hashCode() == itemId) {
+                return true;
+            }
+        }
         for (int i = 0; i < frgs.size(); i++) {
             VideoBaseFrg0 frg = frgs.get(i);
             if (frg.hashCode() == itemId) {
@@ -171,7 +235,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         if (dataSize < 0) {
             dataSize = 0;
         }
-        return dataSize;
+        return getDataSize();
     }
 
     //true 页面无限
