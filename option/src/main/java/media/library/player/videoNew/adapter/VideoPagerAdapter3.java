@@ -8,8 +8,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
-import media.library.player.videoNew.frg2.VideoFrg1;
-import media.library.player.view.CustomExoPlayer;
 
 public class VideoPagerAdapter3 extends FragmentStateAdapter {
     private ArrayList<VideoBaseFrg0> frgs = new ArrayList<>();
@@ -95,17 +93,6 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
      */
     public void removeFrg(int position, VideoBaseFrg0 frg) {
         int index = position % frgs.size();
-        VideoBaseFrg0 temp = frgs.get(index);
-        if (temp instanceof VideoFrg1) {
-            CustomExoPlayer exoPlayer = ((VideoFrg1) temp).getExoPlayer();
-            if (exoPlayer != null) {
-                //正在播放就暂停
-                if (exoPlayer.isPlaying()) {
-                    exoPlayer.setPause();
-                }
-                exoPlayer.release();
-            }
-        }
         for (int i = 0; i < frgs.size() - 1; i++) {
             int slot = (index + i) % frgs.size();
             frgs.set(slot, frgs.get((slot + 1) % frgs.size()));

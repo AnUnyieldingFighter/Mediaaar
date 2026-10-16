@@ -170,7 +170,7 @@ public class ShortVideoManager {
     //获取播放器
     public CustomExoPlayer getExoPlayer(Integer pageIndex) {
         PlayerLog.d("播放视频", "更新  urlIndexs  index:" + pageIndex);
-        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(pageIndex);
+        CustomExoPlayer exoPlayer = getPlayerManager().getCustomExoPlayer(getCursorFrg(pageIndex));
         return exoPlayer;
     }
 

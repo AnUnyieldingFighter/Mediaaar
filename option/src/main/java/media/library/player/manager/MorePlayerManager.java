@@ -1,55 +1,43 @@
 package media.library.player.manager;
 
-import android.text.TextUtils;
+import androidx.fragment.app.Fragment;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
 import media.library.player.view.CustomExoPlayer;
 
 //保存播放器
 public class MorePlayerManager {
-    private ArrayList<CustomExoPlayer> players = new ArrayList<>();
-    private int playersMax = 7;
+    private final HashMap<Fragment, CustomExoPlayer> players = new HashMap<>();
 
-    public int getPlayersMax() {
-        return playersMax;
-    }
-
-    public CustomExoPlayer getCustomExoPlayer(Integer pageIndex) {
-        int index = pageIndex % playersMax;
-        CustomExoPlayer temp = null;
-        if (index >= players.size()) {
-            while (index >= players.size()) {
-                temp = new CustomExoPlayer();
-                players.add(temp);
-            }
+    /** 获取页面对应的播放器，不存在时创建。 */
+    public CustomExoPlayer getCustomExoPlayer(Fragment frg) {
+        CustomExoPlayer temp = players.get(frg);
+        if (temp == null) {
+            temp = new CustomExoPlayer();
+            players.put(frg, temp);
         }
-        temp = players.get(index);
         return temp;
     }
 
     //释放全部资源
     public void setExoPlayerRelease() {
-        for (int i = 0; i < players.size(); i++) {
-            CustomExoPlayer player = players.get(i);
-            if (player != null) {
-                player.release();
-            }
+        for (CustomExoPlayer player : players.values()) {
+            player.release();
         }
         players.clear();
+        customExoPlayer = null;
     }
 
-    /** 删除指定页的播放器，按与页面池相同的循环顺序前移，末位补入新播放器。 */
-    public void setDelExoPlayer(int pageIndex) {
-        int index = pageIndex % playersMax;
-        getCustomExoPlayer(playersMax - 1);
-        for (int i = 0; i < playersMax - 1; i++) {
-            int slot = (index + i) % playersMax;
-            players.set(slot, players.get((slot + 1) % playersMax));
+    /** 移除页面对应的播放器并释放资源。 */
+    public void setDelExoPlayer(Fragment frg) {
+        CustomExoPlayer player = players.remove(frg);
+        if (player != null) {
+            if (customExoPlayer == player) {
+                customExoPlayer = null;
+            }
+            player.release();
         }
-        players.set((index + playersMax - 1) % playersMax, new CustomExoPlayer());
     }
 
     //当前页面正在使用的
