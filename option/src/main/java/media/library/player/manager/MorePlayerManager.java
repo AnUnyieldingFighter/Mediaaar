@@ -41,13 +41,15 @@ public class MorePlayerManager {
         players.clear();
     }
 
-    //取出一个 页面索引删除
+    /** 删除指定页的播放器，按与页面池相同的循环顺序前移，末位补入新播放器。 */
     public void setDelExoPlayer(int pageIndex) {
         int index = pageIndex % playersMax;
-        if (index >= players.size()) {
-            return;
+        getCustomExoPlayer(playersMax - 1);
+        for (int i = 0; i < playersMax - 1; i++) {
+            int slot = (index + i) % playersMax;
+            players.set(slot, players.get((slot + 1) % playersMax));
         }
-        players.remove(index);
+        players.set((index + playersMax - 1) % playersMax, new CustomExoPlayer());
     }
 
     //当前页面正在使用的

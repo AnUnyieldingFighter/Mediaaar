@@ -225,6 +225,9 @@ public class ShortVideoManager2 {
 
     //获取当前页面对象
     public VideoBaseFrg0 getCursorVideoFrg() {
+        if (adapter.getDataSize() == 0) {
+            return null;
+        }
         int indexPage = viewPagerView.getCurrentItem();
         VideoBaseFrg0 cursorVideoFrg = getCursorFrg(indexPage);
         return cursorVideoFrg;
@@ -292,19 +295,19 @@ public class ShortVideoManager2 {
     }
 
 
-    private boolean isDel;
-
     /**
-     * 删除一个正在播放的
-     * 先删除数据，再更正下一个frg的索引，再删除播放器，再删除frg
+     * 删除当前正在播放的
+     * 调用前先删除业务数据；同步页面和播放器的循环顺序，再恢复播放及相邻页预加载。
      */
     public void delData() {
         int index = getResumeIndex();
-        isDel = true;
         int size = adapter.getDataSize();
-        if (size == 0) {
+        if (size == 0 || index < 0 || index >= size) {
             return;
         }
+        setVideoPause(getCursorVideoFrg());
+        //删除后页面映射已改变，相邻页的预加载任务会重新建立。
+        mapFrg.clear();
         int indexNext = index + 1;//下一个
         if (indexNext < size) {
             //不是最后一个 更改下一个 的索引
@@ -315,16 +318,24 @@ public class ShortVideoManager2 {
         }
         //从列表删除这个播放器
         getPlayerManager().setDelExoPlayer(index);
-        //去掉这个frg的预加载
-        setFrgPreDel(adapter.getFragmentAt(index));
         //删除一个frg再补一个frg，并且 释放播放器
         adapter.removeFrg(index, getFrg());
-        //预加载
-        if (indexNext == size) {
-            setPageLoadUp();
-        } else {
-            setPageLoadNext();
+        if (adapter.getDataSize() == 0) {
+            if (cursorFrg != null) {
+                setPageChange(cursorFrg, null);
+                cursorFrg = null;
+            }
+            return;
         }
+        int currentIndex = Math.min(index, adapter.getDataSize() - 1);
+        viewPagerView.setCurrentItem(currentIndex, false);
+        VideoBaseFrg0 currentFrg = getCursorVideoFrg();
+        //页码不变时也要记录删除后进入的新页面。
+        if (cursorFrg != currentFrg) {
+            setPageChange(cursorFrg, currentFrg);
+            cursorFrg = currentFrg;
+        }
+        setVideoPlay(currentIndex);
     }
 
     //播放下一个
@@ -479,11 +490,6 @@ public class ShortVideoManager2 {
             VideoBaseFrg0 temp = getCursorVideoFrg();
             setPageChange(cursorFrg, temp);
             cursorFrg = temp;
-            if (isDel) {
-                //删除 有自己的与加载逻辑
-                isDel = false;
-                return;
-            }
             setPageLoadNext();
             setPageLoadUp();
 

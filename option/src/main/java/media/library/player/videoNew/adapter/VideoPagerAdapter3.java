@@ -90,18 +90,27 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return frg;
     }
 
-    //删除了一个数据
+    /**
+     * 删除当前页，并按循环顺序前移后续页面，末位补入新页面。
+     */
     public void removeFrg(int position, VideoBaseFrg0 frg) {
         int index = position % frgs.size();
         VideoBaseFrg0 temp = frgs.get(index);
         if (temp instanceof VideoFrg1) {
             CustomExoPlayer exoPlayer = ((VideoFrg1) temp).getExoPlayer();
             if (exoPlayer != null) {
+                //正在播放就暂停
+                if (exoPlayer.isPlaying()) {
+                    exoPlayer.setPause();
+                }
                 exoPlayer.release();
             }
         }
-        frgs.remove(index);
-        frgs.add(frg);
+        for (int i = 0; i < frgs.size() - 1; i++) {
+            int slot = (index + i) % frgs.size();
+            frgs.set(slot, frgs.get((slot + 1) % frgs.size()));
+        }
+        frgs.set((index + frgs.size() - 1) % frgs.size(), frg);
         this.dataSize -= 1;
         notifyDataSetChanged();
     }
