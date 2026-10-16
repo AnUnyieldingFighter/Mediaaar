@@ -10,8 +10,11 @@ import media.library.player.view.CustomExoPlayer;
 
 public interface OnVideoOperate2 {
 
+    /** 获取当前显示页面的索引。 */
+    int getResumeIndex();
+
     //根据frg，获取一个播放实例
-    CustomExoPlayer getExoPlayer(Fragment frg, Integer pageIndex, String videoUrl);
+    CustomExoPlayer getExoPlayer(Fragment frg, String videoUrl);
 
     //删除这个frg
     void setDelFrg(Fragment frg);

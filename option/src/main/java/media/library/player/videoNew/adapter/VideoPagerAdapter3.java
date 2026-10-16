@@ -2,6 +2,7 @@ package media.library.player.videoNew.adapter;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -100,6 +101,26 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         frgs.set((index + frgs.size() - 1) % frgs.size(), frg);
         this.dataSize -= 1;
         notifyDataSetChanged();
+    }
+
+    public void removeFrg(Fragment frgDel, VideoBaseFrg0 frg) {
+        frgs.remove(frgDel);
+        if (frg != null) {
+            frgs.add(frg);
+        }
+        this.dataSize -= 1;
+        notifyDataSetChanged();
+    }
+
+    /**
+     * 删除非当前页的数据；删除前面的数据时，将当前 Fragment 对应的槽位前移一位。
+     * 调用方对齐当前页码后，再调用 notifyDataSetChanged 刷新。
+     */
+    public void removeData(int position, int currentPosition) {
+        if (position < currentPosition) {
+            Collections.rotate(frgs, -1);
+        }
+        this.dataSize -= 1;
     }
 
     public int getFrgSize() {

@@ -9,48 +9,37 @@ import media.library.player.manager.PlayerLog;
 public class VideoFrg11 extends VideoFrg1 {
 
 
-    //获取页面索引
-    public int getPageIndex() {
-        return pageIndex;
-    }
-
-    //因为删除了一个frg，这个是相邻的下一个frg，索引要变根
-    public void setUpdateIndex(int index) {
-        pageIndex = index;
-    }
-
+    /** 页面恢复时，获取当前页的数据并播放。 */
     @Override
     public void onResume() {
         super.onResume();
-        setVideoDataPlay(pageIndex);
+        setVideoDataPlay();
     }
 
 
     /**
-     * 预加载
-     *
-     * @param pageIndex
-     *
+     * 获取指定页面的数据并预加载，不开始播放。
+     * @param index 仅用于获取预加载数据的页面索引。
      */
-    public void setVideoDataPre(int pageIndex) {
-        PlayerLog.d("视频播放 预加加载", "pageIndex=" + pageIndex);
-        setVideoDataPlay(pageIndex, true);
+    public void setVideoDataPre(int index) {
+        PlayerLog.d("视频播放 预加加载", "pageIndex=" + index);
+        setVideoData(videoOperate2.getVideoPlayData(index, true), true);
     }
 
-    public void setVideoDataPlay(int pageIndex) {
-        PlayerLog.d("视频播放 加载播放", "pageIndex=" + pageIndex);
-        setVideoDataPlay(pageIndex, false);
+    /** 获取当前显示页面的数据并播放，不使用上次加载时保存的索引。 */
+    public void setVideoDataPlay() {
+        int index = videoOperate2.getResumeIndex();
+        PlayerLog.d("视频播放 加载播放", "pageIndex=" + index);
+        setVideoData(videoOperate2.getVideoPlayData(index, false), false);
     }
 
     /**
-     * 设置拉取播放数据
-     * 一切从这里开始
+     * 校验播放数据，再加载对应的视频。
      *
-     * @param pageIndex 要加载的数据索引
+     * @param videoPlayVo 已获取的视频数据。
      * @param isPreLoad true 是预加载，false 不是预加载
      */
-    private void setVideoDataPlay(int pageIndex, boolean isPreLoad) {
-        VideoPlayVo videoPlayVo = videoOperate2.getVideoPlayData(pageIndex, isPreLoad);
+    private void setVideoData(VideoPlayVo videoPlayVo, boolean isPreLoad) {
         if (videoPlayVo == null || videoPlayVo.pageIndex < 0 ||
                 TextUtils.isEmpty(videoPlayVo.url)) {
             String tempPage = "";
@@ -69,31 +58,25 @@ public class VideoFrg11 extends VideoFrg1 {
         setVideoStart(videoPlayVo, isPreLoad);
     }
 
-    //设置拉取其它数据（用户头像，昵称，点赞，收藏等）
-    public void setDataUpdate(int pageIndex) {
-
-    }
-
     //===============================================数据拉取
     //isPreloading true  是预加载
     protected void setVideoStart(VideoPlayVo videoPlayVo, boolean isPreloading) {
-        int tempIndex = videoPlayVo.pageIndex;
         String tempUrl = videoPlayVo.url;
         if (TextUtils.isEmpty(tempUrl)) {
             return;
         }
         //拉取播放地址
-        updateVideoUrl(tempIndex, tempUrl);
+        updateVideoUrl(tempUrl);
         //
         onPLVideoSizeChanged();
-        //显示页面信息
-        setShowIndexTest();
         if (isPreloading) {
             return;
         }
         if (!isResume) {
             return;
         }
+        //显示当前页信息，预加载页面不使用当前页索引展示。
+        setShowIndexTest();
         setVideoPlay();
     }
 

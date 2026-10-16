@@ -14,6 +14,16 @@
         android:layout_height="match_parent"
         android:orientation="vertical" />
 
+    <TextView
+        android:id="@+id/view_video_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="暂无视频"
+        android:textColor="#fff"
+        android:textSize="16sp"
+        android:visibility="gone" />
+
     <RelativeLayout
         android:id="@+id/view_data_loading"
         android:layout_width="match_parent"

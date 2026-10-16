@@ -33,7 +33,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     protected TextView tvIndex;
 
     protected OnVideoOperate2 videoOperate2 = null;
-    protected int pageIndex = -1;
     protected String videoUrl;
     //true 横屏
     protected Boolean isVideoHorizontalScreen = false;
@@ -50,7 +49,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     @Override
     protected void setViewInit(View view, Bundle savedInstanceState) {
         viewInit(view, savedInstanceState);
-        PlayerLog.d("frg_", "setViewInit  " + pageIndex + " video:" + videoUrl);
+        PlayerLog.d("frg_", "setViewInit video:" + videoUrl);
     }
 
     private void viewInit(View view, Bundle savedInstanceState) {
@@ -117,15 +116,14 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     }
 
     //=======================初始化播放器========================
-    //更新播放源
-    protected void updateVideoUrl(int pageIndex, String url) {
-        PlayerLog.d("视频播放Url", "计划播放 pageIndex：" + pageIndex + " url:" + url);
+    /** 更新播放源，不保存页面索引。 */
+    protected void updateVideoUrl(String url) {
+        PlayerLog.d("视频播放Url", "计划播放 url:" + url);
         if (playerView == null) {
-            PlayerLog.d("未初始化", "------- index=" + pageIndex + "  " + this.pageIndex);
+            PlayerLog.d("未初始化", "url:" + url);
             return;
         }
         this.videoUrl = url;
-        this.pageIndex = pageIndex;
         if (exoPlayer != null) {
             boolean isSame = exoPlayer.isEqualVideoPlay(url);
             if (isSame) {
@@ -143,7 +141,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         }
         //更换 播放url
         PlayerLog.d("去初始化/更新播放源 ",
-                "------- index=" + this.pageIndex + " 更新 pageIndex=" + pageIndex + " videoUrl:" + videoUrl);
+                "videoUrl:" + videoUrl);
         initExoPlayer();
     }
 
@@ -153,7 +151,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         //
         isVideoHorizontalScreen = false;
         //
-        exoPlayer = videoOperate2.getExoPlayer(this, pageIndex, videoUrl);
+        exoPlayer = videoOperate2.getExoPlayer(this, videoUrl);
         exoPlayer.setPlayerVideo(act, videoUrl, isUseCache);
         //
         exoPlayer.setPlayerView(playerView);
@@ -187,10 +185,11 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         }
     }
 
+    /** 展示当前页信息，页面索引实时获取。 */
     protected void setShowIndexTest() {
         if (tvIndex != null) {
             var tempPlay = playerView.getPlayer();
-            tvIndex.setText("页面：" + pageIndex + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
+            tvIndex.setText("页面：" + videoOperate2.getResumeIndex() + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
         }
 
     }
@@ -207,7 +206,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         if (exoPlayer != null) {
             exoPlayer.addListener(playerListener);
         }
-        PlayerLog.d("frg_", "onResume " + pageIndex);
+        PlayerLog.d("frg_", "onResume video:" + videoUrl);
     }
 
     @Override
@@ -217,13 +216,13 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         if (exoPlayer != null) {
             exoPlayer.removeListener(playerListener);
         }
-        PlayerLog.d("frg_", "onPause  " + pageIndex + " video:" + videoUrl);
+        PlayerLog.d("frg_", "onPause video:" + videoUrl);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        PlayerLog.d("frg_", "onStop " + pageIndex + " video:" + videoUrl);
+        PlayerLog.d("frg_", "onStop video:" + videoUrl);
     }
 
 
@@ -235,7 +234,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         }
         exoPlayer = null;
         super.onDestroy();
-        PlayerLog.d("frg_", "onDestroy " + pageIndex + " video:" + videoUrl);
+        PlayerLog.d("frg_", "onDestroy video:" + videoUrl);
     }
 
     @Override
@@ -248,7 +247,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         tvIndex = null;
         super.onDestroyView();
         //视图不可见  Fragment实例还在
-        PlayerLog.d("frg_", "onDestroyView " + pageIndex + " video:" + videoUrl);
+        PlayerLog.d("frg_", "onDestroyView video:" + videoUrl);
     }
 
     //====================操作播放器=========================

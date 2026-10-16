@@ -59,6 +59,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     private VideoPageRl2 videoPageRl;
     private View viewDataLoading, tvDataDel;
     private TextView tvLoadingData, tvAudioPar;
+    private View viewEmpty;
     private ShortVideoManager2 videoPlaysManager;
 
     private void setViewInit(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -66,6 +67,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         viewPager2 = view.findViewById(R.id.view_pager);
         tvDataDel = view.findViewById(R.id.tv_data_del);
         viewDataLoading = view.findViewById(R.id.view_data_loading);
+        viewEmpty = view.findViewById(R.id.view_video_empty);
         tvLoadingData = view.findViewById(R.id.tv_loading_data);
         tvAudioPar = view.findViewById(R.id.tv_audio_par);
         videoPageRl = view.findViewById(R.id.view_root);
@@ -78,6 +80,8 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             }
         });
         videoPlaysManager.setView(this, viewPager2);
+        videoPlaysManager.setUpdateDataSize(videos.size());
+        viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void setClick() {
@@ -130,7 +134,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 }
                 Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(resumeIndex));
                 videos.remove(resumeIndex);
-                videoPlaysManager.delData();
+                videoPlaysManager.delFrgPlay();
             }
         });
     }
@@ -147,10 +151,24 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videoPlaysManager.onPause();
     }
 
+    /** 视图销毁时取消任务，释放管理器并清空视图引用。 */
     @Override
-    public void onDestroy() {
-        videoPlaysManager.onDestroy();
-        super.onDestroy();
+    public void onDestroyView() {
+        handlerData.removeCallbacksAndMessages(null);
+        isDataReq = false;
+        isMoreReq = false;
+        if (videoPlaysManager != null) {
+            videoPlaysManager.onDestroy();
+            videoPlaysManager = null;
+        }
+        viewPager2 = null;
+        videoPageRl = null;
+        viewDataLoading = null;
+        tvDataDel = null;
+        tvLoadingData = null;
+        tvAudioPar = null;
+        viewEmpty = null;
+        super.onDestroyView();
     }
 
     private boolean isMoreReq = false;
@@ -176,6 +194,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     private void setPageData(ArrayList<String> urls) {
         videos.clear();
         videos.addAll(urls);
+        viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
         videoPlaysManager.setUpdateDataSize(videos.size());
         videoPlaysManager.setVideoPlay(0);
     }
@@ -187,6 +206,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
             return;
         }*/
         videos.addAll(urls);
+        viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
         videoPlaysManager.setUpdateDataSize(videos.size());
     }
 
@@ -234,9 +254,15 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
     //=====================视频数据，播放 操作接口======================================
 
+    /** 获取当前显示页面的索引。 */
+    @Override
+    public int getResumeIndex() {
+        return videoPlaysManager.getResumeIndex();
+    }
+
     /** 根据页面对象获取播放器。 */
     @Override
-    public CustomExoPlayer getExoPlayer(Fragment frg, Integer pageIndex, String videoUrl) {
+    public CustomExoPlayer getExoPlayer(Fragment frg, String videoUrl) {
         CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(frg);
         customExoPlayer.setARB(true);
         return customExoPlayer;
@@ -245,7 +271,10 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     /** 页面销毁时移除对应关系并释放播放器。 */
     @Override
     public void setDelFrg(Fragment frg) {
-        videoPlaysManager.setDelFrg(frg);
+        //父视图销毁时已统一释放，随后到达的子页面销毁回调无需再次处理。
+        if (videoPlaysManager != null) {
+            videoPlaysManager.setDelFrg(frg);
+        }
     }
 
     @Override
@@ -260,6 +289,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     @Override
     public void setPageChange(VideoBaseFrg0 frgExit, VideoBaseFrg0 frgEnter) {
+        viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
         Log.d("切换 退出：" + (frgExit != null), "切换 进入" + (frgEnter != null));
     }
 
@@ -267,17 +297,11 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     @Override
     public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre) {
         var index = pageIndex;
-        if (index <= 0) {
-            //page 修正
-            index = videoPlaysManager.getResumeIndex();
-            if (isPre) {
-                return null;
-            }
+        //数据删除或刷新后，旧索引可能已超出范围。
+        if (videos == null || index < 0 || index >= videos.size()) {
+            return null;
         }
-        String videoUrl = "";
-        if (videos != null && videos.size() > 0) {
-            videoUrl = videos.get(index);
-        }
+        String videoUrl = videos.get(index);
         VideoPlayVo vo = new VideoPlayVo();
         vo.pageIndex = index;
         vo.url = videoUrl;
