@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import media.library.player.manager.PlayerLog;
+import media.library.player.view.device.bean.DeviceSupportBean;
 
 /**
  * 播放器支持能力判断。
@@ -39,7 +40,7 @@ public class PlayerDeviceSupport {
 
     private static volatile PlayerDeviceSupport playerSupport;
 
-    private List<DeviceSupportInfo> supportedVideoSupportInfoList;
+    private List<DeviceSupportBean> supportedVideoSupportInfoList;
 
     private PlayerDeviceSupport() {
     }
@@ -68,8 +69,8 @@ public class PlayerDeviceSupport {
                 TAG,
                 "本设备屏幕分辨率：" + displayMetrics.widthPixels + "x" + displayMetrics.heightPixels
         );
-        List<DeviceSupportInfo> infoList = getSupportedVideoResolutionInfo();
-        for (DeviceSupportInfo info : infoList) {
+        List<DeviceSupportBean> infoList = getSupportedVideoResolutionInfo();
+        for (DeviceSupportBean info : infoList) {
             PlayerLog.d(TAG, info.toString());
         }
     }
@@ -77,7 +78,7 @@ public class PlayerDeviceSupport {
     /**
      * 获取当前设备支持的视频编码分辨率信息。
      */
-    public List<DeviceSupportInfo> getSupportedVideoResolutionInfo() {
+    public List<DeviceSupportBean> getSupportedVideoResolutionInfo() {
         if (supportedVideoSupportInfoList == null) {
             supportedVideoSupportInfoList = querySupportedVideoResolutionInfo();
         }
@@ -100,8 +101,8 @@ public class PlayerDeviceSupport {
      */
     private List<String> getSupportedVideoMimeTypes() {
         List<String> mimeTypes = new ArrayList<>();
-        List<DeviceSupportInfo> supportInfoList = getSupportedVideoResolutionInfo();
-        for (DeviceSupportInfo supportInfo : supportInfoList) {
+        List<DeviceSupportBean> supportInfoList = getSupportedVideoResolutionInfo();
+        for (DeviceSupportBean supportInfo : supportInfoList) {
             mimeTypes.add(supportInfo.supportedVideoMimeType);
         }
         return mimeTypes;
@@ -132,8 +133,8 @@ public class PlayerDeviceSupport {
     /**
      * 查询当前设备支持的视频编码和分辨率信息。
      */
-    private List<DeviceSupportInfo> querySupportedVideoResolutionInfo() {
-        List<DeviceSupportInfo> result = new ArrayList<>();
+    private List<DeviceSupportBean> querySupportedVideoResolutionInfo() {
+        List<DeviceSupportBean> result = new ArrayList<>();
         List<String> mimeTypes = querySupportedVideoMimeTypes();
         for (String mimeType : mimeTypes) {
             result.add(buildVideoSupportInfo(mimeType));
@@ -144,7 +145,7 @@ public class PlayerDeviceSupport {
     /**
      * 生成指定视频编码类型的分辨率支持数据。
      */
-    private DeviceSupportInfo buildVideoSupportInfo(String mimeType) {
+    private DeviceSupportBean buildVideoSupportInfo(String mimeType) {
         int minWidth = -1;
         int maxWidth = -1;
         int minHeight = -1;
@@ -183,7 +184,7 @@ public class PlayerDeviceSupport {
             addSupportedCommonResolutions(videoCapabilities, supportedCommonResolutions);
         }
 
-        return new DeviceSupportInfo(
+        return new DeviceSupportBean(
                 mimeType,
                 minWidth,
                 maxWidth,

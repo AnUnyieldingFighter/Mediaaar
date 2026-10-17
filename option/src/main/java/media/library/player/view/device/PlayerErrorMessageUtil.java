@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import com.images.imageselect.BuildConfig;
 
 import androidx.media3.common.PlaybackException;
+import media.library.player.view.device.bean.DeviceSupportBean;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -114,9 +115,9 @@ public class PlayerErrorMessageUtil {
         if (TextUtils.isEmpty(sampleMimeType)) {
             return null;
         }
-        List<DeviceSupportInfo> supportInfoList =
+        List<DeviceSupportBean> supportInfoList =
                 PlayerDeviceSupport.getInstance().getSupportedVideoResolutionInfo();
-        for (DeviceSupportInfo info : supportInfoList) {
+        for (DeviceSupportBean info : supportInfoList) {
             if (info == null || TextUtils.isEmpty(info.supportedVideoMimeType)) {
                 continue;
             }

@@ -1,8 +1,6 @@
-package media.library.player.view;
+package media.library.player.view.play;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -99,7 +97,7 @@ public class CustomTrackSelector {
     //日文音轨 ja
     //setPreferredAudioLanguage("zh"); 优先选择中文音轨
     @OptIn(markerClass = UnstableApi.class)
-    protected void setPreferredAudioLanguage(final String... language) {
+    public void setPreferredAudioLanguage(final String... language) {
         // 语言码：中文=zh, 英文=en, 日文=ja
         runOnPlayerThread(new Runnable() {
             @Override
@@ -127,7 +125,7 @@ public class CustomTrackSelector {
 
     //禁用视频 / 音频 / 字幕轨道
     @OptIn(markerClass = UnstableApi.class)
-    protected void disableTrackType(final int trackType) {
+    public void disableTrackType(final int trackType) {
         Set<Integer> set = new HashSet<>();
         set.add(trackType);
         disableTrackType(set);
@@ -154,7 +152,7 @@ public class CustomTrackSelector {
 
     // “显示/隐藏字幕，并且可指定优先字幕语言”。
     @OptIn(markerClass = UnstableApi.class)
-    protected void setPreferredTextTrack(final boolean showText, final String preferredLanguage) {
+    public void setPreferredTextTrack(final boolean showText, final String preferredLanguage) {
         runOnPlayerThread(new Runnable() {
             @Override
             public void run() {
@@ -203,7 +201,7 @@ public class CustomTrackSelector {
     //============================打印轨道信息==============================
 
     @OptIn(markerClass = UnstableApi.class)
-    protected void setTrackLog() {
+    public void setTrackLog() {
         runOnPlayerThread(new Runnable() {
             @Override
             public void run() {

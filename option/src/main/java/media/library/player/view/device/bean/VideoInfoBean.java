@@ -1,4 +1,4 @@
-package media.library.player.view.device;
+package media.library.player.view.device.bean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 单个视频地址的媒体信息和本设备支持结果。
  */
-public class PlayerVideoInfo {
+public class VideoInfoBean {
 
     //视频地址
     public String videoUrl;

@@ -1,4 +1,4 @@
-package media.library.player.view;
+package media.library.player.view.play;
 
 import android.text.TextUtils;
 
@@ -14,7 +14,6 @@ import androidx.media3.common.util.UnstableApi;
 import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
-import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.FileDataSource;
 import androidx.media3.datasource.cache.CacheDataSource;
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
@@ -25,7 +24,6 @@ import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
-import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter;
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
 import media.library.utils.FileUtil;
@@ -48,7 +46,7 @@ import media.library.utils.Md5Media;
  *     <li>WebRTC：不是 ExoPlayer MediaSource 体系，需要单独接 WebRTC SDK、信令、PeerConnection。</li>
  * </ul>
  */
-class BaseMediaSource extends BaseExoPlayer {
+public class BaseMediaSource extends BaseExoPlayer {
     //tru 开启缓存
     protected boolean isUseCache;
 

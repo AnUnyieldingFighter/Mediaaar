@@ -1,4 +1,4 @@
-package media.library.player.view;
+package media.library.player.view.play;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -39,7 +39,7 @@ import media.library.player.manager.PlayerLog;
 import media.library.player.videoNew.stats.VideoWatchStats;
 
 //设置播放器
-class BaseExoPlayer extends PlayerDB {
+ class BaseExoPlayer extends PlayerDB {
     //观看统计
     protected VideoWatchStats watchStatistics = new VideoWatchStats();
     protected Context playerContext;

@@ -1,4 +1,4 @@
-package media.library.player.view.device;
+package media.library.player.view.device.bean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 视频编码支持信息。
  */
-public class DeviceSupportInfo {
+public class DeviceSupportBean {
     //支持的视频编码 MIME 类型，例如 video/avc、video/hevc
     public final String supportedVideoMimeType;
     //支持的最小宽度
@@ -22,7 +22,7 @@ public class DeviceSupportInfo {
     //支持该编码的解码器名称
     public final List<String> decoderNames;
 
-    public DeviceSupportInfo(
+    public DeviceSupportBean(
             String supportedVideoMimeType,
             int minWidth,
             int maxWidth,

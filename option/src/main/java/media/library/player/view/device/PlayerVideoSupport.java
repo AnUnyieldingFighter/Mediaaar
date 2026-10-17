@@ -20,6 +20,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import media.library.player.manager.PlayerLog;
+import media.library.player.view.device.bean.CodecSupportBean;
+import media.library.player.view.device.bean.VideoInfoBean;
 
 /**
  * 单个视频地址的媒体信息和本设备播放支持能力判断。
@@ -58,7 +60,7 @@ public class PlayerVideoSupport {
             Context context,
             String videoUrl,
             @Nullable Map<String, String> requestHeaders) {
-        PlayerVideoInfo playerVideoInfo = getVideoInfo(context, videoUrl, requestHeaders);
+        VideoInfoBean playerVideoInfo = getVideoInfo(context, videoUrl, requestHeaders);
         PlayerLog.d(TAG, playerVideoInfo.toString());
     }
 
@@ -67,7 +69,7 @@ public class PlayerVideoSupport {
      *
      * <p>网络地址会阻塞读取，请放到子线程执行。</p>
      */
-    public PlayerVideoInfo getVideoInfo(Context context, String videoUrl) {
+    public VideoInfoBean getVideoInfo(Context context, String videoUrl) {
         return getVideoInfo(context, videoUrl, null);
     }
 
@@ -76,11 +78,11 @@ public class PlayerVideoSupport {
      *
      * @param requestHeaders 网络视频请求头，没有可传 null
      */
-    public PlayerVideoInfo getVideoInfo(
+    public VideoInfoBean getVideoInfo(
             Context context,
             String videoUrl,
             @Nullable Map<String, String> requestHeaders) {
-        PlayerVideoInfo result = new PlayerVideoInfo();
+        VideoInfoBean result = new VideoInfoBean();
         result.videoUrl = videoUrl;
 
         if (context == null) {
@@ -161,7 +163,7 @@ public class PlayerVideoSupport {
             Context context,
             String videoUrl,
             @Nullable Map<String, String> requestHeaders,
-            PlayerVideoInfo result) {
+            VideoInfoBean result) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             Uri uri = Uri.parse(videoUrl);
@@ -197,7 +199,7 @@ public class PlayerVideoSupport {
      * 读取视频轨道信息。
      */
     private void readVideoTrackInfo(
-            PlayerVideoInfo result,
+            VideoInfoBean result,
             MediaFormat mediaFormat,
             int trackIndex,
             String mimeType) {
@@ -210,7 +212,7 @@ public class PlayerVideoSupport {
         int frameRate = getIntegerValue(mediaFormat, MediaFormat.KEY_FRAME_RATE, -1);
         int bitrate = getIntegerValue(mediaFormat, MediaFormat.KEY_BIT_RATE, -1);
         long durationMs = getDurationMs(mediaFormat);
-        PlayerCodecSupportResult codecSupportResult = getDecoderSupportResult(mediaFormat, mimeType);
+        CodecSupportBean codecSupportResult = getDecoderSupportResult(mediaFormat, mimeType);
 
         if (durationMs > result.durationMs) {
             result.durationMs = durationMs;
@@ -248,7 +250,7 @@ public class PlayerVideoSupport {
      * 读取音频轨道信息。
      */
     private void readAudioTrackInfo(
-            PlayerVideoInfo result,
+            VideoInfoBean result,
             MediaFormat mediaFormat,
             int trackIndex,
             String mimeType) {
@@ -259,7 +261,7 @@ public class PlayerVideoSupport {
         int sampleRate = getIntegerValue(mediaFormat, MediaFormat.KEY_SAMPLE_RATE, -1);
         int bitrate = getIntegerValue(mediaFormat, MediaFormat.KEY_BIT_RATE, -1);
         String language = getStringValue(mediaFormat, MediaFormat.KEY_LANGUAGE);
-        PlayerCodecSupportResult codecSupportResult = getDecoderSupportResult(mediaFormat, mimeType);
+        CodecSupportBean codecSupportResult = getDecoderSupportResult(mediaFormat, mimeType);
 
         if (result.audioTrackCount == 1) {
             result.audioMimeType = mimeType;
@@ -292,7 +294,7 @@ public class PlayerVideoSupport {
      * 读取字幕轨道信息。
      */
     private void readSubtitleTrackInfo(
-            PlayerVideoInfo result,
+            VideoInfoBean result,
             MediaFormat mediaFormat,
             int trackIndex,
             String mimeType) {
@@ -309,7 +311,7 @@ public class PlayerVideoSupport {
     /**
      * 刷新本设备是否支持播放的最终结果。
      */
-    private void refreshPlaySupportResult(PlayerVideoInfo result) {
+    private void refreshPlaySupportResult(VideoInfoBean result) {
         if (!result.parseSuccess) {
             result.deviceSupportPlay = false;
             result.deviceSupportMessage = "媒体信息读取失败：" + result.errorMessage;
@@ -339,8 +341,8 @@ public class PlayerVideoSupport {
     /**
      * 获取指定轨道格式的解码器支持结果。
      */
-    private PlayerCodecSupportResult getDecoderSupportResult(MediaFormat mediaFormat, String mimeType) {
-        PlayerCodecSupportResult result = new PlayerCodecSupportResult();
+    private CodecSupportBean getDecoderSupportResult(MediaFormat mediaFormat, String mimeType) {
+        CodecSupportBean result = new CodecSupportBean();
         if (TextUtils.isEmpty(mimeType)) {
             result.supported = false;
             result.message = "mimeType 为空";

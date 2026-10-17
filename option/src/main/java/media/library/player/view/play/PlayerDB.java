@@ -1,4 +1,4 @@
-package media.library.player.view;
+package media.library.player.view.play;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;

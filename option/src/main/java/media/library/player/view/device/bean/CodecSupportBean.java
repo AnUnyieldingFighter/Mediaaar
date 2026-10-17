@@ -1,9 +1,9 @@
-package media.library.player.view.device;
+package media.library.player.view.device.bean;
 
 /**
  * 解码器支持结果。
  */
-public class PlayerCodecSupportResult {
+public class CodecSupportBean {
     //是否支持
     public boolean supported;
     //命中的解码器名称

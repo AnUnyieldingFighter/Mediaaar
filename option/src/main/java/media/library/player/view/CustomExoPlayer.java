@@ -19,6 +19,7 @@ import java.util.List;
 import media.library.player.bean.VideoEntity;
 import media.library.player.manager.PlayerLog;
 import media.library.player.videoNew.stats.VideoWatchStats;
+import media.library.player.view.play.BaseMediaSource;
 import media.library.utils.FileUtil;
 
 //        exoPlayer = new CustomExoPlayer();

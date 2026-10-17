@@ -1,4 +1,4 @@
-package media.library.player.view;
+package media.library.player.view.play;
 
 import android.os.Handler;
 import android.os.SystemClock;
