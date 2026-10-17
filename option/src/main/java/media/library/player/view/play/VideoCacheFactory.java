@@ -17,7 +17,7 @@ import androidx.media3.datasource.cache.SimpleCache;
 
 /** 缓存数据源工厂：所有已打开的数据源关闭后，才允许释放缓存。 */
 @UnstableApi
-final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.Factory {
+final class VideoCacheFactory extends PlayerDB implements DataSource.Factory {
     private final Context context;
     private final File cacheDir;
     //保存实际的磁盘缓存对象，负责缓存文件读写。等数据源全部关闭后，调用它的 cache.release() 释放资源。
@@ -33,8 +33,8 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
     private boolean released;
 
     /** 保存本次缓存对应的目录和上下文，避免切源后使用新视频的信息。 */
-    PlayerCacheDataSourceFactory(Context context, File cacheDir, SimpleCache cache,
-                                 DataSource.Factory factory, StandaloneDatabaseProvider databaseProvider) {
+    VideoCacheFactory(Context context, File cacheDir, SimpleCache cache,
+                      DataSource.Factory factory, StandaloneDatabaseProvider databaseProvider) {
         this.context = context;
         this.cacheDir = cacheDir;
         this.cache = cache;
@@ -78,7 +78,7 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
             /** 先占用缓存，再打开数据源；旧源释放后到达的打开请求直接取消。 */
             @Override
             public long open(DataSpec dataSpec) throws IOException {
-                synchronized (PlayerCacheDataSourceFactory.this) {
+                synchronized (VideoCacheFactory.this) {
                     if (releaseRequested) {
                         throw new IOException("旧播放源的缓存已申请释放");
                     }
@@ -118,7 +118,7 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
                 try {
                     source.close();
                 } finally {
-                    synchronized (PlayerCacheDataSourceFactory.this) {
+                    synchronized (VideoCacheFactory.this) {
                         opened = false;
                         openCount--;
                         releaseIfIdle();

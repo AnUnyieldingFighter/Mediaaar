@@ -46,7 +46,7 @@ import media.library.player.videoNew.stats.VideoWatchStats;
     protected ExoPlayer player;
     //数据源的传输监听，用于统计缓冲期间的网络下载和本地读取速度
     @UnstableApi
-    protected ExoPlayerAnalyticsListener bufferTransferListener;
+    protected VideoAnalyticsListener bufferTransferListener;
 
     //
     protected String videoUrl;
@@ -141,7 +141,7 @@ import media.library.player.videoNew.stats.VideoWatchStats;
             //
             player = builder.build();
             player.addListener(new ExoPlayerListener());
-            ExoPlayerAnalyticsListener bufferListener = new ExoPlayerAnalyticsListener(this);
+            VideoAnalyticsListener bufferListener = new VideoAnalyticsListener(this);
             bufferTransferListener = bufferListener;
             player.addAnalyticsListener(bufferListener);
             restoreVideoSurface();
@@ -323,7 +323,7 @@ import media.library.player.videoNew.stats.VideoWatchStats;
     }
 
     //===================设置 DefaultTrackSelector 是 “选轨道”，不是 “转码”，单轨道场景必无效========================
-    protected CustomTrackSelector customTrackSelector;
+    protected VideoTrackSelector customTrackSelector;
     //true 使用arb
     private boolean isArb;
 
@@ -344,7 +344,7 @@ import media.library.player.videoNew.stats.VideoWatchStats;
     @OptIn(markerClass = UnstableApi.class)
     private DefaultTrackSelector getPlayerTrackSelector() {
         if (customTrackSelector == null) {
-            customTrackSelector = new CustomTrackSelector(this, playerContext);
+            customTrackSelector = new VideoTrackSelector(this, playerContext);
         }
         customTrackSelector.setIsArb(isArb);
         return customTrackSelector.getPlayerTrackSelector();

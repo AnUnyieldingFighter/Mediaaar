@@ -19,9 +19,9 @@ import java.util.List;
  * 播放地址是什么、媒体标识是什么、媒体类型是什么、有没有字幕、有没有 DRM、
  * 有没有直播参数、有没有标题封面等配置。</p>
  */
-public class MediaItemConfig {
+public class VideoMediaItemConfig {
 
-    private MediaItemConfig() {
+    private VideoMediaItemConfig() {
     }
 
     /**
@@ -105,7 +105,7 @@ public class MediaItemConfig {
         String videoUrl = "https://xxx.com/test.mp4";
         String subtitleUrl = "https://xxx.com/test.zh.vtt";
 
-        MediaItem mediaItem = MediaItemConfig.createSubtitleMediaItem(
+        MediaItem mediaItem = VideoMediaItemConfig.createSubtitleMediaItem(
                 videoUrl,
                 subtitleUrl,
                 MimeTypes.TEXT_VTT,

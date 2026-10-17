@@ -18,7 +18,7 @@ import media.library.player.manager.PlayerLog;
 
 //同时监听播放器状态与数据源传输，统计缓冲期间的实际数据读取速度
 @UnstableApi
-class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener {
+class VideoAnalyticsListener implements AnalyticsListener, TransferListener {
     //所属播放器，加载回调通过它将事件信息交给 PlayerDB 保存
     private final BaseExoPlayer baseExoPlayer;
     //沿用所属播放器的日志标识
@@ -42,7 +42,7 @@ class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener 
         //读取并清空本次采样计数，仍在缓冲时安排下一次采样
         @Override
         public void run() {
-            synchronized (ExoPlayerAnalyticsListener.this) {
+            synchronized (VideoAnalyticsListener.this) {
                 if (!buffering || !speedAvailable) {
                     return;
                 }
@@ -53,7 +53,7 @@ class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener 
     };
 
     //传入所属播放器，在其线程上创建采样任务的调度器
-    ExoPlayerAnalyticsListener(BaseExoPlayer baseExoPlayer) {
+    VideoAnalyticsListener(BaseExoPlayer baseExoPlayer) {
         this.baseExoPlayer = baseExoPlayer;
         this.speedHandler = new Handler(baseExoPlayer.player.getApplicationLooper());
     }

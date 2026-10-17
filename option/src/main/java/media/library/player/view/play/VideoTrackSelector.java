@@ -24,12 +24,12 @@ import androidx.media3.exoplayer.trackselection.MappingTrackSelector;
 import media.library.player.manager.PlayerLog;
 
 //轨道
-public class CustomTrackSelector {
+public class VideoTrackSelector {
     private String tag = "轨道_";
     private BaseExoPlayer baseExoPlayer;
     private Context playerContext;
 
-    public CustomTrackSelector(BaseExoPlayer baseExoPlayer, Context context) {
+    public VideoTrackSelector(BaseExoPlayer baseExoPlayer, Context context) {
         this.baseExoPlayer = baseExoPlayer;
         this.playerContext = context;
     }

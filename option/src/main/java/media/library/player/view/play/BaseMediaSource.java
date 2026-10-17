@@ -82,11 +82,11 @@ public class BaseMediaSource extends BaseExoPlayer {
         //根据播放源类型创建 MediaItem
         MediaItem videoItem;
         if ("m3u8".equals(type)) {
-            videoItem = MediaItemConfig.createHlsMediaItem(videoUrl);
+            videoItem = VideoMediaItemConfig.createHlsMediaItem(videoUrl);
         } else if ("flv".equals(type)) {
-            videoItem = MediaItemConfig.createFlvMediaItem(videoUrl);
+            videoItem = VideoMediaItemConfig.createFlvMediaItem(videoUrl);
         } else {
-            videoItem = MediaItemConfig.createBaseMediaItem(videoUrl);
+            videoItem = VideoMediaItemConfig.createBaseMediaItem(videoUrl);
         }
         //告诉 ExoPlayer “这个资源要怎么读取、解析、加载
         MediaSource mediaSource;
@@ -191,13 +191,13 @@ public class BaseMediaSource extends BaseExoPlayer {
     protected long maxBytes = 100 * 1024 * 1024;//100M
     //当前缓存的数据源工厂，负责等待读写关闭后再真正释放缓存。
     @UnstableApi
-    private PlayerCacheDataSourceFactory cacheDataSourceFactory;
+    private VideoCacheFactory cacheDataSourceFactory;
 
     /**
      * 创建缓存数据源，普通文件和 HLS 共用相同的缓存释放逻辑。
      */
     @OptIn(markerClass = UnstableApi.class)
-    protected PlayerCacheDataSourceFactory createCacheDataSourceFactory() {
+    protected VideoCacheFactory createCacheDataSourceFactory() {
         //缓存目录  (有缓存目录则复用，没有则新建)
         File simpleCacheDir = getCacheFile();
         //缓存时使用的数据库连接
@@ -224,7 +224,7 @@ public class BaseMediaSource extends BaseExoPlayer {
                         .setListener(bufferTransferListener))
                 .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
         //
-        PlayerCacheDataSourceFactory sourceFactoryTemp = new PlayerCacheDataSourceFactory(
+        VideoCacheFactory sourceFactoryTemp = new VideoCacheFactory(
                 playerContext, simpleCacheDir, simpleCacheTemp, factory, databaseProvider);
         return sourceFactoryTemp;
     }
