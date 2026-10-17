@@ -37,10 +37,10 @@ public interface VideoDao {
             + "isLook = 1, lookTime = :lookTime WHERE videoUrl = :videoUrl")
     int updateVideoLookHis(String videoUrl, long pro, long total, long lookTime);
 
-    //即使关闭文件缓存，也建立视频信息记录；同一地址已有记录时不重复插入
+    //即使关闭文件缓存，也建立视频信息记录；默认观看时间等于创建时间，同一地址不重复插入
     @Query("INSERT INTO tab_video (videoUrl, recordTime, videoCacheType, videoCacheTime, "
             + "pro, total, sizeKb, videoWidth, videoHeight, videoType, isLook, lookTime) "
-            + "SELECT :videoUrl, :recordTime, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 "
+            + "SELECT :videoUrl, :recordTime, 0, 0, 0, 0, 0, 0, 0, 0, 0, :recordTime "
             + "WHERE NOT EXISTS (SELECT 1 FROM tab_video WHERE videoUrl = :videoUrl)")
     void ensureVideoRecord(String videoUrl, long recordTime);
 
@@ -69,7 +69,7 @@ public interface VideoDao {
 
     //SELECT * FROM table_name ORDER BY column_name ASC|DESC;
 
-    @Query("select * from tab_video ORDER BY recordTime DESC")
+    @Query("select * from tab_video ORDER BY lookTime DESC, indexId DESC")
     List<VideoEntity> queryAll();
 
     //DESC 降序

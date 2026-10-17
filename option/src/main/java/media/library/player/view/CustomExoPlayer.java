@@ -145,7 +145,7 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     @OptIn(markerClass = UnstableApi.class)
     public void setPlayerView(PlayerView playerView) {
-        if(playerView!=null){
+        if (playerView != null) {
             //清除错误
             playerView.setCustomErrorMessage(null);
         }
@@ -374,6 +374,7 @@ public class CustomExoPlayer extends BaseMediaSource {
             //从统计中取
             width = watchStatistics.getVideoWidth();
             height = watchStatistics.getVideoHeight();
+            videoSize = new VideoSize(width, height);
         }
         if (width <= 0 && height <= 0) {
             //从数据库中取

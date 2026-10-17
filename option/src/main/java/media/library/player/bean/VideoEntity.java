@@ -31,6 +31,6 @@ public class VideoEntity {
     public String other3;//未使用：其它3，当前无赋值逻辑
 
     public boolean isLook;//true 看过
-    public long lookTime;//最后观看记录时间，时间戳毫秒，不是累计观看时长
+    public long lookTime;//最后观看记录时间，默认等于 recordTime，时间戳毫秒，不是累计观看时长
 
 }

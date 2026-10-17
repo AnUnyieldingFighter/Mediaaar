@@ -110,6 +110,10 @@ class PlayerDB {
         videoEntity.videoCacheType = 1;
         long time = new Date().getTime();
         videoEntity.recordTime = time;
+        //新视频默认以创建时间作为观看时间，已有观看时间继续保留。
+        if (videoEntity.lookTime <= 0) {
+            videoEntity.lookTime = videoEntity.recordTime;
+        }
         MediaRoom.geVideoDb(context).put(videoEntity);
     }
 
