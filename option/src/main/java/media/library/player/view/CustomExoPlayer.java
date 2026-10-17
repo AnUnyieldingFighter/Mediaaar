@@ -145,6 +145,10 @@ public class CustomExoPlayer extends BaseMediaSource {
 
     @OptIn(markerClass = UnstableApi.class)
     public void setPlayerView(PlayerView playerView) {
+        if(playerView!=null){
+            //清除错误
+            playerView.setCustomErrorMessage(null);
+        }
         if (cachePlayerView == playerView) {
             return;
         }
