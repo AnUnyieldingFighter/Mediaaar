@@ -30,25 +30,26 @@ public class VideoFrg11 extends VideoFrg1 {
      */
     public void setVideoDataPre(int index) {
         PlayerLog.d("视频播放 预加加载", "pageIndex=" + index);
-        setVideoData(videoOperate2.getVideoPlayData(index, true, isAd), true);
+        setVideoStart(videoOperate2.getVideoPlayData(index, true, isAd), true);
     }
 
     /** 获取当前显示页面的数据并播放，不使用上次加载时保存的索引。 */
     public void setVideoDataPlay() {
         int index = videoOperate2.getResumeIndex();
         PlayerLog.d("视频播放 加载播放", "pageIndex=" + index);
-        setVideoData(videoOperate2.getVideoPlayData(index, false, isAd), false);
+        setVideoStart(videoOperate2.getVideoPlayData(index, false, isAd), false);
     }
 
+    //===============================================数据拉取
     /**
-     * 校验播放数据，再加载对应的视频。
+     * 预加载和正式播放的统一入口；默认不加载空数据或空地址。
+     * 子类可重写此方法处理广告或空数据，再按需调用父类加载视频。
      *
-     * @param videoPlayVo 已获取的视频数据。
-     * @param isPreLoad true 是预加载，false 不是预加载
+     * @param videoPlayVo 获取的播放数据，可能为 null；pageIndex 不作为播放条件。
+     * @param isPreloading true 为预加载，false 为正式播放。
      */
-    private void setVideoData(VideoPlayVo videoPlayVo, boolean isPreLoad) {
-        if (videoPlayVo == null || videoPlayVo.pageIndex < 0 ||
-                TextUtils.isEmpty(videoPlayVo.url)) {
+    protected void setVideoStart(VideoPlayVo videoPlayVo, boolean isPreloading) {
+        if (videoPlayVo == null || TextUtils.isEmpty(videoPlayVo.url)) {
             String tempPage = "";
             String tempUrl = "";
             String tempId = "";
@@ -62,16 +63,7 @@ public class VideoFrg11 extends VideoFrg1 {
                     + " url=" + tempUrl);
             return;
         }
-        setVideoStart(videoPlayVo, isPreLoad);
-    }
-
-    //===============================================数据拉取
-    //isPreloading true  是预加载
-    protected void setVideoStart(VideoPlayVo videoPlayVo, boolean isPreloading) {
         String tempUrl = videoPlayVo.url;
-        if (TextUtils.isEmpty(tempUrl)) {
-            return;
-        }
         //拉取播放地址
         updateVideoUrl(tempUrl);
         //

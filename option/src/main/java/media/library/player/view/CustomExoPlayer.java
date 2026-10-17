@@ -367,6 +367,12 @@ public class CustomExoPlayer extends BaseMediaSource {
         int width = videoSize.width;
         int height = videoSize.height;
         if (width <= 0 && height <= 0) {
+            //从统计中取
+            width = watchStatistics.getVideoWidth();
+            height = watchStatistics.getVideoHeight();
+        }
+        if (width <= 0 && height <= 0) {
+            //从数据库中取
             List<VideoEntity> datas = dbGetVideoSize(playerContext, videoUrl);
             if (datas != null && datas.size() > 0) {
                 VideoEntity entity = datas.get(0);

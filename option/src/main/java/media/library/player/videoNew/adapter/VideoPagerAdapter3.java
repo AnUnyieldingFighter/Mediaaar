@@ -45,7 +45,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         if (this.dataSize == dataSize) {
             return;
         }
-        setDataCount(dataSize, false);
+        setDataCount(dataSize, isInfinite);
     }
 
     //设置循环
@@ -57,8 +57,21 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     public void setDataCount(int dataSize, boolean isInfinite) {
+        dataSize = Math.max(0, dataSize);
         if (this.dataSize == dataSize && this.isInfinite == isInfinite) {
             return;
+        }
+        if ((dataSize < this.dataSize || this.isInfinite && !isInfinite)
+                && (!isInfinite || dataSize == 0)) {
+            //视频减少时移除超出新列表末尾的广告；清空视频时同时清空广告。
+            //从后往前删除，计算广告前的视频数量时不会受已删除广告影响。
+            for (Integer position : new ArrayList<>(insertedFrgs.descendingKeySet())) {
+                if (dataSize == 0 || position - insertedFrgs.headMap(position).size() > dataSize) {
+                    insertedFrgs.remove(position);
+                } else {
+                    break;
+                }
+            }
         }
         this.dataSize = dataSize;
         this.isInfinite = isInfinite;
@@ -88,7 +101,8 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         if (inserted != null) {
             return inserted;
         }
-        int index = getVideoDataIndex(position) % frgs.size();
+        //复用槽位按经过的视频页数量计算，无限翻页时也继续顺序复用七个页面。
+        int index = (position - insertedFrgs.headMap(position).size()) % frgs.size();
         VideoBaseFrg0 frg = frgs.get(index);
         return frg;
     }
@@ -103,7 +117,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
      * 调用方对齐当前页码后，再通知刷新。
      */
     public void removeFrg(int position, VideoBaseFrg0 frg) {
-        int index = getVideoDataIndex(position) % frgs.size();
+        int index = (position - insertedFrgs.headMap(position).size()) % frgs.size();
         for (int i = 0; i < frgs.size() - 1; i++) {
             int slot = (index + i) % frgs.size();
             frgs.set(slot, frgs.get((slot + 1) % frgs.size()));
@@ -148,12 +162,13 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return frgs.contains(frg) || insertedFrgs.containsValue(frg);
     }
 
-    /** 将页面索引转换为原视频列表索引，广告页或无效位置返回 -1。 */
+    /** 将页面索引转换为原视频列表索引；无限翻页时循环取数据，广告页或无效位置返回 -1。 */
     public int getVideoDataIndex(int position) {
-        if (position < 0 || position >= getDataSize() || isInsertedFrg(position)) {
+        if (position < 0 || position >= getItemCount() || isInsertedFrg(position) || dataSize == 0) {
             return -1;
         }
-        return position - insertedFrgs.headMap(position).size();
+        int index = position - insertedFrgs.headMap(position).size();
+        return isInfinite ? index % dataSize : index;
     }
 
     /** 插入或删除页面时，统一调整后面广告页的索引。 */
@@ -180,6 +195,37 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
             this.dataSize -= 1;
         }
         shiftInsertedFrgs(position + 1, -1);
+    }
+
+    /**
+     * 无限翻页时删除原视频列表中的一条数据，移除它在各轮中的位置，并对齐广告和视频复用槽位。
+     * replacement 非空表示当前视频也被删除，替换当前 Fragment；返回调整后的当前页码。
+     */
+    public int removeLoopVideo(int position, int currentPosition, VideoBaseFrg0 replacement) {
+        int deletedIndex = getVideoDataIndex(position);
+        int currentOrdinal = currentPosition - insertedFrgs.headMap(currentPosition).size();
+        int removedBeforeCurrent = getRemovedVideoCount(currentOrdinal, deletedIndex);
+        int targetOrdinal = currentOrdinal;
+        if (replacement != null) {
+            frgs.set(currentOrdinal % frgs.size(), replacement);
+            //当前视频被删除，尽量保留下一条视频原有的 Fragment 和预加载结果。
+            targetOrdinal += 1;
+        }
+        Collections.rotate(frgs, -getRemovedVideoCount(targetOrdinal, deletedIndex));
+        TreeMap<Integer, VideoBaseFrg0> remainingAds = new TreeMap<>();
+        for (Integer page : insertedFrgs.keySet()) {
+            int ordinal = page - insertedFrgs.headMap(page).size();
+            remainingAds.put(page - getRemovedVideoCount(ordinal, deletedIndex), insertedFrgs.get(page));
+        }
+        insertedFrgs.clear();
+        insertedFrgs.putAll(remainingAds);
+        dataSize -= 1;
+        return currentPosition - removedBeforeCurrent;
+    }
+
+    /** 计算指定视频序号之前，被删除的数据在各轮中共出现了多少次。 */
+    private int getRemovedVideoCount(int ordinal, int deletedIndex) {
+        return ordinal / dataSize + (ordinal % dataSize > deletedIndex ? 1 : 0);
     }
 
     public int getFrgSize() {
@@ -229,7 +275,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         if (frgs == null || frgs.size() == 0) {
             return 0;
         }
-        if (isInfinite) {
+        if (isInfinite && dataSize > 0) {
             return Integer.MAX_VALUE;
         }
         if (dataSize < 0) {
