@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DataSpec;
 import androidx.media3.datasource.TransferListener;
@@ -21,6 +22,8 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
     private final File cacheDir;
     //保存实际的磁盘缓存对象，负责缓存文件读写。等数据源全部关闭后，调用它的 cache.release() 释放资源。
     private final SimpleCache cache;
+    //创建当前缓存时使用的数据库连接，缓存实际释放后再关闭。
+    private final StandaloneDatabaseProvider databaseProvider;
     //保存数据源工厂，用来通过 factory.createDataSource() 创建具体的数据源，读取网络或缓存中的视频数据
     private final DataSource.Factory factory;
     //包含正在打开、读取和关闭的数据源，打开失败也要等 close() 收尾。
@@ -31,10 +34,11 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
 
     /** 保存本次缓存对应的目录和上下文，避免切源后使用新视频的信息。 */
     PlayerCacheDataSourceFactory(Context context, File cacheDir, SimpleCache cache,
-                                 DataSource.Factory factory) {
+                                 DataSource.Factory factory, StandaloneDatabaseProvider databaseProvider) {
         this.context = context;
         this.cacheDir = cacheDir;
         this.cache = cache;
+        this.databaseProvider = databaseProvider;
         this.factory = factory;
     }
 
@@ -48,7 +52,12 @@ final class PlayerCacheDataSourceFactory extends PlayerDB implements DataSource.
     private void releaseIfIdle() {
         if (releaseRequested && openCount == 0 && !released) {
             released = true;
-            cache.release();
+            try {
+                cache.release();
+            } finally {
+                //保存缓存索引需要访问数据库，因此必须先释放缓存，再关闭连接。
+                databaseProvider.close();
+            }
             dbSetVideoCacheUsable(context, cacheDir);
         }
     }

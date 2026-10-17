@@ -189,10 +189,7 @@ class BaseMediaSource extends BaseExoPlayer {
         return "progressive";
     }
 
-    @UnstableApi
-    protected SimpleCache simpleCache;
-    @UnstableApi
-    protected File simpleCacheDir;
+
     protected long maxBytes = 100 * 1024 * 1024;//100M
     //当前缓存的数据源工厂，负责等待读写关闭后再真正释放缓存。
     @UnstableApi
@@ -202,34 +199,38 @@ class BaseMediaSource extends BaseExoPlayer {
      * 创建缓存数据源，普通文件和 HLS 共用相同的缓存释放逻辑。
      */
     @OptIn(markerClass = UnstableApi.class)
-    private PlayerCacheDataSourceFactory createCacheDataSourceFactory() {
-        simpleCache = createSimpleCache();
+    protected PlayerCacheDataSourceFactory createCacheDataSourceFactory() {
+        //缓存目录  (有缓存目录则复用，没有则新建)
+        File simpleCacheDir = getCacheFile();
+        //缓存时使用的数据库连接
+        StandaloneDatabaseProvider databaseProvider = new StandaloneDatabaseProvider(playerContext);
+        //磁盘缓存管理器
+        SimpleCache simpleCacheTemp;
+        try {
+            if (maxBytes == 0) {
+                simpleCacheTemp = new SimpleCache(simpleCacheDir, new NoOpCacheEvictor(), databaseProvider);
+            } else {
+                simpleCacheTemp = new SimpleCache(simpleCacheDir, new LeastRecentlyUsedCacheEvictor(maxBytes), databaseProvider);
+            }
+        } catch (RuntimeException exception) {
+            //缓存创建失败时没有工厂负责释放，直接关闭本次数据库连接。
+            databaseProvider.close();
+            throw exception;
+        }
+        //
         CacheDataSource.Factory factory = new CacheDataSource.Factory()
-                .setCache(simpleCache)
+                .setCache(simpleCacheTemp)
                 .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
                         .setTransferListener(bufferTransferListener))
                 .setCacheReadDataSourceFactory(new FileDataSource.Factory()
                         .setListener(bufferTransferListener))
                 .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-
+        //
         PlayerCacheDataSourceFactory sourceFactoryTemp = new PlayerCacheDataSourceFactory(
-                playerContext, simpleCacheDir, simpleCache, factory);
+                playerContext, simpleCacheDir, simpleCacheTemp, factory, databaseProvider);
         return sourceFactoryTemp;
     }
 
-    //构建缓存
-    @OptIn(markerClass = UnstableApi.class)
-    private SimpleCache createSimpleCache() {
-        // 有缓存目录则复用，没有则新建
-        simpleCacheDir = getCacheFile();
-        SimpleCache simpleCache;
-        if (maxBytes == 0) {
-            simpleCache = new SimpleCache(simpleCacheDir, new NoOpCacheEvictor(), new StandaloneDatabaseProvider(playerContext));
-        } else {
-            simpleCache = new SimpleCache(simpleCacheDir, new LeastRecentlyUsedCacheEvictor(maxBytes), new StandaloneDatabaseProvider(playerContext));
-        }
-        return simpleCache;
-    }
 
     //申请释放缓存，实际释放要等旧数据源全部关闭。
     @OptIn(markerClass = UnstableApi.class)
@@ -240,8 +241,6 @@ class BaseMediaSource extends BaseExoPlayer {
             cacheDataSourceFactory.release();
             cacheDataSourceFactory = null;
         }
-        simpleCache = null;
-        simpleCacheDir = null;
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
 
