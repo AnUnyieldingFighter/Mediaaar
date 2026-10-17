@@ -1,10 +1,11 @@
-package media.library.player.view.device;
+package media.library.utils;
 
 import android.text.TextUtils;
 
 import com.images.imageselect.BuildConfig;
 
 import androidx.media3.common.PlaybackException;
+import media.library.player.view.device.PlayerDeviceSupport;
 import media.library.player.view.device.bean.DeviceSupportBean;
 
 import java.util.List;
@@ -16,9 +17,9 @@ import java.util.regex.Pattern;
  *
  * <p>底层错误信息保留在日志中，页面上只展示用户能看懂、能行动的短文案。</p>
  */
-public class PlayerErrorMessageUtil {
+public class PlayerErrorMessageUtile {
 
-    private PlayerErrorMessageUtil() {
+    private PlayerErrorMessageUtile() {
     }
 
     /**

@@ -18,7 +18,7 @@ import com.images.imageselect.R;
 import media.library.player.manager.PlayerLog;
 import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.view.CustomExoPlayer;
-import media.library.player.view.device.PlayerErrorMessageUtil;
+import media.library.utils.PlayerErrorMessageUtile;
 
 
 public class VideoFrg1 extends VideoBaseFrg0 {
@@ -363,7 +363,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
 
     @OptIn(markerClass = UnstableApi.class)
     protected void onPLPlayerError(PlaybackException error) {
-        playerView.setCustomErrorMessage(PlayerErrorMessageUtil.getPlayerErrorUiMessage(error));
+        playerView.setCustomErrorMessage(PlayerErrorMessageUtile.getPlayerErrorUiMessage(error));
     }
 
 
