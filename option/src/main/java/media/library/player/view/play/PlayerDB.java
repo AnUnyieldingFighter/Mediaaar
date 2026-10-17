@@ -225,6 +225,10 @@ class PlayerDB {
                 configuration.mimeType) != C.CONTENT_TYPE_OTHER) {
             return;
         }
+        //只保存主视频请求的大小，排除外挂字幕等附属资源；原始请求地址不受 HTTP 重定向影响
+        if (!configuration.uri.equals(info.dataSpec.uri)) {
+            return;
+        }
         String scheme = info.dataSpec.uri.getScheme();
         if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
             return;
