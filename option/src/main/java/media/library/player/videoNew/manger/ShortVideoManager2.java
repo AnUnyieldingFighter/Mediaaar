@@ -484,9 +484,6 @@ public class ShortVideoManager2 {
         }
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
         try {
-            if (frg instanceof VideoFrg11) {
-                ((VideoFrg11) frg).setAd(true);
-            }
             VideoBaseFrg0 removed = adapter.addFrg(index, frg, currentIndex);
             setDelFrg(removed);
             if (size > 0 && index <= currentIndex) {
