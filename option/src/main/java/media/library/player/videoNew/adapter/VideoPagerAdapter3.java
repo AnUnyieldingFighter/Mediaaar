@@ -152,17 +152,23 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         insertedFrgs.put(position, frg);
     }
 
-    /** 判断页面是否为独立插入的广告页。 */
+    /**
+     * 判断页面是否为独立插入的广告页。
+     */
     public boolean isInsertedFrg(int position) {
         return insertedFrgs.containsKey(position);
     }
 
-    /** 判断对象是否已在视频复用池或独立页面中，避免重复使用同一个 Fragment。 */
+    /**
+     * 判断对象是否已在视频复用池或独立页面中，避免重复使用同一个 Fragment。
+     */
     public boolean containsFrg(VideoBaseFrg0 frg) {
         return frgs.contains(frg) || insertedFrgs.containsValue(frg);
     }
 
-    /** 将页面索引转换为原视频列表索引；无限翻页时循环取数据，广告页或无效位置返回 -1。 */
+    /**
+     * 将页面索引转换为原视频列表索引；无限翻页时循环取数据，广告页或无效位置返回 -1。
+     */
     public int getVideoDataIndex(int position) {
         if (position < 0 || position >= getItemCount() || isInsertedFrg(position) || dataSize == 0) {
             return -1;
@@ -171,7 +177,9 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return isInfinite ? index % dataSize : index;
     }
 
-    /** 插入或删除页面时，统一调整后面广告页的索引。 */
+    /**
+     * 插入或删除页面时，统一调整后面广告页的索引。
+     */
     private void shiftInsertedFrgs(int fromPosition, int offset) {
         ArrayList<Integer> positions = new ArrayList<>(insertedFrgs.tailMap(fromPosition).keySet());
         if (offset > 0) {
@@ -223,7 +231,9 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return currentPosition - removedBeforeCurrent;
     }
 
-    /** 计算指定视频序号之前，被删除的数据在各轮中共出现了多少次。 */
+    /**
+     * 计算指定视频序号之前，被删除的数据在各轮中共出现了多少次。
+     */
     private int getRemovedVideoCount(int ordinal, int deletedIndex) {
         return ordinal / dataSize + (ordinal % dataSize > deletedIndex ? 1 : 0);
     }
@@ -252,6 +262,10 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     // 可选：让 Adapter 知道这个 Fragment 是哪个
     public VideoBaseFrg0 getFragmentAt(int pos) {
         return getFrg(pos);
+    }
+
+    public int getFragmentAt(Fragment frg) {
+        return frgs.indexOf(frg);
     }
 
     @Override
