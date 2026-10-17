@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.OptIn;
 import androidx.media3.common.util.UnstableApi;
+import androidx.media3.database.StandaloneDatabaseProvider;
 import androidx.media3.datasource.cache.SimpleCache;
 
 import java.io.File;
@@ -139,7 +140,7 @@ public class VideoDb {
         long expireTime = calendar.getTimeInMillis();
         Set<String> videoUrls = new HashSet<>();
         Set<String> retainedPaths = new HashSet<>();
-        try {
+        try (StandaloneDatabaseProvider provider = new StandaloneDatabaseProvider(context)) {
             File cacheRoot = new File(FileUtil.getVideoCacheDir(context)).getCanonicalFile();
             //查询结果按最后观看时间倒序，同一地址第一次出现的就是最新记录。
             for (VideoEntity entity : getDao().queryAll()) {
@@ -166,7 +167,13 @@ public class VideoDb {
                         || SimpleCache.isCacheFolderLocked(cacheFile)) {
                     continue;
                 }
-                if (!dbDeleteCacheFile(cacheRoot, cacheFile)) {
+                if (!dbCheckCacheFile(cacheRoot, cacheFile)) {
+                    PlayerLog.d("视频缓存清理", "路径检查失败，跳过：" + cacheFile.getPath());
+                    continue;
+                }
+                //使用与创建缓存时相同的数据库，同时清理缓存目录和 Media3 索引。
+                SimpleCache.delete(cacheFile, provider);
+                if (cacheFile.exists()) {
                     PlayerLog.d("视频缓存清理", "删除失败，下次重试：" + cacheFile.getPath());
                 }
             }
@@ -175,8 +182,8 @@ public class VideoDb {
         }
     }
 
-    /** 递归删除视频缓存根目录内的文件，不删除根目录，也不进入符号链接指向的目录。 */
-    private boolean dbDeleteCacheFile(File cacheRoot, File file) throws IOException {
+    /** 删除前检查目录边界，仅移除符号链接本身，避免后续递归删除进入链接指向的目录。 */
+    private boolean dbCheckCacheFile(File cacheRoot, File file) throws IOException {
         String rootPrefix = cacheRoot.getPath() + File.separator;
         if (!file.getAbsolutePath().startsWith(rootPrefix)) {
             return false;
@@ -193,12 +200,12 @@ public class VideoDb {
                 return false;
             }
             for (File child : children) {
-                if (!dbDeleteCacheFile(cacheRoot, child)) {
+                if (!dbCheckCacheFile(cacheRoot, child)) {
                     return false;
                 }
             }
         }
-        return file.delete();
+        return true;
     }
 
 
