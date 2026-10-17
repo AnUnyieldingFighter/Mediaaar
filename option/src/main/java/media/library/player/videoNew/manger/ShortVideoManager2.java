@@ -462,6 +462,7 @@ public class ShortVideoManager2 {
      * 移除页面与播放器的对应关系，并释放播放器。
      */
     public void setDelFrg(Fragment frg) {
+        setFrgPreDel(frg);
         getPlayerManager().setDelExoPlayer(frg);
     }
 
@@ -528,25 +529,23 @@ public class ShortVideoManager2 {
         return false;
     }
 
-    //frg 已创建时的回调 在frg的 onViewCreated 里
+    //frg 视图创建后的回调，只预加载当前页、前一页或后一页对应的对象。
     public void setFrgAttach(Fragment frg) {
         if (!frgPres.contains(frg)) {
             return;
         }
         int index = getResumeIndex();
-        int frgIndex = adapter.getFragmentAt(frg);
-        if (frgIndex == -1) {
-            //适配器里没有 frg
+        int size = adapter.getItemCount();
+        if (index < 0 || index >= size) {
             return;
         }
-        if (frgIndex > index && ((frgIndex - index) == 1)) {
-            setPageVideoPre(frg, frgIndex);
-        }
-        if (index > frgIndex && ((index - frgIndex) == 1)) {
-            setPageVideoPre(frg, frgIndex);
-        }
-        if (index == frgIndex) {
-            setPageVideoPre(frg, frgIndex);
+        //按实际页码取得 Fragment 比较，避免把复用池槽位当成页面索引。
+        if (frg == getCursorFrg(index)) {
+            setPageVideoPre(frg, index);
+        } else if (index > 0 && frg == getCursorFrg(index - 1)) {
+            setPageVideoPre(frg, index - 1);
+        } else if (index < size - 1 && frg == getCursorFrg(index + 1)) {
+            setPageVideoPre(frg, index + 1);
         }
     }
 

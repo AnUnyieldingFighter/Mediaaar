@@ -58,16 +58,16 @@ public class MorePlayerManager {
      * 设置视频预加载(在播放之前)
      *
      * @param act
-     * @param index      包含广告的页面索引，从 0 开始。
+     * @param frg        预加载视频所属的页面。
      * @param videoUrl   视频url
      * @param playerView 播放视图（一般没有）
      */
     @OptIn(markerClass = UnstableApi.class)
-    public void setVideoLoadPre(Activity act, int index, String videoUrl, PlayerView playerView) {
-        CustomExoPlayer exoPlayer = getExoPlayer(index);
-        if (exoPlayer == null) {
+    public void setVideoLoadPre(Activity act, Fragment frg, String videoUrl, PlayerView playerView) {
+        if (frg == null) {
             return;
         }
+        CustomExoPlayer exoPlayer = getCustomExoPlayer(frg);
         //原本就存在要加载的Url
         boolean isSame = exoPlayer.isEqualVideoPlay(videoUrl);
         if (isSame) {

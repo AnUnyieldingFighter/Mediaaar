@@ -61,6 +61,13 @@ public class VideoFrg11 extends VideoFrg1 {
             PlayerLog.d("视频播放 数据异常", "pageIndex=" + tempPage
                     + " id=" + tempId
                     + " url=" + tempUrl);
+            //无效数据清除旧播放，避免滑动结束时再次播放上一条视频。
+            setVideoPause();
+            if (exoPlayer != null) {
+                videoOperate2.setDelFrg(this);
+                exoPlayer = null;
+            }
+            videoUrl = null;
             return;
         }
         String tempUrl = videoPlayVo.url;
