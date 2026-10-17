@@ -12,9 +12,11 @@ import android.widget.TextView;
 import com.images.imageselect.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.core.processing.SurfaceProcessorNode;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.media3.common.Player;
@@ -136,6 +138,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 if (videoIndex >= 0) {
                     Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(videoIndex));
                     videos.remove(videoIndex);
+                    //广告也使用列表索引，删除占位或视频后同步后面广告的位置。
+                    ads.remove(videoIndex);
+                    for (int i = videoIndex; i < videos.size(); i++) {
+                        String adUrl = ads.remove(i + 1);
+                        if (adUrl != null) {
+                            ads.put(i, adUrl);
+                        }
+                    }
                 }
                 videoPlaysManager.delFrgPlay();
             }
@@ -196,6 +206,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     //设置页面
     private void setPageData(ArrayList<String> urls) {
         videos.clear();
+        ads.clear();
         videos.addAll(urls);
         viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
         videoPlaysManager.setUpdateDataSize(videos.size());
@@ -215,6 +226,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     //
     private ArrayList<String> videos = new ArrayList();
+    private HashMap<Integer,String> ads = new HashMap<>();
     private HandlerData handlerData = new HandlerData();
     //true 没有更多了
     private boolean isMoreNot;
@@ -299,17 +311,17 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null
     @Override
     public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre, boolean isAd) {
-        if (isAd) {
-            //在这里单独提供广告的播放数据；示例暂未配置广告视频。
-            return null;
-        }
-        //页面索引包含广告，读取原视频列表前先转换；广告页不读取视频数据。
+        //videos 已包含广告占位，页码无需扣除广告；无限翻页时仅循环取列表索引。
         int index = videoPlaysManager.getVideoDataIndex(pageIndex);
         //数据删除或刷新后，旧索引可能已超出范围。
         if (videos == null || index < 0 || index >= videos.size()) {
             return null;
         }
         String videoUrl = videos.get(index);
+        //Fragment 会复用，实际类型以本次数据为准，空字符串从 ads 获取广告地址。
+        if ("".equals(videoUrl)) {
+            videoUrl = ads.get(index);
+        }
         VideoPlayVo vo = new VideoPlayVo();
         vo.pageIndex = pageIndex;
         vo.url = videoUrl;

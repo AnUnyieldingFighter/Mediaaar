@@ -191,13 +191,13 @@ public class ShortVideoManager2 {
     }
 
     //=================适配器=======================
-    //更新视频数据数量，不包含独立插入的广告页。
+    //更新列表数量，包含空字符串表示的广告占位。
     public void setUpdateDataSize(int dataSzie) {
         adapter.setDataSize(dataSzie);
     }
 
     /**
-     * 获取页面对应的原视频列表索引，广告页或无效位置返回 -1。
+     * 获取页面对应的列表索引，包含广告占位，无效位置返回 -1。
      */
     public int getVideoDataIndex(int pageIndex) {
         return adapter.getVideoDataIndex(pageIndex);
@@ -388,7 +388,7 @@ public class ShortVideoManager2 {
     }
 
     /**
-     * 删除指定页；视频页需先删除业务数据，广告页只删除页面，不操作原视频列表。
+     * 删除指定页；调用前先删除业务列表中的视频或广告占位，并同步 ads。
      * 删除当前页时切换页面，删除其他页时保留当前视频。
      */
     public void delFrgPlay(int index) {
@@ -397,7 +397,7 @@ public class ShortVideoManager2 {
             return;
         }
         int currentIndex = getResumeIndex();
-        boolean isLoopVideo = adapter.isInfinite() && !adapter.isInsertedFrg(index);
+        boolean isLoopVideo = adapter.isInfinite();
         //循环列表中，同一条视频可能出现在不同页面；删除该数据时当前页也需要切换。
         boolean deleteCurrent = index == currentIndex || (isLoopVideo
                 && adapter.getVideoDataIndex(index) == adapter.getVideoDataIndex(currentIndex));
@@ -406,9 +406,6 @@ public class ShortVideoManager2 {
         try {
             if (!deleteCurrent) {
                 //非当前frg
-                if (adapter.isInsertedFrg(index)) {
-                    setDelFrg(getCursorFrg(index));
-                }
                 if (isLoopVideo) {
                     currentIndex = adapter.removeLoopVideo(index, currentIndex, null);
                 } else {
@@ -430,9 +427,6 @@ public class ShortVideoManager2 {
             setDelFrg(frg);
             if (isLoopVideo) {
                 currentIndex = adapter.removeLoopVideo(index, currentIndex, getFrg());
-            } else if (adapter.isInsertedFrg(index)) {
-                //广告页直接移除，不调整视频复用池。
-                adapter.removeData(index, currentIndex);
             } else {
                 //按循环顺序前移，使下一视频页对应删除后的索引。
                 adapter.removeFrg(index, getFrg());
@@ -468,7 +462,9 @@ public class ShortVideoManager2 {
 
 
     /**
-     * 在指定页面位置插入独立 Fragment，例如广告，不修改原视频列表，不参与七个视频页的复用。
+     * 在指定位置插入广告 Fragment，同时从七个复用页面中移出一个远端页面。
+     * 调用前先在 videos 对应位置插入空字符串，并设置 ads；本方法将数据数量加一，
+     * 因此无需提前调用 setUpdateDataSize。业务列表和广告数据均由调用方维护。
      * index 从 0 开始，传入 getResumeIndex() + 1 即插在当前页之后，也可以追加到末尾。
      * 插入时保持当前页面和播放状态；需要删除时调用 delFrgPlay(广告当前所在的页面索引)。
      */
@@ -491,7 +487,8 @@ public class ShortVideoManager2 {
             if (frg instanceof VideoFrg11) {
                 ((VideoFrg11) frg).setAd(true);
             }
-            adapter.addFrg(index, frg);
+            VideoBaseFrg0 removed = adapter.addFrg(index, frg, currentIndex);
+            setDelFrg(removed);
             if (size > 0 && index <= currentIndex) {
                 //先对齐页码，再通知刷新，保持当前 Fragment 和播放器不变。
                 viewPagerView.setCurrentItem(currentIndex + 1, false);

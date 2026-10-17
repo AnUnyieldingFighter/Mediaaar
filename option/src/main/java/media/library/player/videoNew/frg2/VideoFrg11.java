@@ -8,10 +8,10 @@ import media.library.player.manager.PlayerLog;
 
 public class VideoFrg11 extends VideoFrg1 {
 
-    //true 为独立插入的广告页，不参与原视频页面的复用。
+    //true 表示由 addFrg 插入的广告页面；取数据时仍以 videos 中的空字符串占位为准。
     private boolean isAd;
 
-    /** 设置当前页面是否为独立插入的广告页。 */
+    /** 设置插入页面的广告标记。 */
     public void setAd(boolean isAd) {
         this.isAd = isAd;
     }
