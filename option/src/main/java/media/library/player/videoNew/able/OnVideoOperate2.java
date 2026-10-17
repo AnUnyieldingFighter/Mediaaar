@@ -31,9 +31,9 @@ public interface OnVideoOperate2 {
      * 获取指定页面的播放数据。
      * @param pageIndex 页面索引，包含列表中的广告占位。
      * @param isPre true 为预加载。
-     * @param isAd 页面插入时的广告标记；页面复用后，实际数据以 videos 的空字符串占位为准。
+     *
      */
-    VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre, boolean isAd);
+    VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre);
 
     //已成功添加淘容器里
     void onFrgAttach(Fragment frg);

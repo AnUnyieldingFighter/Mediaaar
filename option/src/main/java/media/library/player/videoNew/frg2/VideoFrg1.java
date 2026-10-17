@@ -190,14 +190,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         }
     }
 
-    /** 展示当前页信息，页面索引实时获取。 */
-    protected void setShowIndexTest() {
-        if (tvIndex != null) {
-            var tempPlay = playerView.getPlayer();
-            tvIndex.setText("页面：" + videoOperate2.getResumeIndex() + "\nplayer==null:" + (tempPlay == null) + "\n" + videoUrl);
-        }
 
-    }
 
     //=======================初始化完成回调===============================
     //一个新的播放

@@ -310,7 +310,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     //获取播放数据 重要的是视频路径  可以为空 vo可以为null
     @Override
-    public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre, boolean isAd) {
+    public VideoPlayVo getVideoPlayData(int pageIndex, boolean isPre) {
         //videos 已包含广告占位，页码无需扣除广告；无限翻页时仅循环取列表索引。
         int index = videoPlaysManager.getVideoDataIndex(pageIndex);
         //数据删除或刷新后，旧索引可能已超出范围。
