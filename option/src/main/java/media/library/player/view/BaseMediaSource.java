@@ -55,6 +55,7 @@ class BaseMediaSource extends BaseExoPlayer {
     //==========================设置播放源========================================
     @OptIn(markerClass = UnstableApi.class)
     public void setMediaSource(MediaSource mediaSource) {
+        setMediaSourceCacheRelease();
         //外部播放源的传输监听未知，默认不启用测速
         bufferTransferListener.setSpeedAvailable(false);
         player.setMediaSource(mediaSource);
@@ -65,6 +66,8 @@ class BaseMediaSource extends BaseExoPlayer {
 
     @OptIn(markerClass = UnstableApi.class)
     protected MediaSource getMediaSource() {
+        //切源只申请释放，旧数据源仍可完成本次读写和关闭。
+        setMediaSourceCacheRelease();
         String type = getMediaSourceType(videoUrl);
         //普通文件流和 HLS 在下方绑定传输监听；RTSP 没有接入这套测速
         bufferTransferListener.setSpeedAvailable(!"rtsp".equals(type));
@@ -105,21 +108,8 @@ class BaseMediaSource extends BaseExoPlayer {
                             .setTransferListener(bufferTransferListener);
                     //factory = new DefaultDataSource.Factory(playerContext,httpFactory);
                 } else {
-                    setMediaSourceCacheRelease();
-                    //构建缓存
-                    simpleCache = createSimpleCache();
-                    factory = new CacheDataSource.Factory()
-                            .setCache(simpleCache)
-                            .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
-                                    .setTransferListener(bufferTransferListener))
-                            .setCacheReadDataSourceFactory(new FileDataSource.Factory()
-                                    .setListener(bufferTransferListener))
-                            //更适合网络视频
-                            //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
-                            //缓存出错时自动回退到原始源
-                            //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
-                            //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
-                            .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+                    cacheDataSourceFactory = createCacheDataSourceFactory();
+                    factory = cacheDataSourceFactory;
                 }
                 mediaSource = new HlsMediaSource.Factory(factory).createMediaSource(videoItem);
                 break;
@@ -161,22 +151,9 @@ class BaseMediaSource extends BaseExoPlayer {
                     .createMediaSource(videoItem);
 
         } else {
-            setMediaSourceCacheRelease();
-            //构建缓存
-            simpleCache = createSimpleCache();
             //自动缓存到磁盘，预加载 / 二次播放直接读本地
-            CacheDataSource.Factory dataSourceFactory = new CacheDataSource.Factory()
-                    .setCache(simpleCache)
-                    .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
-                            .setTransferListener(bufferTransferListener))
-                    .setCacheReadDataSourceFactory(new FileDataSource.Factory()
-                            .setListener(bufferTransferListener))
-                    //更适合网络视频
-                    //.setUpstreamDataSourceFactory(new DefaultHttpDataSource.Factory().setUserAgent("Media3"))
-                    //缓存出错时自动回退到原始源
-                    //FLAG_BLOCK_ON_CACHE → 优先读缓存（你要的预加载生效！）
-                    //FLAG_IGNORE_CACHE_ON_ERROR → 缓存坏了自动走网络，不崩溃
-                    .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+            cacheDataSourceFactory = createCacheDataSourceFactory();
+            DataSource.Factory dataSourceFactory = cacheDataSourceFactory;
             //构建 MediaSource（支持 DRM + 缓存）
             mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory)
                     .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
@@ -217,6 +194,28 @@ class BaseMediaSource extends BaseExoPlayer {
     @UnstableApi
     protected File simpleCacheDir;
     protected long maxBytes = 100 * 1024 * 1024;//100M
+    //当前缓存的数据源工厂，负责等待读写关闭后再真正释放缓存。
+    @UnstableApi
+    private PlayerCacheDataSourceFactory cacheDataSourceFactory;
+
+    /**
+     * 创建缓存数据源，普通文件和 HLS 共用相同的缓存释放逻辑。
+     */
+    @OptIn(markerClass = UnstableApi.class)
+    private PlayerCacheDataSourceFactory createCacheDataSourceFactory() {
+        simpleCache = createSimpleCache();
+        CacheDataSource.Factory factory = new CacheDataSource.Factory()
+                .setCache(simpleCache)
+                .setUpstreamDataSourceFactory(new DefaultDataSource.Factory(playerContext)
+                        .setTransferListener(bufferTransferListener))
+                .setCacheReadDataSourceFactory(new FileDataSource.Factory()
+                        .setListener(bufferTransferListener))
+                .setFlags(CacheDataSource.FLAG_BLOCK_ON_CACHE | CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+
+        PlayerCacheDataSourceFactory sourceFactoryTemp = new PlayerCacheDataSourceFactory(
+                playerContext, simpleCacheDir, simpleCache, factory);
+        return sourceFactoryTemp;
+    }
 
     //构建缓存
     @OptIn(markerClass = UnstableApi.class)
@@ -232,22 +231,17 @@ class BaseMediaSource extends BaseExoPlayer {
         return simpleCache;
     }
 
-    //清理/释放缓存
+    //申请释放缓存，实际释放要等旧数据源全部关闭。
     @OptIn(markerClass = UnstableApi.class)
     @Override
     protected void setMediaSourceCacheRelease() {
         super.setMediaSourceCacheRelease();
-        if (TextUtils.isEmpty(videoUrl)) {
-            return;
+        if (cacheDataSourceFactory != null) {
+            cacheDataSourceFactory.release();
+            cacheDataSourceFactory = null;
         }
-        if (simpleCache != null) {
-            simpleCache.release();
-            simpleCache = null;
-        }
-        if (simpleCacheDir != null) {
-            dbSetVideoCacheUsable(playerContext, simpleCacheDir);
-            simpleCacheDir = null;
-        }
+        simpleCache = null;
+        simpleCacheDir = null;
         PlayerLog.d(tag, "播放器 释放缓存：" + videoUrl);
     }
 
