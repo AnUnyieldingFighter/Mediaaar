@@ -19,10 +19,10 @@ import media.library.player.manager.PlayerLog;
 //同时监听播放器状态与数据源传输，统计缓冲期间的实际数据读取速度
 @UnstableApi
 class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener {
-    //所属播放器，加载回调通过它读取当前地址及调用 PlayerDB 中的数据保存方法
+    //所属播放器，加载回调通过它将事件信息交给 PlayerDB 保存
     private final BaseExoPlayer baseExoPlayer;
     //沿用所属播放器的日志标识
-    private final String tag="播放器_Analytics_";
+    private final String tag = "播放器_Analytics_";
     //当前播放源是否已接入传输监听；未接入时不启动测速，不把未知速度打印成零
     private boolean speedAvailable;
     //是否处于缓冲状态；与字节计数一起由当前监听对象的锁保护
@@ -73,7 +73,7 @@ class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener 
     //加载线程只累计实际字节；速度计算和日志由播放器线程的定时任务完成
     @Override
     public synchronized void onBytesTransferred(DataSource source, DataSpec dataSpec,
-                                                 boolean isNetwork, int bytesTransferred) {
+                                                boolean isNetwork, int bytesTransferred) {
         if (!buffering || !speedAvailable || bytesTransferred <= 0) {
             return;
         }
@@ -102,7 +102,7 @@ class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener 
     @Override
     public void onLoadCanceled(EventTime eventTime, LoadEventInfo info, MediaLoadData data) {
         baseExoPlayer.dbSaveLoadedFileSize(baseExoPlayer.playerContext,
-                baseExoPlayer.videoUrl, baseExoPlayer.player, info, data);
+                eventTime, info, data);
     }
 
     //一次加载任务完成，保存可确认的文件大小，并打印任务整体的平均加载速度
@@ -110,7 +110,7 @@ class ExoPlayerAnalyticsListener implements AnalyticsListener, TransferListener 
     public void onLoadCompleted(EventTime eventTime, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
         AnalyticsListener.super.onLoadCompleted(eventTime, loadEventInfo, mediaLoadData);
         baseExoPlayer.dbSaveLoadedFileSize(baseExoPlayer.playerContext,
-                baseExoPlayer.videoUrl, baseExoPlayer.player, loadEventInfo, mediaLoadData);
+                eventTime, loadEventInfo, mediaLoadData);
         if (loadEventInfo.loadDurationMs <= 0) {
             PlayerLog.d(tag, "加载完成 平均加载速度：未知，已加载字节="
                     + loadEventInfo.bytesLoaded + "，加载耗时=" + loadEventInfo.loadDurationMs + " ms");

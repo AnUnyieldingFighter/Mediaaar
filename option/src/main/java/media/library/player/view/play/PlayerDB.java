@@ -21,10 +21,12 @@ import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
+import androidx.media3.common.Timeline;
 import androidx.media3.common.VideoSize;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.common.util.Util;
 import androidx.media3.datasource.DataSpec;
+import androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime;
 import androidx.media3.exoplayer.source.LoadEventInfo;
 import androidx.media3.exoplayer.source.MediaLoadData;
 import media.library.db.MediaRoom;
@@ -205,19 +207,22 @@ class PlayerDB {
     }
 
     //==========网络上的视频大小===========
-    //只读取普通视频文件的大小，排除直播、HLS/DASH 分片和字幕
+    //从事件所属时间线读取地址和类型；无法确认时不入库，排除直播、HLS/DASH 分片和字幕
     @OptIn(markerClass = UnstableApi.class)
-    protected void dbSaveLoadedFileSize(Context context, String videoUrl, Player player,
+    protected void dbSaveLoadedFileSize(Context context, EventTime eventTime,
                                         LoadEventInfo info, MediaLoadData data) {
-        if (player == null || player.isCurrentMediaItemLive()
+        if (eventTime.windowIndex < 0
+                || eventTime.windowIndex >= eventTime.timeline.getWindowCount()
                 || data.dataType != C.DATA_TYPE_MEDIA
                 || info.dataSpec.httpMethod != DataSpec.HTTP_METHOD_GET) {
             return;
         }
-        MediaItem item = player.getCurrentMediaItem();
-        if (item == null || item.localConfiguration == null
-                || Util.inferContentType(item.localConfiguration.uri,
-                item.localConfiguration.mimeType) != C.CONTENT_TYPE_OTHER) {
+        Timeline.Window window = new Timeline.Window();
+        eventTime.timeline.getWindow(eventTime.windowIndex, window);
+        MediaItem.LocalConfiguration configuration = window.mediaItem.localConfiguration;
+        if (window.isLive() || configuration == null
+                || Util.inferContentType(configuration.uri,
+                configuration.mimeType) != C.CONTENT_TYPE_OTHER) {
             return;
         }
         String scheme = info.dataSpec.uri.getScheme();
@@ -225,7 +230,7 @@ class PlayerDB {
             return;
         }
         long size = getVideoSizeNet(info);
-        dbSetVideoFileSize(context, videoUrl, size);
+        dbSetVideoFileSize(context, configuration.uri.toString(), size);
     }
 
     //获取网络视频总大小：从 HTTP 响应头读取，分段响应取 Content-Range 的总大小，完整请求才取 Content-Length
@@ -287,10 +292,10 @@ class PlayerDB {
         }
         String sizeStr = Formatter.formatShortFileSize(context, sizeKb * 1024);
         MediaRoom.geVideoDb(context).updateVideoFileSize(videoUrl, sizeKb, sizeStr);
-        onDbVideoFileSizeChanged(sizeKb, sizeStr);
+        onDbVideoFileSizeChanged(videoUrl, sizeKb, sizeStr);
     }
 
-    //视频大小写入数据库后，同步通知当前播放器更新内存中的统计数据
-    protected void onDbVideoFileSizeChanged(long sizeKb, String sizeStr) {
+    //视频大小写入数据库后，携带对应地址通知播放器更新统计数据
+    protected void onDbVideoFileSizeChanged(String videoUrl, long sizeKb, String sizeStr) {
     }
 }

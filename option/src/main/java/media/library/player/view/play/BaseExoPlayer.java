@@ -756,7 +756,9 @@ import media.library.player.videoNew.stats.VideoWatchStats;
 
     //数据库取得本地或网络视频总大小后，同步更新当前视频的观看统计
     @Override
-    protected void onDbVideoFileSizeChanged(long sizeKb, String sizeStr) {
-        watchStatistics.setVideoFileSize(sizeKb, sizeStr);
+    protected void onDbVideoFileSizeChanged(String videoUrl, long sizeKb, String sizeStr) {
+        if (TextUtils.equals(this.videoUrl, videoUrl)) {
+            watchStatistics.setVideoFileSize(sizeKb, sizeStr);
+        }
     }
 }
