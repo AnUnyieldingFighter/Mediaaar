@@ -94,7 +94,12 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         Player temp = playerView.getPlayer();
         if (temp != null) {
             boolean playWhenReady = temp.getPlayWhenReady();
-            temp.setPlayWhenReady(!playWhenReady);
+            if (playWhenReady) {
+                //通过统一暂停方法保存当前播放进度。
+                setVideoPause();
+            } else {
+                setVideoPlay();
+            }
         }
     }
 
