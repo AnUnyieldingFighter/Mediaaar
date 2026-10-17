@@ -251,8 +251,9 @@ public class ShortVideoManager2 {
      * 设置视频播放
      *
      * @param index 第几个
+     * @param isDataReset true 为数据重置，视图就绪时主动加载；false 由页面 onResume 加载。
      */
-    public void setVideoPlay(int index) {
+    public void setVideoPlay(int index, boolean isDataReset) {
         VideoBaseFrg0 frg = setPageCurrentItem(index);
         if (frg == null) {
             return;
@@ -260,10 +261,8 @@ public class ShortVideoManager2 {
         if (!isFrgReady(frg)) {
             //没有被初始化，走预加载逻辑
             setFrgPre(frg);
-        } else {
-            if (frg instanceof VideoFrg11) {
-                ((VideoFrg11) frg).setVideoDataPlay();
-            }
+        } else if (isDataReset && frg instanceof VideoFrg11) {
+            ((VideoFrg11) frg).setVideoDataPlay();
         }
         setPageLoadNext();
         if (index != 0) {
@@ -453,7 +452,7 @@ public class ShortVideoManager2 {
                 setPageChange(cursorFrg, currentFrg);
                 cursorFrg = currentFrg;
             }
-            setVideoPlay(currentIndex);
+            setVideoPlay(currentIndex, false);
         } finally {
             viewPagerView.registerOnPageChangeCallback(onPageChange);
         }
@@ -501,7 +500,7 @@ public class ShortVideoManager2 {
                 VideoBaseFrg0 currentFrg = getCursorVideoFrg();
                 setPageChange(cursorFrg, currentFrg);
                 cursorFrg = currentFrg;
-                setVideoPlay(0);
+                setVideoPlay(0, false);
             } else {
                 setPageLoadNext();
                 setPageLoadUp();

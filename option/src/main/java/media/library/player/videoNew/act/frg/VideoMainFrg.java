@@ -199,7 +199,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videos.addAll(urls);
         viewEmpty.setVisibility(videos.isEmpty() ? View.VISIBLE : View.GONE);
         videoPlaysManager.setUpdateDataSize(videos.size());
-        videoPlaysManager.setVideoPlay(0);
+        videoPlaysManager.setVideoPlay(0, true);
     }
 
     //设置加载更多页面
