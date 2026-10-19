@@ -9,4 +9,8 @@ public class DBManager {
     public static void setCacheFileReleaseAll(Context context) {
         MediaRoom.geVideoDb(context).setCacheFileReleaseAll();
     }
+    //设置清理缓存文件
+    public static void dbClearVideoCache(Context context) {
+        MediaRoom.geVideoDb(context).dbClearVideoCache(context);
+    }
 }

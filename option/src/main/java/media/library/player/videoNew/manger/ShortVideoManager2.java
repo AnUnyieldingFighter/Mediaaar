@@ -213,8 +213,12 @@ public class ShortVideoManager2 {
     /**
      * 根据页面对象获取对应的播放器。
      */
+    public CustomExoPlayer getExoPlayer(Fragment frg, String url) {
+        return getPlayerManager().getCustomExoPlayer(frg, url);
+    }
+
     public CustomExoPlayer getExoPlayer(Fragment frg) {
-        return getPlayerManager().getCustomExoPlayer(frg);
+        return getPlayerManager().getCustomExoPlayer(frg, "");
     }
 
     //获取当前页面的播放器
@@ -229,28 +233,17 @@ public class ShortVideoManager2 {
         return null;
     }
 
-    /**
-     * 根据页面索引获取播放器，索引无效时返回 null。
-     */
-    public CustomExoPlayer getExoPlayer(Integer pageIndex) {
-        if (pageIndex == null || adapter == null
-                || pageIndex < 0 || pageIndex >= adapter.getItemCount()) {
-            return null;
-        }
-        PlayerLog.d("播放视频", "更新  urlIndexs  index:" + pageIndex);
-        return getExoPlayer(getCursorFrg(pageIndex));
-    }
-
     //调用暂停
     protected void setVideoPause(VideoBaseFrg0 frg) {
         if (frg != null && frg instanceof VideoFrg1) {
             ((VideoFrg1) frg).setVideoPause();
         }
     }
+
     /**
      * 设置视频播放
      *
-     * @param index 第几个
+     * @param index       第几个
      * @param isDataReset true 为数据重置，视图就绪时主动加载；false 由页面 onResume 加载。
      */
     public void setVideoPlay(int index, boolean isDataReset) {
@@ -269,6 +262,7 @@ public class ShortVideoManager2 {
             setPageLoadUp();
         }
     }
+
     //调用播放
     protected void setVideoPlay(VideoBaseFrg0 frg) {
         if (frg != null && frg instanceof VideoFrg1) {

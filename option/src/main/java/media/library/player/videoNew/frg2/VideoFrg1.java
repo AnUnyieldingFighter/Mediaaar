@@ -121,7 +121,10 @@ public class VideoFrg1 extends VideoBaseFrg0 {
     }
 
     //=======================初始化播放器========================
-    /** 更新播放源，不保存页面索引。 */
+
+    /**
+     * 更新播放源，不保存页面索引。
+     */
     protected void updateVideoUrl(String url) {
         PlayerLog.d("视频播放Url", "计划播放 url:" + url);
         if (playerView == null) {
@@ -157,7 +160,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         isVideoHorizontalScreen = false;
         //
         exoPlayer = videoOperate2.getExoPlayer(this, videoUrl);
-        exoPlayer.setPlayerVideo(act, videoUrl, isUseCache);
+        exoPlayer.setPlayerVideo(act.getApplicationContext(), videoUrl, isUseCache);
         //
         exoPlayer.setPlayerView(playerView);
         if (isResume) {
@@ -189,7 +192,6 @@ public class VideoFrg1 extends VideoBaseFrg0 {
             onPLVideoSizeChanged(video);
         }
     }
-
 
 
     //=======================初始化完成回调===============================
