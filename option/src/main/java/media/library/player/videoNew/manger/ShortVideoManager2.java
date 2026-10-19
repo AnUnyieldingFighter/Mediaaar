@@ -395,8 +395,10 @@ public class ShortVideoManager2 {
         }
         int currentIndex = getResumeIndex();
         boolean isLoopVideo = adapter.isInfinite();
+        //true 当前页面
+        boolean isPageNow = (index == currentIndex);
         //循环列表中，同一条视频可能出现在不同页面；删除该数据时当前页也需要切换。
-        boolean deleteCurrent = index == currentIndex || (isLoopVideo
+        boolean deleteCurrent = (index == currentIndex) || (isLoopVideo
                 && adapter.getVideoDataIndex(index) == adapter.getVideoDataIndex(currentIndex));
         //调整页面映射期间暂停本管理器的切页回调，完成后统一刷新预加载。
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
@@ -430,22 +432,18 @@ public class ShortVideoManager2 {
             }
             if (adapter.getItemCount() == 0) {
                 adapter.notifyDataSetChanged();
-                setPageChange(cursorFrg, null);
-                cursorFrg = null;
                 return;
             }
             //还有下一条时保持原索引；删除末条时转到上一条。
             currentIndex = Math.min(currentIndex, adapter.getItemCount() - 1);
             viewPagerView.setCurrentItem(currentIndex, false);
             adapter.notifyDataSetChanged();
-            VideoBaseFrg0 currentFrg = getCursorVideoFrg();
-            if (cursorFrg != currentFrg) {
-                setPageChange(cursorFrg, currentFrg);
-                cursorFrg = currentFrg;
-            }
             setVideoPlay(currentIndex, false);
         } finally {
             viewPagerView.registerOnPageChangeCallback(onPageChange);
+            if (isPageNow) {
+                setCursorFrg();
+            }
         }
     }
 
@@ -569,13 +567,18 @@ public class ShortVideoManager2 {
     //当前页面
     private VideoBaseFrg0 cursorFrg;
 
+    //设置当前页面，设置切换页面
+    private void setCursorFrg() {
+        VideoBaseFrg0 temp = getCursorVideoFrg();
+        setPageChange(cursorFrg, temp);
+        cursorFrg = temp;
+    }
+
     class OnPageChange extends ViewPager2.OnPageChangeCallback {
         @Override
         public void onPageSelected(int position) {
             super.onPageSelected(position);
-            VideoBaseFrg0 temp = getCursorVideoFrg();
-            setPageChange(cursorFrg, temp);
-            cursorFrg = temp;
+            setCursorFrg();
             setPageLoadNext();
             setPageLoadUp();
 
