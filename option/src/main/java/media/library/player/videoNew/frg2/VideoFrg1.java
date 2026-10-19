@@ -146,6 +146,7 @@ public class VideoFrg1 extends VideoBaseFrg0 {
                 exoPlayer.setPlayerView(playerView);
                 return;
             }
+            exoPlayer.setPause();
         }
         //更换 播放url
         PlayerLog.d("去初始化/更新播放源 ",
@@ -160,7 +161,11 @@ public class VideoFrg1 extends VideoBaseFrg0 {
         isVideoHorizontalScreen = false;
         //
         exoPlayer = videoOperate2.getExoPlayer(this, videoUrl);
-        exoPlayer.setPlayerVideo(act.getApplicationContext(), videoUrl, isUseCache);
+        if(exoPlayer.isVideoPre()){
+            exoPlayer.setVideoPre(false);
+        }else {
+            exoPlayer.setPlayerVideo(act.getApplicationContext(), videoUrl, isUseCache);
+        }
         //
         exoPlayer.setPlayerView(playerView);
         if (isResume) {

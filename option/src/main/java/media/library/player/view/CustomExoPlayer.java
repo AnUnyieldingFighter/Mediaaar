@@ -52,6 +52,17 @@ public class CustomExoPlayer extends BaseMediaSource {
         setPlayerVideo(context, videoUrl, "", isCache);
     }
 
+    //true 是预加载
+    private boolean isVideoPre;
+
+    public void setVideoPre(boolean isVideoPre) {
+        this.isVideoPre = isVideoPre;
+    }
+
+    public boolean isVideoPre() {
+        return isVideoPre;
+    }
+
     /**
      * @param videoUrl 播放器url
      * @param isCache  true 可以缓存

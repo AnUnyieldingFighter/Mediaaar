@@ -26,6 +26,9 @@ public class MorePlayerManager {
         CustomExoPlayer temp = players.get(frg);
         if (temp == null && playersPre.size() > 0) {
             temp = playersPre.remove(url);
+            if (temp != null) {
+                players.put(frg, temp);
+            }
         }
         if (temp == null) {
             temp = new CustomExoPlayer();
@@ -34,30 +37,20 @@ public class MorePlayerManager {
         return temp;
     }
 
-    //释放全部资源
-    public void setExoPlayerRelease() {
+    public void setPlayerRelease() {
         if (players.size() > 0) {
             for (CustomExoPlayer player : players.values()) {
                 if (player != null) {
                     player.setPlayerViewRelease();
                     player.release();
                 }
-                players.clear();
             }
+            players.clear();
         }
 
-        if (playersPre.size() > 0) {
-            for (CustomExoPlayer player : playersPre.values()) {
-                if (player != null) {
-                    player.setPlayerViewRelease();
-                    player.release();
-                }
-            }
-            playersPre.clear();
-        }
         customExoPlayer = null;
-        objs = null;
     }
+
 
     /**
      * 移除页面对应的播放器并释放资源。
@@ -84,6 +77,9 @@ public class MorePlayerManager {
             return;
         }
         for (int i = 0; i < videos.size(); i++) {
+            if (playersPre.size() >= max) {
+                break;
+            }
             Object video = videos.get(i);
             String url = video.toString();
             if (TextUtils.isEmpty(url)) {
@@ -92,14 +88,28 @@ public class MorePlayerManager {
             if (url.startsWith("http")) {
                 setVideoLoadPre(context, url);
             }
-            if (playersPre.size() > max) {
-                break;
-            }
         }
+    }
+
+    public HashMap getPlayersPres() {
+        return playersPre;
     }
 
     public ArrayList<Object> getObjs() {
         return objs;
+    }
+
+    public void setPlayerReleasePre() {
+        if (playersPre.size() > 0) {
+            for (CustomExoPlayer player : playersPre.values()) {
+                if (player != null) {
+                    player.setPlayerViewRelease();
+                    player.release();
+                }
+            }
+            playersPre.clear();
+        }
+        objs = null;
     }
 
     /**
@@ -116,6 +126,8 @@ public class MorePlayerManager {
             return;
         }
         exoPlayer = new CustomExoPlayer();
+        //
+        exoPlayer.setVideoPre(true);
         //原本就存在要加载的Url
         exoPlayer.setPlayerVideo(context, videoUrl, true);
         //
@@ -136,6 +148,12 @@ public class MorePlayerManager {
 
     public CustomExoPlayer getPlay() {
         return customExoPlayer;
+    }
+
+    //释放全部资源
+    public void setExoPlayerRelease() {
+        setPlayerRelease();
+        setPlayerReleasePre();
     }
 
     //========================================

@@ -247,6 +247,7 @@ public class ShortVideoManager2 {
      * @param isDataReset true 为数据重置，视图就绪时主动加载；false 由页面 onResume 加载。
      */
     public void setVideoPlay(int index, boolean isDataReset) {
+        VideoBaseFrg0 frgOld = cursorFrg;
         VideoBaseFrg0 frg = setPageCurrentItem(index);
         if (frg == null) {
             return;
@@ -254,8 +255,10 @@ public class ShortVideoManager2 {
         if (!isFrgReady(frg)) {
             //没有被初始化，走预加载逻辑
             setFrgPre(frg);
-        } else if (isDataReset && frg instanceof VideoFrg11) {
-            ((VideoFrg11) frg).setVideoDataPlay();
+        } else if (isDataReset || frg == frgOld) {
+            if (frg instanceof VideoFrg11) {
+                ((VideoFrg11) frg).setVideoDataPlay();
+            }
         }
         setPageLoadNext();
         if (index != 0) {
