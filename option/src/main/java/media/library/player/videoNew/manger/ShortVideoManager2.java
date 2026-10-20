@@ -1,25 +1,19 @@
 package media.library.player.videoNew.manger;
 
-import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 
-
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.media3.common.Player;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.ui.PlayerView;
 import androidx.viewpager.widget.ViewPager;
 import androidx.viewpager2.widget.ViewPager2;
 import media.library.player.manager.MorePlayerManager;
 import media.library.player.manager.PlayerLog;
+import media.library.player.videoNew.able.OnVideoData2;
 import media.library.player.videoNew.able.OnVideoLoading;
 import media.library.player.videoNew.able.OnVideoOperate2;
 import media.library.player.videoNew.adapter.VideoPagerAdapter3;
@@ -124,7 +118,7 @@ public class ShortVideoManager2 {
 
 
     public void onPause() {
-        handlerUi.stop();
+        handlerUi.pause();
     }
 
     /**
@@ -186,7 +180,7 @@ public class ShortVideoManager2 {
             return null;
         }
         int indexPage = viewPagerView.getCurrentItem();
-        VideoBaseFrg0 cursorVideoFrg = getCursorFrg(indexPage);
+        VideoBaseFrg0 cursorVideoFrg = getPageFrg(indexPage);
         return cursorVideoFrg;
     }
 
@@ -204,7 +198,7 @@ public class ShortVideoManager2 {
     }
 
     //获取指定页面对象
-    private VideoBaseFrg0 getCursorFrg(int index) {
+    private VideoBaseFrg0 getPageFrg(int index) {
         return adapter.getIndexAtFrg(index);
     }
 
@@ -243,7 +237,7 @@ public class ShortVideoManager2 {
     /**
      * 设置视频播放
      *
-     * @param index       第几个
+     * @param index
      * @param isDataReset true 为数据重置，视图就绪时主动加载；false 由页面 onResume 加载。
      */
     public void setVideoPlay(int index, boolean isDataReset) {
@@ -275,20 +269,26 @@ public class ShortVideoManager2 {
     }
 
     //播放下一个
-    public void setPagePlayNext() {
+    public boolean setPagePlayNext() {
+        boolean isOk = false;
         int index = getResumeIndex();
         if (index + 1 < adapter.getItemCount()) {
             viewPagerView.setCurrentItem(index + 1, true);
+            isOk = true;
         }
+        return isOk;
     }
 
     //播放上一个
-    public void setPagePlayUp() {
+    public boolean setPagePlayUp() {
+        boolean isOk = false;
         int index = getResumeIndex();
         if (index == 0) {
-            return;
+            return isOk;
         }
         viewPagerView.setCurrentItem(index - 1, true);
+        isOk = true;
+        return isOk;
     }
 
     //==================================页面视频预加载逻辑======================
@@ -315,7 +315,7 @@ public class ShortVideoManager2 {
         //下划 要预加载上一页
         int dataSize = adapter.getItemCount();
         if (indexUp >= 0 && indexUp < dataSize) {
-            VideoBaseFrg0 videoFrgUp = getCursorFrg(indexUp);
+            VideoBaseFrg0 videoFrgUp = getPageFrg(indexUp);
             if (isFrgReady(videoFrgUp)) {
                 setPageVideoPre(videoFrgUp, indexUp);
             } else {
@@ -349,7 +349,7 @@ public class ShortVideoManager2 {
         if (indexNext < 0 || indexNext >= dataSize) {
             return;
         }
-        VideoBaseFrg0 videoFrgDow = getCursorFrg(indexNext);
+        VideoBaseFrg0 videoFrgDow = getPageFrg(indexNext);
         if (isFrgReady(videoFrgDow)) {
             setPageVideoPre(videoFrgDow, indexNext);
         } else {
@@ -376,75 +376,155 @@ public class ShortVideoManager2 {
     //=========================删除frg和播放器，以及添加frg=====================================
 
     /**
-     * 删除当前正在播放的
+     *
+     * 多次删除当前正在播放的当前页面（要等onDataBack回调之后 ）
+     * 先跳转视频，在移除删除frg和播放器，最后删除数据
      * 调用前先删除业务数据；释放被删除页面的播放器，再恢复播放及相邻页预加载。
      */
-    public void delFrgPlay() {
+    public boolean delFrgPlay(OnVideoData2 onDataBack) {
         int index = getResumeIndex();
-        delFrgPlay(index);
+        return delFrgPlay(index, onDataBack);
     }
 
     /**
-     * 删除指定页；调用前先删除业务列表中的视频或广告占位，并同步 ads。
+     * index 要删除的数据索引
+     * 如果是当前，先跳转视频，在移除删除frg和播放器，最后删除数据
      * 删除当前页时切换页面，删除其他页时保留当前视频。
      */
-    public void delFrgPlay(int index) {
+    public boolean delFrgPlay(int index, OnVideoData2 onDataBack) {
         int size = adapter.getItemCount();
         if (size == 0 || index < 0 || index >= size) {
-            return;
+            return false;
         }
+
         int currentIndex = getResumeIndex();
-        boolean isLoopVideo = adapter.isInfinite();
+
         //true 当前页面
         boolean isPageNow = (index == currentIndex);
-        //循环列表中，同一条视频可能出现在不同页面；删除该数据时当前页也需要切换。
-        boolean deleteCurrent = (index == currentIndex) || (isLoopVideo
-                && adapter.getVideoDataIndex(index) == adapter.getVideoDataIndex(currentIndex));
-        //调整页面映射期间暂停本管理器的切页回调，完成后统一刷新预加载。
-        viewPagerView.unregisterOnPageChangeCallback(onPageChange);
-        try {
-            if (!deleteCurrent) {
-                //非当前frg
-                if (isLoopVideo) {
-                    currentIndex = adapter.removeLoopVideo(index, currentIndex, null);
-                } else {
-                    adapter.removeData(index, currentIndex);
-                    if (index < currentIndex) {
-                        currentIndex -= 1;
-                    }
+        if (isPageNow) {
+            VideoDelBean videoDelBean = null;
+
+
+            //true: 已切换页面
+            boolean isOk = false;
+            //切换下一个
+            boolean isNextOk = setPagePlayNext();
+
+            if (isNextOk) {
+                VideoBaseFrg0 frgNow = getPageFrg(index + 1);
+                VideoBaseFrg0 frgDown = (index + 2) < size ? getPageFrg(index + 2) : null;
+                VideoBaseFrg0 frgUp = (index - 1) >= 0 ? getPageFrg(index - 1) : null;//getPageFrg(index - 1);
+                //
+                videoDelBean = new VideoDelBean();
+                videoDelBean.frgNow = frgNow;
+                videoDelBean.frgDown = frgDown;
+                videoDelBean.frgUp = frgUp;
+                videoDelBean.indexDel = index + 1;
+                videoDelBean.indexUpdate = index;
+                videoDelBean.onDataBack = onDataBack;
+                videoDelBean.videoIndex = index;
+                //
+                //adapter.setFrgLast(index + 1, index, frgHold1, frgHold3, frgHold2);
+                isOk = true;
+            }
+            //切换上一个
+            if (!isNextOk) {
+                boolean isUpOk = setPagePlayUp();
+                if (isUpOk) {
+                    VideoBaseFrg0 frgNow = getPageFrg(index - 1);
+                    VideoBaseFrg0 frgUp = (index - 2) >= 0 ? getPageFrg(index - 2) : null;//getPageFrg(index - 2);
+                    //
+                    videoDelBean = new VideoDelBean();
+                    videoDelBean.frgNow = frgNow;
+                    videoDelBean.frgDown = null;
+                    videoDelBean.frgUp = frgUp;
+                    videoDelBean.indexDel = index - 1;//frgNow 删除之前的索引
+                    videoDelBean.indexUpdate = index - 1;//frgNow 删除之后的索引
+                    videoDelBean.onDataBack = onDataBack;
+                    videoDelBean.videoIndex = index;
+                    //
+                    //adapter.setFrgLast(index - 1, index , frgHold1, frgHold2, null);
+                    isOk = true;
                 }
-                viewPagerView.setCurrentItem(currentIndex, false);
-                //先对齐页码，再通知刷新，避免适配器按旧页码切换 Fragment 生命周期。
-                adapter.notifyDataSetChanged();
-                setPageLoadNext();
-                setPageLoadUp();
-                return;
             }
-            //删除当前的frg
-            VideoBaseFrg0 frg = getCursorFrg(currentIndex);
-            setVideoPause(frg);
-            setDelFrg(frg);
-            if (isLoopVideo) {
-                currentIndex = adapter.removeLoopVideo(index, currentIndex, getFrg());
+
+            if (isOk) {
+                viewPagerView.setUserInputEnabled(false);
+                Message msg = new Message();
+                msg.what = 500;
+                msg.obj = videoDelBean;
+                handlerUi.sendMessageDelayed(msg, 500);
+
             } else {
-                //按循环顺序前移，使下一视频页对应删除后的索引。
-                adapter.removeFrg(index, getFrg());
-            }
-            if (adapter.getItemCount() == 0) {
+                //是最后一个
+                //释放全部播放器
+                getPlayerManager().setExoPlayerRelease();
+                adapter.removeData();
                 adapter.notifyDataSetChanged();
-                return;
+                onDataBack.setDataDel(index);
             }
-            //还有下一条时保持原索引；删除末条时转到上一条。
-            currentIndex = Math.min(currentIndex, adapter.getItemCount() - 1);
-            viewPagerView.setCurrentItem(currentIndex, false);
+        } else {
+            //删除相邻的下一个
+            if ((currentIndex - index) == 1) {
+                //当前
+                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
+                //当前上一个
+                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
+                //当前下一个（删除）
+                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
+                //当前下二个
+                VideoBaseFrg0 frgNowDown2 = getPageFrg(currentIndex + 1);
+                //
+                getPlayerManager().setDelExoPlayerAdjacent(frgNow, frgNowUp1, frgNowDown1, frgNowDown2);
+                setPageLoadNext();
+
+            } else if ((index - currentIndex) == 1) {
+                //删除相邻的上一个
+                //当前
+                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
+                //当前上一个（删除）
+                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
+                //当前上二个
+                VideoBaseFrg0 frgNowUp2 = getPageFrg(currentIndex - 2);
+                //当前下一个
+                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
+                //
+                getPlayerManager().setDelExoPlayerAdjacent(frgNow, frgNowDown1, frgNowUp1, frgNowUp2);
+                setPageLoadUp();
+            } else {
+                //当前
+                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
+                //当前上一个
+                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
+                //当前下一个
+                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
+                //
+                getPlayerManager().setDelExoPlayerHold3(frgNow, frgNowDown1, frgNowUp1);
+            }
+            onDataBack.setDataDel(index);
+            adapter.removeData();
             adapter.notifyDataSetChanged();
-            setVideoPlay(currentIndex, false);
-        } finally {
-            viewPagerView.registerOnPageChangeCallback(onPageChange);
-            if (isPageNow) {
-                setCursorFrg();
-            }
         }
+        return true;
+
+    }
+
+    //先切换页面完成，再删除视频和页面
+    private void delVideo(VideoDelBean videoDelBean) {
+        if (videoDelBean == null) {
+            return;
+        }
+        getPlayerManager().setDelExoPlayerHold3(videoDelBean.frgNow, videoDelBean.frgDown, videoDelBean.frgUp);
+        videoDelBean.onDataBack.setDataDel(videoDelBean.videoIndex);
+        //
+        adapter.setFrgLast(videoDelBean.indexDel, videoDelBean.indexUpdate, videoDelBean.frgNow, videoDelBean.frgUp, videoDelBean.frgDown);
+        //
+        adapter.removeData();
+        adapter.notifyDataSetChanged();
+        //预加载不需要了，因为更换了adapter里的frg的位置
+        //setPageLoadNext();
+        //setPageLoadUp();
+
     }
 
     /**
@@ -529,11 +609,11 @@ public class ShortVideoManager2 {
             return;
         }
         //按实际页码取得 Fragment 比较，避免把复用池槽位当成页面索引。
-        if (frg == getCursorFrg(index)) {
+        if (frg == getPageFrg(index)) {
             setPageVideoPre(frg, index);
-        } else if (index > 0 && frg == getCursorFrg(index - 1)) {
+        } else if (index > 0 && frg == getPageFrg(index - 1)) {
             setPageVideoPre(frg, index - 1);
-        } else if (index < size - 1 && frg == getCursorFrg(index + 1)) {
+        } else if (index < size - 1 && frg == getPageFrg(index + 1)) {
             setPageVideoPre(frg, index + 1);
         }
     }
@@ -623,8 +703,13 @@ public class ShortVideoManager2 {
             sendEmptyMessageDelayed(1, 1 * 300);
         }
 
+        private void pause() {
+            removeMessages(1);
+        }
+
         private void stop() {
             removeMessages(1);
+            removeMessages(500);
         }
 
         @Override
@@ -634,6 +719,14 @@ public class ShortVideoManager2 {
                 case 1:
                     setUpdatePlayProgress(getCursorVideoFrg());
                     sendEmptyMessageDelayed(1, 1 * 300);
+                    break;
+                case 500:
+                    //删除页面
+                    Object obj = msg.obj;
+                    if (obj instanceof VideoDelBean) {
+                        delVideo((VideoDelBean) obj);
+                    }
+                    viewPagerView.setUserInputEnabled(true);
                     break;
             }
         }

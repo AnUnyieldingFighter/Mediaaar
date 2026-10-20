@@ -137,7 +137,6 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                 int videoIndex = videoPlaysManager.getVideoDataIndex(resumeIndex);
                 if (videoIndex >= 0) {
                     Log.d("删除", "索引：" + resumeIndex + "\nurl=" + videos.get(videoIndex));
-                    videos.remove(videoIndex);
                     //广告也使用列表索引，删除占位或视频后同步后面广告的位置。
                     ads.remove(videoIndex);
                     for (int i = videoIndex; i < videos.size(); i++) {
@@ -147,7 +146,8 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
                         }
                     }
                 }
-                videoPlaysManager.delFrgPlay();
+                videoPlaysManager.delFrgPlay(VideoMainFrg.this);
+
             }
         });
     }
@@ -164,7 +164,9 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         videoPlaysManager.onPause();
     }
 
-    /** 视图销毁时取消任务，释放管理器并清空视图引用。 */
+    /**
+     * 视图销毁时取消任务，释放管理器并清空视图引用。
+     */
     @Override
     public void onDestroyView() {
         handlerData.removeCallbacksAndMessages(null);
@@ -226,7 +228,7 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
 
     //
     private ArrayList<String> videos = new ArrayList();
-    private HashMap<Integer,String> ads = new HashMap<>();
+    private HashMap<Integer, String> ads = new HashMap<>();
     private HandlerData handlerData = new HandlerData();
     //true 没有更多了
     private boolean isMoreNot;
@@ -269,21 +271,27 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     }
     //=====================视频数据，播放 操作接口======================================
 
-    /** 获取当前显示页面的索引。 */
+    /**
+     * 获取当前显示页面的索引。
+     */
     @Override
     public int getResumeIndex() {
         return videoPlaysManager.getResumeIndex();
     }
 
-    /** 根据页面对象获取播放器。 */
+    /**
+     * 根据页面对象获取播放器。
+     */
     @Override
     public CustomExoPlayer getExoPlayer(Fragment frg, String videoUrl) {
-        CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(frg,videoUrl);
+        CustomExoPlayer customExoPlayer = videoPlaysManager.getExoPlayer(frg, videoUrl);
         customExoPlayer.setARB(true);
         return customExoPlayer;
     }
 
-    /** 页面销毁时移除对应关系并释放播放器。 */
+    /**
+     * 页面销毁时移除对应关系并释放播放器。
+     */
     @Override
     public void setDelFrg(Fragment frg) {
         //父视图销毁时已统一释放，随后到达的子页面销毁回调无需再次处理。
@@ -346,6 +354,12 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
     @Override
     public void onScreenRotation(int typeScreen) {
 
+    }
+
+    //删除这个索引的数据
+    @Override
+    public void setDataDel(int index) {
+        videos.remove(index);
     }
 
 }

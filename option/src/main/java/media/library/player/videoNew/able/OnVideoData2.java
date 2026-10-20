@@ -9,4 +9,5 @@ public interface OnVideoData2 {
 
     //1 旋转到横屏 2 旋转到竖屏
     void onScreenRotation(int typeScreen);
+    void setDataDel(int index);
 }

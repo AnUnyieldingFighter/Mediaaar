@@ -74,14 +74,50 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         notifyDataSetChanged();
     }
 
+    /**
+     * 按当前页及前后页的索引调整复用槽位，不改变 Fragment 数量。
+     * 这里只交换位置，数据数量和刷新由调用方处理。
+     *
+     * @param indexDel frgNow 在删除数据之前的页面索引，不是被删除视频的索引。
+     * @param indexUpdate frgNow 在删除数据之后的页面索引。
+     * @param frgNow 删除后保留的当前页面。
+     * @param frgUp 删除后的上一页，为空时不调整该页。
+     * @param frgDown 删除后的下一页，为空时不调整该页。
+     */
+    public void setFrgLast(int indexDel, int indexUpdate, VideoBaseFrg0 frgNow, VideoBaseFrg0 frgUp, VideoBaseFrg0 frgDown) {
+        int size = frgs.size();
+        if (indexDel < 0 || indexUpdate < 0 || size == 0 || frgNow == null) {
+            return;
+        }
+        int nowSlot = indexUpdate % size;
+        //先将当前页面从删除前的槽位交换到删除后的槽位。
+        Collections.swap(frgs, indexDel % size, nowSlot);
+        VideoBaseFrg0[] pages = {frgUp, frgDown};
+        int[] slots = {(nowSlot + size - 1) % size, (nowSlot + 1) % size};
+        for (int i = 0; i < pages.length; i++) {
+            if (pages[i] == null) {
+                continue;
+            }
+            int oldSlot = frgs.indexOf(pages[i]);
+            if (oldSlot >= 0) {
+                //交换时保留被占用槽位的 Fragment，避免直接覆盖导致重复或丢失。
+                Collections.swap(frgs, oldSlot, slots[i]);
+            }
+        }
+    }
+
     public void updateItem(int position) {
         notifyItemChanged(position);
     }
 
 
     private VideoBaseFrg0 getFrg(int position) {
+        int size = frgs.size();
+        if (position < 0 || size == 0) {
+            return null;
+        }
         //普通视频和广告统一按页面索引复用七个 Fragment。
-        int index = position % frgs.size();
+        int index = position % size;
         VideoBaseFrg0 frg = frgs.get(index);
         return frg;
     }
@@ -159,14 +195,12 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     /**
-     * 删除非当前页的数据；删除前面的数据时，将当前 Fragment 对应的槽位前移一位。
-     * 调用方对齐当前页码后，再调用 notifyDataSetChanged 刷新。
+     * 删除一个数据
      */
-    public void removeData(int position, int currentPosition) {
-        if (position < currentPosition) {
-            Collections.rotate(frgs, -1);
+    public void removeData() {
+        if (this.dataSize > 0) {
+            this.dataSize -= 1;
         }
-        this.dataSize -= 1;
     }
 
     /**
