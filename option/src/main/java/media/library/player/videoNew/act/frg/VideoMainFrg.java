@@ -327,12 +327,14 @@ public class VideoMainFrg extends Fragment implements OnVideoOperate2, OnVideoDa
         }
         String videoUrl = videos.get(index);
         //Fragment 会复用，实际类型以本次数据为准，空字符串从 ads 获取广告地址。
-        if ("".equals(videoUrl)) {
+        boolean isAd = "".equals(videoUrl);
+        if (isAd) {
             videoUrl = ads.get(index);
         }
         VideoPlayVo vo = new VideoPlayVo();
         vo.pageIndex = pageIndex;
         vo.url = videoUrl;
+        vo.isAd = isAd;
         vo.id = "-1";
         return vo;
 
