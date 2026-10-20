@@ -569,7 +569,7 @@ public class ShortVideoManager2 {
      *
      * @param index 插入前列表中的插入位置，从 0 开始，允许追加到末尾，不允许等于当前页索引。
      */
-    public void addFrg(int index) {
+    public void addVideoFrg(int index) {
         if (adapter == null || viewPagerView == null) {
             return;
         }
