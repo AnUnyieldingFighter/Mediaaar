@@ -152,29 +152,62 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     }
 
     /**
-     * 在当前页附近插入页面，按循环顺序后移已有页面，移出远端的一个页面。
-     * 复用池数量不变；数据数量增加一条，包含业务层已插入的广告占位。
-     * 返回移出的页面，由管理器释放其播放器；调用方对齐页码后再通知刷新。
+     * 仅用于相邻位置插入广告页面，保留原当前页及前后页。
+     *
+     * <p>先取得插入前的当前页和前后页。索引小于插入位置的页面保持原索引，
+     * 其余页面的索引加一，再通过交换槽位将这三个 Fragment 放到对应的新位置。
+     * 将新广告 Fragment 放入插入位置对应的槽位，并移出该槽位原来的 Fragment，
+     * 最多保留原三页和广告共四页的对应关系，frgs 的总数量仍为七个。
+     * 例如当前播放 C，在原 D 的位置插入 Y，保留 B、C、Y、D，原 D 移到 Y 后面。
+     *
+     * 本方法将 dataSize 加一；业务列表、播放器释放、当前页码对齐和刷新由调用方处理。
+     *
+     * @param position 插入前当前页的前一位或后一位索引，从 0 开始。
+     * @param frg 新建的广告 Fragment。
+     * @param currentPosition 插入前正在播放的页面索引，从 0 开始。
+     * @return 被移出复用池的 Fragment，供调用方清理。
      */
     public VideoBaseFrg0 addFrg(int position, VideoBaseFrg0 frg, int currentPosition) {
-        int index = position % frgs.size();
-        if (position < currentPosition - 1) {
-            //插在已加载范围之前，当前页及相邻页整体后移一个槽位。
-            Collections.rotate(frgs, 1);
-            dataSize += 1;
-            return frgs.set(index, frg);
+        int size = frgs.size();
+        VideoBaseFrg0 frgNow = getFrg(currentPosition);
+        VideoBaseFrg0 frgUp = currentPosition > 0 ? getFrg(currentPosition - 1) : null;
+        VideoBaseFrg0 frgDown = currentPosition + 1 < getItemCount() ? getFrg(currentPosition + 1) : null;
+        VideoBaseFrg0[] pages = {frgNow, frgUp, frgDown};
+        int[] oldIndexes = {currentPosition, currentPosition - 1, currentPosition + 1};
+        //插入位置之前的页面索引不变，其余页面索引后移一位。
+        for (int i = 0; i < pages.length; i++) {
+            if (pages[i] == null) {
+                continue;
+            }
+            int newIndex = oldIndexes[i];
+            if (newIndex >= position) {
+                newIndex += 1;
+            }
+            Collections.swap(frgs, frgs.indexOf(pages[i]), newIndex % size);
         }
-        //插在当前页附近时，从下一预加载页后面移出一个；更远的位置直接替换槽位。
-        int lastIndex = (int) (Math.max((long) position, (long) currentPosition + 2) % frgs.size());
-        VideoBaseFrg0 removed = frgs.get(lastIndex);
-        while (lastIndex != index) {
-            int previous = (lastIndex + frgs.size() - 1) % frgs.size();
-            frgs.set(lastIndex, frgs.get(previous));
-            lastIndex = previous;
-        }
-        frgs.set(index, frg);
+        //原当前页及前后页已放好，广告槽位不会占用这三个页面。
+        VideoBaseFrg0 removed = frgs.set(position % size, frg);
         dataSize += 1;
         return removed;
+    }
+
+    /**
+     * 非相邻位置插入一条数据，不创建或移出 Fragment。
+     * 插在当前页之前时，原当前页和前后页的索引都加一，同步调整它们的复用槽位；
+     * 插在当前页之后时，原三页的索引和槽位不变。
+     * 本方法仅将 dataSize 加一并调整槽位，业务列表、页码对齐和刷新由调用方处理。
+     *
+     * @param position 插入前列表中的非相邻插入位置，从 0 开始。
+     * @param currentPosition 插入前正在播放的页面索引，从 0 开始。
+     */
+    public void setFrgUpdate(int position, int currentPosition) {
+        if (position < currentPosition) {
+            VideoBaseFrg0 frgNow = getFrg(currentPosition);
+            VideoBaseFrg0 frgUp = currentPosition > 0 ? getFrg(currentPosition - 1) : null;
+            VideoBaseFrg0 frgDown = currentPosition + 1 < getItemCount() ? getFrg(currentPosition + 1) : null;
+            setFrgLast(currentPosition, currentPosition + 1, frgNow, frgUp, frgDown);
+        }
+        dataSize += 1;
     }
 
     /**

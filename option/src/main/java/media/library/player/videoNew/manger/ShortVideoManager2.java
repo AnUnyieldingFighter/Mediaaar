@@ -376,10 +376,12 @@ public class ShortVideoManager2 {
     //=========================删除frg和播放器，以及添加frg=====================================
 
     /**
+     * 删除当前页面的数据，处理流程见带 index 的重载。
+     * 业务数据由 onDataBack.setDataDel 删除，调用前不要提前删除。
+     * 删除当前页需要等待延迟处理完成，再发起下一次删除。
      *
-     * 多次删除当前正在播放的当前页面（要等onDataBack回调之后 ）
-     * 先跳转视频，在移除删除frg和播放器，最后删除数据
-     * 调用前先删除业务数据；释放被删除页面的播放器，再恢复播放及相邻页预加载。
+     * @param onDataBack 同步删除业务列表中指定索引的数据，并处理业务界面更新。
+     * @return true 表示已受理删除，当前页的延迟删除此时可能尚未完成。
      */
     public boolean delFrgPlay(OnVideoData2 onDataBack) {
         int index = getResumeIndex();
@@ -387,9 +389,28 @@ public class ShortVideoManager2 {
     }
 
     /**
-     * index 要删除的数据索引
-     * 如果是当前，先跳转视频，在移除删除frg和播放器，最后删除数据
-     * 删除当前页时切换页面，删除其他页时保留当前视频。
+     * 删除指定索引的数据，保留删除后的当前页及前后页对应的 Fragment 和播放器。
+     *
+     * <p>删除当前页：先切换到下一页；没有下一页时切换到上一页。
+     * 按删除前的索引取得删除后要保留的当前页和前后页，暂时禁止手势翻页，
+     * 延迟 500 毫秒交给 delVideo 完成删除，再恢复手势翻页。
+     * 仅剩一条数据时，直接释放全部播放器、清空适配器数量，并回调删除业务数据。
+     *
+     * <p>删除非当前页：保持当前视频，分三种情况选择要保留的页面。
+     * 删除相邻下一页，用原下二页补为下一页，当前索引不变；
+     * 删除相邻上一页，用原上二页补为上一页，当前索引减一；
+     * 删除其它页，保留原前后页，只有删除位置在当前页之前时，当前索引才减一。
+     *
+     * <p>保留页面确定后，通过 setDelExoPlayerHold3 保留这些页面的播放器并释放其余播放器，
+     * 回调同步删除业务数据，再用 setFrgLast 调整复用槽位，最后减少适配器数量并刷新。
+     * setFrgLast 接收的是保留的当前页在删除前、删除后的索引，不是被删页的索引；
+     * Fragment 数量不变，保留页面与播放器的对应关系也不变。
+     * 非当前页删除完成后，仅为删除相邻页所露出的新邻页补预加载。
+     *
+     * @param index      删除前业务列表中要删除的数据索引，从 0 开始。
+     * @param onDataBack 同步删除业务数据的回调；调用本方法前不要提前删除业务数据，
+     *                   也不要在回调中重复减少适配器数量。业务界面更新由回调处理。
+     * @return 索引无效或列表为空时返回 false；true 表示已受理，当前页删除可能尚未完成。
      */
     public boolean delFrgPlay(int index, OnVideoData2 onDataBack) {
         int size = adapter.getItemCount();
@@ -529,44 +550,84 @@ public class ShortVideoManager2 {
 
 
     /**
-     * 在指定位置插入广告 Fragment，同时从七个复用页面中移出一个远端页面。
+     * 一定是先添加videos里的数据，在检查frg，是插入还是单纯更换位置
+     *
+     * 在非当前页的位置插入广告，按删除页面时相同的思路保留页面和播放器，再调整槽位。
      * 调用前先在 videos 对应位置插入空字符串，并设置 ads；本方法将数据数量加一，
      * 因此无需提前调用 setUpdateDataSize。业务列表和广告数据均由调用方维护。
-     * index 从 0 开始，传入 getResumeIndex() + 1 即插在当前页之后，也可以追加到末尾。
-     * 插入时保持当前页面和播放状态；需要删除时调用 delFrgPlay(广告当前所在的页面索引)。
+     *
+     * <p>分三种情况：插在原当前索引的下一位、上一位、其它位置。
+     * 相邻插入时保留原当前页、原前后页及广告，最多四页，并移出一个其它 Fragment；
+     * 广告页面仅在相邻插入时通过 getFrg 创建，其它位置不创建页面。
+     * 例如当前播放 C，在 D 的位置插入 Y，保留 B、C、Y、D，D 移到 Y 后面。
+     * 其它位置只保留原当前页和前后页并调整槽位，广告数据后续自然加载。
+     * 复用池始终为七个 Fragment，多余播放器释放，保留页面的播放器不更换。
+     *
+     * <p>插在当前页之前时，当前视频的新索引加一；插在之后时不变。
+     * 数据数量与槽位更新后刷新，当前视频继续使用原 Fragment 和播放器。
+     * 只为相邻插入的广告安排预加载，原前后页的数据与播放器继续保留。
+     *
+     * @param index 插入前列表中的插入位置，从 0 开始，允许追加到末尾，不允许等于当前页索引。
      */
-    public void addFrg(int index, VideoBaseFrg0 frg) {
-        if (adapter == null || viewPagerView == null || frg == null) {
+    public void addFrg(int index) {
+        if (adapter == null || viewPagerView == null) {
             return;
         }
         int size = adapter.getItemCount();
-        if (index < 0 || index > size || index == Integer.MAX_VALUE
-                || frg.isAdded() || adapter.containsFrg(frg)) {
+        if (size == 0 || index < 0 || index > size) {
             return;
         }
         int currentIndex = getResumeIndex();
-        //无限页数已到 int 上限时，当前末页无法再后移，避免插入后切换到其他视频。
-        if (size == Integer.MAX_VALUE && currentIndex == size - 1 && index <= currentIndex) {
+        if (index == currentIndex) {
             return;
+        }
+
+        //先取得插入前的当前页及前后页，保留已有数据和播放器。
+        VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
+        VideoBaseFrg0 frgUp = currentIndex > 0 ? getPageFrg(currentIndex - 1) : null;
+        VideoBaseFrg0 frgDown = currentIndex + 1 < size ? getPageFrg(currentIndex + 1) : null;
+        VideoBaseFrg0 removed = null;
+        int indexUpdate = currentIndex;
+        if (index == (currentIndex - 1)) {
+            //相邻的上一个
+            VideoBaseFrg0 frg = getFrg();
+            //原上一页、当前页及下一页都后移一位，广告放在原上一页之前。
+            getPlayerManager().setDelExoPlayerHold3(frgNow, frgUp, frgDown);
+            removed = adapter.addFrg(index, frg, currentIndex);
+            indexUpdate = currentIndex + 1;
+            if (canLoadPre) {
+                setFrgPre(frg);
+            }
+
+        } else if (index == (currentIndex + 1)) {
+            //相邻的下一个
+            VideoBaseFrg0 frg = getFrg();
+            //当前页及上一页不变，原下一页移动到广告后面。
+            getPlayerManager().setDelExoPlayerHold3(frgNow, frgUp, frgDown);
+            removed = adapter.addFrg(index, frg, currentIndex);
+            if (canLoadPre) {
+                setFrgPre(frg);
+            }
+        } else {
+            //其它
+            getPlayerManager().setDelExoPlayerHold3(frgNow, frgUp, frgDown);
+            adapter.setFrgUpdate(index, currentIndex);
+            if (index < currentIndex) {
+                indexUpdate = currentIndex + 1;
+            }
+        }
+
+        if (removed != null) {
+            //释放被移出复用池的页面对应的播放器，并移除其待预加载记录。
+            setDelFrg(removed);
         }
         viewPagerView.unregisterOnPageChangeCallback(onPageChange);
         try {
-            VideoBaseFrg0 removed = adapter.addFrg(index, frg, currentIndex);
-            setDelFrg(removed);
-            if (size > 0 && index <= currentIndex) {
-                //先对齐页码，再通知刷新，保持当前 Fragment 和播放器不变。
-                viewPagerView.setCurrentItem(currentIndex + 1, false);
+            if (indexUpdate != currentIndex) {
+                //仅调整当前视频的页码，继续使用原 Fragment 和播放器。
+                viewPagerView.setCurrentItem(indexUpdate, false);
             }
             adapter.notifyDataSetChanged();
-            if (size == 0) {
-                VideoBaseFrg0 currentFrg = getCursorVideoFrg();
-                setPageChange(cursorFrg, currentFrg);
-                cursorFrg = currentFrg;
-                setVideoPlay(0, false);
-            } else {
-                setPageLoadNext();
-                setPageLoadUp();
-            }
         } finally {
             viewPagerView.registerOnPageChangeCallback(onPageChange);
         }
@@ -590,7 +651,7 @@ public class ShortVideoManager2 {
         return false;
     }
 
-    //frg 视图创建后的回调，只预加载当前页、前一页或后一页对应的对象。
+    //视图创建后完成已登记的预加载；相邻插入后，也接续移到上二页或下二页的任务。
     public void setFrgAttach(Fragment frg) {
         if (!frgPres.contains(frg)) {
             return;
@@ -607,6 +668,12 @@ public class ShortVideoManager2 {
             setPageVideoPre(frg, index - 1);
         } else if (index < size - 1 && frg == getPageFrg(index + 1)) {
             setPageVideoPre(frg, index + 1);
+        } else if (index >= 2 && frg == getPageFrg(index - 2)) {
+            //相邻插入后，已登记的广告或原上一页可能位于上二页。
+            setPageVideoPre(frg, index - 2);
+        } else if (index + 2 < size && frg == getPageFrg(index + 2)) {
+            //插入下一页广告后，原下一页移动到下二页，继续完成已登记的预加载。
+            setPageVideoPre(frg, index + 2);
         }
     }
 
