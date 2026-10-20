@@ -402,7 +402,8 @@ public class ShortVideoManager2 {
      * 删除其它页，保留原前后页，只有删除位置在当前页之前时，当前索引才减一。
      *
      * <p>保留页面确定后，通过 setDelExoPlayerHold3 保留这些页面的播放器并释放其余播放器，
-     * 回调同步删除业务数据，再用 setFrgLast 调整复用槽位，最后减少适配器数量并刷新。
+     * 回调同步删除业务数据，再用 setFrgLast 调整复用槽位，减少适配器数量，刷新前对齐当前页码。
+     * 对齐页码时临时取消业务页面监听，保留当前 Fragment 和播放器，不重复触发页面切换和预加载。
      * setFrgLast 接收的是保留的当前页在删除前、删除后的索引，不是被删页的索引；
      * Fragment 数量不变，保留页面与播放器的对应关系也不变。
      * 非当前页删除完成后，仅为删除相邻页所露出的新邻页补预加载。
@@ -423,8 +424,6 @@ public class ShortVideoManager2 {
         boolean isPageNow = (index == currentIndex);
         if (isPageNow) {
             VideoDelBean videoDelBean = null;
-
-
             //true: 已切换页面
             boolean isOk = false;
             //切换下一个
@@ -510,7 +509,16 @@ public class ShortVideoManager2 {
             onDataBack.setDataDel(index);
             adapter.setFrgLast(currentIndex, indexUpdate, frgNow, frgUp, frgDown);
             adapter.removeData();
-            adapter.notifyDataSetChanged();
+            viewPagerView.unregisterOnPageChangeCallback(onPageChange);
+            try {
+                if (getResumeIndex() != indexUpdate) {
+                    //刷新前对齐保留页的新索引，避免按旧页码更新 Fragment 生命周期。
+                    viewPagerView.setCurrentItem(indexUpdate, false);
+                }
+                adapter.notifyDataSetChanged();
+            } finally {
+                viewPagerView.registerOnPageChangeCallback(onPageChange);
+            }
             //数据和槽位更新完成后，只补预加载删除相邻页后新露出的一页。
             if (index == currentIndex + 1) {
                 setPageLoadNext(indexUpdate + 1);
@@ -533,7 +541,16 @@ public class ShortVideoManager2 {
         adapter.setFrgLast(videoDelBean.indexDel, videoDelBean.indexUpdate, videoDelBean.frgNow, videoDelBean.frgUp, videoDelBean.frgDown);
         //
         adapter.removeData();
-        adapter.notifyDataSetChanged();
+        viewPagerView.unregisterOnPageChangeCallback(onPageChange);
+        try {
+            if (getResumeIndex() != videoDelBean.indexUpdate) {
+                //删除后继续显示保留页，仅修正页码，不重新加载视频。
+                viewPagerView.setCurrentItem(videoDelBean.indexUpdate, false);
+            }
+            adapter.notifyDataSetChanged();
+        } finally {
+            viewPagerView.registerOnPageChangeCallback(onPageChange);
+        }
         //预加载不需要了，因为更换了adapter里的frg的位置
         //setPageLoadNext();
         //setPageLoadUp();
