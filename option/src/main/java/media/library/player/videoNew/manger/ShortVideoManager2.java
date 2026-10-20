@@ -396,9 +396,8 @@ public class ShortVideoManager2 {
         if (size == 0 || index < 0 || index >= size) {
             return false;
         }
-
+        //当前索引
         int currentIndex = getResumeIndex();
-
         //true 当前页面
         boolean isPageNow = (index == currentIndex);
         if (isPageNow) {
@@ -464,46 +463,39 @@ public class ShortVideoManager2 {
                 onDataBack.setDataDel(index);
             }
         } else {
+            VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
+            VideoBaseFrg0 frgUp;
+            VideoBaseFrg0 frgDown;
+            int indexUpdate = currentIndex;
             //删除相邻的下一个
-            if ((currentIndex - index) == 1) {
-                //当前
-                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
-                //当前上一个
-                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
-                //当前下一个（删除）
-                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
-                //当前下二个
-                VideoBaseFrg0 frgNowDown2 = getPageFrg(currentIndex + 1);
-                //
-                getPlayerManager().setDelExoPlayerAdjacent(frgNow, frgNowUp1, frgNowDown1, frgNowDown2);
-                setPageLoadNext();
-
-            } else if ((index - currentIndex) == 1) {
-                //删除相邻的上一个
-                //当前
-                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
-                //当前上一个（删除）
-                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
-                //当前上二个
-                VideoBaseFrg0 frgNowUp2 = getPageFrg(currentIndex - 2);
-                //当前下一个
-                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
-                //
-                getPlayerManager().setDelExoPlayerAdjacent(frgNow, frgNowDown1, frgNowUp1, frgNowUp2);
-                setPageLoadUp();
+            if (index == currentIndex + 1) {
+                frgUp = currentIndex > 0 ? getPageFrg(currentIndex - 1) : null;
+                //跳过删除页，原来的下二页成为下一页。
+                frgDown = currentIndex + 2 < size ? getPageFrg(currentIndex + 2) : null;
+            } else if (index == currentIndex - 1) {
+                //删除相邻的上一个，原来的上二页成为上一页。
+                frgUp = currentIndex >= 2 ? getPageFrg(currentIndex - 2) : null;
+                frgDown = currentIndex + 1 < size ? getPageFrg(currentIndex + 1) : null;
+                indexUpdate = currentIndex - 1;
             } else {
-                //当前
-                VideoBaseFrg0 frgNow = getPageFrg(currentIndex);
-                //当前上一个
-                VideoBaseFrg0 frgNowUp1 = getPageFrg(currentIndex - 1);
-                //当前下一个
-                VideoBaseFrg0 frgNowDown1 = getPageFrg(currentIndex + 1);
-                //
-                getPlayerManager().setDelExoPlayerHold3(frgNow, frgNowDown1, frgNowUp1);
+                //删除其它页，保留当前页和原来的前后页。
+                frgUp = currentIndex > 0 ? getPageFrg(currentIndex - 1) : null;
+                frgDown = currentIndex + 1 < size ? getPageFrg(currentIndex + 1) : null;
+                if (index < currentIndex) {
+                    indexUpdate = currentIndex - 1;
+                }
             }
+            getPlayerManager().setDelExoPlayerHold3(frgNow, frgDown, frgUp);
             onDataBack.setDataDel(index);
+            adapter.setFrgLast(currentIndex, indexUpdate, frgNow, frgUp, frgDown);
             adapter.removeData();
             adapter.notifyDataSetChanged();
+            //数据和槽位更新完成后，只补预加载删除相邻页后新露出的一页。
+            if (index == currentIndex + 1) {
+                setPageLoadNext(indexUpdate + 1);
+            } else if (index == currentIndex - 1) {
+                setPageLoadUp(indexUpdate - 1);
+            }
         }
         return true;
 
