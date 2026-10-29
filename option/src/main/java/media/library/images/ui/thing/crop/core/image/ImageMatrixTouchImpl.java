@@ -79,11 +79,29 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
     }
 
     /**
+     * 计算图片居中时的缩放比例，开启边界限制时至少覆盖裁剪框。
+     */
+    public float getFitScale(int imageWidth, int imageHeight, boolean fitImageInside) {
+        int viewWidth = mView.getWidth() - mView.getPaddingLeft() - mView.getPaddingRight();
+        int viewHeight = mView.getHeight() - mView.getPaddingTop() - mView.getPaddingBottom();
+        float widthScale = (float) viewWidth / imageWidth;
+        float heightScale = (float) viewHeight / imageHeight;
+        float scale = fitImageInside ? Math.min(widthScale, heightScale)
+                : Math.max(widthScale, heightScale);
+        if (mRestrictRect != null) {
+            float minScale = Math.max(mRestrictRect.width() / imageWidth,
+                    mRestrictRect.height() / imageHeight);
+            scale = Math.max(scale, minScale);
+        }
+        return scale;
+    }
+
+    /**
      * 在屏幕中心显示,这里来自于ImageView的源码
      * fitImageInside true 图片完整显示在容器内，使用 Math.min()。 false:图片填满容器，使用 Math.max()，图片边缘可能超出容器。
      */
     private void postCenter(final boolean fitImageInside) {
-        mView.post(new Runnable() {
+        Runnable centerTask = new Runnable() {
             @Override
             public void run() {
                 if (mView.getDrawable() == null) {
@@ -98,10 +116,7 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
                     return;
                 }
 
-                float widthScale = (float) vwidth / (float) dwidth;
-                float heightScale = (float) vheight / (float) dheight;
-                float scale = fitImageInside ? Math.min(widthScale, heightScale)
-                        : Math.max(widthScale, heightScale);
+                float scale = getFitScale(dwidth, dheight, fitImageInside);
                 float dx = (vwidth - dwidth * scale) * 0.5f;
                 float dy = (vheight - dheight * scale) * 0.5f;
 
@@ -111,7 +126,13 @@ public class ImageMatrixTouchImpl extends BaseTouchImpl<ImageView> implements Sc
                 mView.setImageMatrix(matrix);
                 mScale = scale;
             }
-        });
+        };
+        //已完成布局时同步更新，避免新图片先使用旧矩阵绘制一帧。
+        if (mView.getWidth() > 0 && mView.getHeight() > 0) {
+            centerTask.run();
+        } else {
+            mView.post(centerTask);
+        }
 
     }
 

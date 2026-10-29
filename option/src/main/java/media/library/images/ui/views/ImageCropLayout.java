@@ -2,10 +2,11 @@ package media.library.images.ui.views;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.RectF;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.MotionEvent;
 import android.widget.RelativeLayout;
 
 import android.animation.Animator;
@@ -24,6 +25,7 @@ import media.library.images.ui.thing.crop.core.BaseLayerView;
 import media.library.images.ui.thing.crop.core.clippath.ClipPathLayerView;
 import media.library.images.ui.thing.crop.core.clippath.ClipPathSquare;
 import media.library.images.ui.thing.crop.core.mask.ColorMask;
+import media.library.images.ui.thing.crop.core.image.EnjoyImageView;
 import media.library.images.unmix.BitmapUtile;
 import media.library.images.unmix.ImageLog;
 
@@ -180,6 +182,17 @@ public class ImageCropLayout extends RelativeLayout {
     private boolean isRotating;
 
     /**
+     * 旋转期间不处理裁剪手势，避免手势修改动画使用的图片矩阵。
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (isRotating) {
+            return true;
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
+    /**
      * 以预览动画将图像旋转指定角度。
      *
      * @param angle 角度
@@ -194,17 +207,39 @@ public class ImageCropLayout extends RelativeLayout {
             return;
         }
 
-        final View imageView = enjoyCropLayout.getImageView();
+        final EnjoyImageView imageView = (EnjoyImageView) enjoyCropLayout.getImageView();
+        if (imageView.getWidth() <= 0 || imageView.getHeight() <= 0) {
+            return;
+        }
+        //以当前图片中心旋转，同时过渡到新图片的缩放比例和居中位置。
+        RectF imageRect = new RectF(0, 0, imageView.getDrawable().getIntrinsicWidth(),
+                imageView.getDrawable().getIntrinsicHeight());
+        imageView.getImageMatrix().mapRect(imageRect);
+        float targetScale = imageView.getFitScale(rotatedBitmap, fitImageInside);
+        float scaleRatio = targetScale / (float) imageView.getScale();
+        imageView.setPivotX(imageRect.centerX());
+        imageView.setPivotY(imageRect.centerY());
         isRotating = true;
         imageView.animate()
                 .rotationBy(angle)
+                .scaleX(scaleRatio)
+                .scaleY(scaleRatio)
+                .translationX(imageView.getWidth() / 2f - imageRect.centerX())
+                .translationY(imageView.getHeight() / 2f - imageRect.centerY())
                 .setDuration(ROTATION_DURATION_MS)
                 .setInterpolator(new AccelerateDecelerateInterpolator())
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        //旋转角度重置为 0° 恢复正常方向
+                        //同一帧中替换图片并恢复视图属性，由图片矩阵接管最终显示状态。
+                        imageView.animate().setListener(null);
                         imageView.setRotation(0f);
+                        imageView.setScaleX(1f);
+                        imageView.setScaleY(1f);
+                        imageView.setTranslationX(0f);
+                        imageView.setTranslationY(0f);
+                        imageView.setPivotX(imageView.getWidth() / 2f);
+                        imageView.setPivotY(imageView.getHeight() / 2f);
                         updateBit(rotatedBitmap);
                         isRotating = false;
                     }

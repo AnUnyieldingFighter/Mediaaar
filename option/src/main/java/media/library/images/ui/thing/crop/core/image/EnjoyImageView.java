@@ -2,8 +2,10 @@ package media.library.images.ui.thing.crop.core.image;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -44,6 +46,15 @@ public class EnjoyImageView extends AppCompatImageView {
 
     public double getScale() {
         return mImageToucheHandler.getScale();
+    }
+
+    /**
+     * 计算替换图片后的目标缩放比例，供旋转动画提前过渡使用。
+     */
+    public float getFitScale(Bitmap bitmap, boolean fitImageInside) {
+        BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
+        return mImageToucheHandler.getFitScale(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), fitImageInside);
     }
 
     @Override
