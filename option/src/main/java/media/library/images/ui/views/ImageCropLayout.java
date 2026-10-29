@@ -15,7 +15,9 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import media.library.images.config.CropType;
 import media.library.images.config.entity.MediaEntity;
+import media.library.images.ui.thing.crop.core.clippath.ClipPathCircle;
 import media.library.utils.FileUtil;
 import media.library.images.ui.thing.crop.EnjoyCropLayout;
 import media.library.images.ui.thing.crop.core.BaseLayerView;
@@ -45,6 +47,40 @@ public class ImageCropLayout extends RelativeLayout {
         getViewTreeObserver().addOnGlobalLayoutListener(globalLayoutListener);
     }
 
+
+    private GlobalLayoutListener globalLayoutListener = new GlobalLayoutListener();
+
+    class GlobalLayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
+        public void onGlobalLayout() {
+            initContextWidth();
+        }
+    }
+
+    private int width, height;
+
+    protected void initContextWidth() {
+        int w = getWidth();
+        if (w <= 0) {
+            return;
+        }
+        this.width = w;
+        this.height = getHeight();
+        if (width > height) {
+            int temp = height;
+            width = height;
+            height = temp;
+        }
+        getViewTreeObserver().removeOnGlobalLayoutListener(globalLayoutListener);
+        //
+        enjoyCropLayout = new EnjoyCropLayout(context);
+        addView(enjoyCropLayout);
+        //尝试重新初始化数据
+        if (!isSetInit && !TextUtils.isEmpty(path)) {
+            setImageCrop(path);
+        }
+    }
+
+    //============================================================
     private int outWidth, outHeight;
     private String path;
     // fitImageInside true 图片完整显示在容器内  false:图片填满容器 ，图片边缘可能超出容器。
@@ -57,6 +93,19 @@ public class ImageCropLayout extends RelativeLayout {
     public void setOutWH(int outWidth, int outHeight) {
         this.outWidth = outWidth;
         this.outHeight = outHeight;
+    }
+
+    //裁剪框类型，默认矩形。
+    private CropType corpType = CropType.RECTANGLE;
+
+    /**
+     * 设置裁剪框类型；图片加载后调用会立即更新裁剪框。
+     */
+    public void setCorpType(@NonNull CropType corpType) {
+        this.corpType = corpType;
+        if (enjoyCropLayout != null && bitOriginal != null) {
+            defineCropParams();
+        }
     }
 
     private Context context;
@@ -103,11 +152,11 @@ public class ImageCropLayout extends RelativeLayout {
         }
     }
 
-    //裁剪
+    //按裁剪框形状裁剪并保存 PNG，圆形图片的圆外区域保持透明。
     public String saveImg() {
-        Bitmap bitmap = enjoyCropLayout.crop();
+        Bitmap bitmap = enjoyCropLayout.crop(corpType);
         File file = FileUtil.createCropFile(context);
-        boolean isSave = BitmapUtile.saveBitmaps(bitmap, file);
+        boolean isSave = BitmapUtile.saveBitmaps(bitmap, file, Bitmap.CompressFormat.PNG);
         String path = "";
         if (isSave) {
             path = file.getPath();
@@ -115,9 +164,9 @@ public class ImageCropLayout extends RelativeLayout {
         return path;
     }
 
-    //获取裁剪的头像
+    //获取裁剪结果：矩形返回矩形图片，圆形返回圆外透明的圆形图片。
     public Bitmap getCropImg() {
-        Bitmap bitmap = enjoyCropLayout.crop();
+        Bitmap bitmap = enjoyCropLayout.crop(corpType);
         return bitmap;
     }
 
@@ -169,7 +218,17 @@ public class ImageCropLayout extends RelativeLayout {
         enjoyCropLayout.setImage(bit, fitImageInside);
     }
 
+    //根据设置的类型更新裁剪框。
     private void defineCropParams() {
+        if (corpType == CropType.CIRCLE) {
+            defineCropParamsCircle();
+        } else {
+            defineCropParamsRectangle();
+        }
+    }
+
+    //矩形裁剪框
+    protected void defineCropParamsRectangle() {
         int outX = outWidth;
         int outY = outHeight;
         if (outX <= 0) {
@@ -178,12 +237,13 @@ public class ImageCropLayout extends RelativeLayout {
         if (outY <= 0) {
             outY = 600;
         }
+        outWidth = outX;
+        outHeight = outY;
         //设置裁剪集成视图，这里通过一定的方式集成了遮罩层与预览框
         BaseLayerView layerView = new ClipPathLayerView(context);
         //设置遮罩层,这里使用半透明的遮罩层
         layerView.setMask(ColorMask.getTranslucentMask());
         //设置预览框形状
-        // layerView.setShape(new ClipPathCircle(aspectX));
         layerView.setShape(new ClipPathSquare(outX, outY));
         //设置裁剪集成视图
         enjoyCropLayout.setLayerView(layerView);
@@ -191,36 +251,35 @@ public class ImageCropLayout extends RelativeLayout {
         enjoyCropLayout.setRestrict(true);
     }
 
+    //圆形裁剪
+    protected void defineCropParamsCircle() {
+        int outX = outWidth;
+        int outY = outHeight;
+        if (outX <= 0) {
+            outX = 600;
+        }
+        if (outY <= 0) {
+            outY = 600;
+        }
+        //以框的较短边作为直径，转换为半径，单位 px。
+        int w = Math.min(outX, outY);
+        outWidth = w;
+        outHeight = w;
+        int radius = w / 2;
+        BaseLayerView layerView = new ClipPathLayerView(context);
+        layerView.setMask(ColorMask.getTranslucentMask()); // 设置遮罩
 
-    private int width, height;
-
-    protected void initContextWidth() {
-        int w = getWidth();
-        if (w <= 0) {
-            return;
-        }
-        this.width = w;
-        this.height = getHeight();
-        if (width > height) {
-            int temp = height;
-            width = height;
-            height = temp;
-        }
-        getViewTreeObserver().removeOnGlobalLayoutListener(globalLayoutListener);
-        //
-        enjoyCropLayout = new EnjoyCropLayout(context);
-        addView(enjoyCropLayout);
-        //尝试重新初始化数据
-        if (!isSetInit && !TextUtils.isEmpty(path)) {
-            setImageCrop(path);
-        }
+        layerView.setShape(new ClipPathCircle(radius));
+        enjoyCropLayout.setLayerView(layerView); // 放到图片上方
+        enjoyCropLayout.setRestrict(true); // 限制图片边界，避免框内露出空白。
     }
 
-    private GlobalLayoutListener globalLayoutListener = new GlobalLayoutListener();
-
-    class GlobalLayoutListener implements ViewTreeObserver.OnGlobalLayoutListener {
-        public void onGlobalLayout() {
-            initContextWidth();
-        }
+    public int getOutWidth() {
+        return outWidth;
     }
+
+    public int getOutHeight() {
+        return outHeight;
+    }
+
 }

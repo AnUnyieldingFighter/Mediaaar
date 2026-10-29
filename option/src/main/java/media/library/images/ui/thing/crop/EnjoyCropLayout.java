@@ -2,17 +2,22 @@ package media.library.images.ui.thing.crop;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+
+import media.library.images.config.CropType;
 import media.library.images.ui.thing.crop.core.BaseLayerView;
 import media.library.images.ui.thing.crop.core.IShape;
 import media.library.images.ui.thing.crop.core.clippath.ClipPathCircle;
@@ -171,12 +176,15 @@ public class EnjoyCropLayout extends FrameLayout {
 
 
     /**
-     * 裁剪
+     * 按指定类型生成裁剪图片，裁剪位置和大小取自当前预览框。
+     *
+     * @param cropType 裁剪类型：矩形或圆形，圆形的圆外区域保持透明。
      */
-    public Bitmap crop() {
+    public Bitmap crop(@NonNull CropType cropType) {
 
         if (mLayerView == null) {
             ImageLog.d(" layerView is null");
+            return null;
         }
         if (mImageView.getDrawable() == null) {
             ImageLog.d("ImageView 'drawable is null");
@@ -210,7 +218,7 @@ public class EnjoyCropLayout extends FrameLayout {
 
         //  Bitmap newBitmap = Bitmap.createBitmap(bitmap,centerX,centerY,actuallyWidth,actuallyHeight);
         //保存的图片
-        Bitmap saveBitmap = Bitmap.createBitmap(actuallyWidth, actuallyHeight, Bitmap.Config.ARGB_4444);
+        Bitmap saveBitmap = Bitmap.createBitmap(actuallyWidth, actuallyHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(saveBitmap);
         //当裁剪超出图片边界，超出区域以颜色填充
         canvas.drawColor(mFillColor);
@@ -232,8 +240,25 @@ public class EnjoyCropLayout extends FrameLayout {
         Rect showRect = new Rect(0, 0, showRight, showBottom);
         canvas.drawBitmap(bitmap, cropRect, showRect, new Paint());
 
-        return saveBitmap;
-
+        //按传入类型处理裁剪结果。
+        switch (cropType) {
+            case RECTANGLE:
+                //矩形直接返回框内图片。
+                return saveBitmap;
+            case CIRCLE:
+                //使用裁剪结果绘制抗锯齿圆形，未绘制的圆外区域保持透明。
+                Bitmap circleBitmap = Bitmap.createBitmap(actuallyWidth, actuallyHeight, Bitmap.Config.ARGB_8888);
+                Paint circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+                circlePaint.setShader(new BitmapShader(saveBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));
+                Canvas circleCanvas = new Canvas(circleBitmap);
+                circleCanvas.drawCircle(actuallyWidth / 2f, actuallyHeight / 2f,
+                        Math.min(actuallyWidth, actuallyHeight) / 2f, circlePaint);
+                //只回收本方法生成的中间图片，不回收原图。
+                saveBitmap.recycle();
+                return circleBitmap;
+            default:
+                return saveBitmap;
+        }
     }
 
     /**

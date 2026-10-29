@@ -11,11 +11,15 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import media.library.player.videoNew.frg2.VideoBaseFrg0;
 
 public class VideoPagerAdapter3 extends FragmentStateAdapter {
+    //========================= 属性 =========================
+
     private ArrayList<VideoBaseFrg0> frgs = new ArrayList<>();
     //数据数量，包含业务列表中的广告占位。
     private int dataSize;
     //true 无限翻页
     private boolean isInfinite;
+
+    //========================= 构造方法 =========================
 
     public VideoPagerAdapter3(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
@@ -37,6 +41,8 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         this.dataSize = dataSize;
 
     }
+
+    //========================= 数据设置与刷新 =========================
 
     public void setDataSize(int dataSize) {
         if (this.dataSize == dataSize) {
@@ -74,6 +80,69 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         notifyDataSetChanged();
     }
 
+    public void updateItem(int position) {
+        notifyItemChanged(position);
+    }
+
+    //========================= 页面与数据查询 =========================
+
+    private VideoBaseFrg0 getFrg(int position) {
+        int size = frgs.size();
+        if (position < 0 || size == 0) {
+            return null;
+        }
+        //普通视频和广告统一按页面索引复用七个 Fragment。
+        int index = position % size;
+        VideoBaseFrg0 frg = frgs.get(index);
+        return frg;
+    }
+
+    public VideoBaseFrg0 getIndexAtFrg(int index) {
+        VideoBaseFrg0 frg = getFrg(index);
+        return frg;
+    }
+
+    // 可选：让 Adapter 知道这个 Fragment 是哪个
+    public VideoBaseFrg0 getFragmentAt(int pos) {
+        return getFrg(pos);
+    }
+
+    public int getFragmentAt(Fragment frg) {
+        return frgs.indexOf(frg);
+    }
+
+    /**
+     * 判断对象是否已在复用池中，避免重复使用同一个 Fragment。
+     */
+    public boolean containsFrg(VideoBaseFrg0 frg) {
+        return frgs.contains(frg);
+    }
+
+    /**
+     * 获取包含广告占位的数据索引；无限翻页时循环取数据，无效位置返回 -1。
+     */
+    public int getVideoDataIndex(int position) {
+        if (position < 0 || position >= getItemCount() || dataSize == 0) {
+            return -1;
+        }
+        return isInfinite ? position % dataSize : position;
+    }
+
+    public int getFrgSize() {
+        return frgs.size();
+    }
+
+    public int getDataSize() {
+        return dataSize;
+    }
+
+    //true 页面无限
+    public boolean isInfinite() {
+        return isInfinite;
+    }
+
+    //========================= 复用槽位调整 =========================
+
     /**
      * 按当前页及前后页的索引调整复用槽位，不改变 Fragment 数量。
      * 这里只交换位置，数据数量和刷新由调用方处理。
@@ -106,26 +175,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         }
     }
 
-    public void updateItem(int position) {
-        notifyItemChanged(position);
-    }
-
-
-    private VideoBaseFrg0 getFrg(int position) {
-        int size = frgs.size();
-        if (position < 0 || size == 0) {
-            return null;
-        }
-        //普通视频和广告统一按页面索引复用七个 Fragment。
-        int index = position % size;
-        VideoBaseFrg0 frg = frgs.get(index);
-        return frg;
-    }
-
-    public VideoBaseFrg0 getIndexAtFrg(int index) {
-        VideoBaseFrg0 frg = getFrg(index);
-        return frg;
-    }
+    //========================= 页面与数据删除 =========================
 
     /**
      * 删除当前视频页，并按循环顺序前移后续视频页面，末位补入新页面。
@@ -150,6 +200,43 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         this.dataSize -= 1;
         notifyDataSetChanged();
     }
+
+    /**
+     * 删除一个数据
+     */
+    public void removeData() {
+        if (this.dataSize > 0) {
+            this.dataSize -= 1;
+        }
+    }
+
+    /**
+     * 无限翻页时删除列表中的一条数据（含广告占位），并对齐复用槽位。
+     * replacement 非空表示当前视频也被删除，替换当前 Fragment；返回调整后的当前页码。
+     */
+    public int removeLoopVideo(int position, int currentPosition, VideoBaseFrg0 replacement) {
+        int deletedIndex = getVideoDataIndex(position);
+        int currentOrdinal = currentPosition;
+        int removedBeforeCurrent = getRemovedVideoCount(currentOrdinal, deletedIndex);
+        int targetOrdinal = currentOrdinal;
+        if (replacement != null) {
+            frgs.set(currentOrdinal % frgs.size(), replacement);
+            //当前视频被删除，尽量保留下一条视频原有的 Fragment 和预加载结果。
+            targetOrdinal += 1;
+        }
+        Collections.rotate(frgs, -getRemovedVideoCount(targetOrdinal, deletedIndex));
+        dataSize -= 1;
+        return currentPosition - removedBeforeCurrent;
+    }
+
+    /**
+     * 计算指定视频序号之前，被删除的数据在各轮中共出现了多少次。
+     */
+    private int getRemovedVideoCount(int ordinal, int deletedIndex) {
+        return ordinal / dataSize + (ordinal % dataSize > deletedIndex ? 1 : 0);
+    }
+
+    //========================= 页面与数据插入 =========================
 
     /**
      * 仅用于相邻位置插入广告页面，保留原当前页及前后页。
@@ -210,65 +297,7 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         dataSize += 1;
     }
 
-    /**
-     * 判断对象是否已在复用池中，避免重复使用同一个 Fragment。
-     */
-    public boolean containsFrg(VideoBaseFrg0 frg) {
-        return frgs.contains(frg);
-    }
-
-    /**
-     * 获取包含广告占位的数据索引；无限翻页时循环取数据，无效位置返回 -1。
-     */
-    public int getVideoDataIndex(int position) {
-        if (position < 0 || position >= getItemCount() || dataSize == 0) {
-            return -1;
-        }
-        return isInfinite ? position % dataSize : position;
-    }
-
-    /**
-     * 删除一个数据
-     */
-    public void removeData() {
-        if (this.dataSize > 0) {
-            this.dataSize -= 1;
-        }
-    }
-
-    /**
-     * 无限翻页时删除列表中的一条数据（含广告占位），并对齐复用槽位。
-     * replacement 非空表示当前视频也被删除，替换当前 Fragment；返回调整后的当前页码。
-     */
-    public int removeLoopVideo(int position, int currentPosition, VideoBaseFrg0 replacement) {
-        int deletedIndex = getVideoDataIndex(position);
-        int currentOrdinal = currentPosition;
-        int removedBeforeCurrent = getRemovedVideoCount(currentOrdinal, deletedIndex);
-        int targetOrdinal = currentOrdinal;
-        if (replacement != null) {
-            frgs.set(currentOrdinal % frgs.size(), replacement);
-            //当前视频被删除，尽量保留下一条视频原有的 Fragment 和预加载结果。
-            targetOrdinal += 1;
-        }
-        Collections.rotate(frgs, -getRemovedVideoCount(targetOrdinal, deletedIndex));
-        dataSize -= 1;
-        return currentPosition - removedBeforeCurrent;
-    }
-
-    /**
-     * 计算指定视频序号之前，被删除的数据在各轮中共出现了多少次。
-     */
-    private int getRemovedVideoCount(int ordinal, int deletedIndex) {
-        return ordinal / dataSize + (ordinal % dataSize > deletedIndex ? 1 : 0);
-    }
-
-    public int getFrgSize() {
-        return frgs.size();
-    }
-
-    public int getDataSize() {
-        return dataSize;
-    }
+    //========================= 父类重写方法 =========================
 
     @NonNull
     @Override
@@ -281,15 +310,6 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
     public long getItemId(int position) {
         VideoBaseFrg0 frg = getFrg(position);
         return frg.hashCode();
-    }
-
-    // 可选：让 Adapter 知道这个 Fragment 是哪个
-    public VideoBaseFrg0 getFragmentAt(int pos) {
-        return getFrg(pos);
-    }
-
-    public int getFragmentAt(Fragment frg) {
-        return frgs.indexOf(frg);
     }
 
     @Override
@@ -317,8 +337,4 @@ public class VideoPagerAdapter3 extends FragmentStateAdapter {
         return getDataSize();
     }
 
-    //true 页面无限
-    public boolean isInfinite() {
-        return isInfinite;
-    }
 }

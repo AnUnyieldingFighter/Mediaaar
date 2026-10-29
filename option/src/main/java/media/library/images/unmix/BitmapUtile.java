@@ -169,15 +169,27 @@ public class BitmapUtile {
      * @return
      */
     public static boolean saveBitmaps(Bitmap bitmap, File newFile) {
+        return saveBitmaps(bitmap, newFile, Bitmap.CompressFormat.JPEG);
+    }
+
+    /**
+     * 按指定格式保存图片，需要保留透明区域时使用 PNG。
+     */
+    public static boolean saveBitmaps(Bitmap bitmap, File newFile, Bitmap.CompressFormat format) {
+        if (bitmap == null) {
+            return false;
+        }
         try {
             if (!newFile.exists()) {
                 newFile.createNewFile();
             }
-            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(
-                    newFile));
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
-            bos.flush();
-            bos.close();
+            try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(newFile))) {
+                if (!bitmap.compress(format, 100, bos)) {
+                    ImageLog.d(TAG, "图片保存失败");
+                    return false;
+                }
+                bos.flush();
+            }
             ImageLog.d(TAG, "图片保存成功");
             return true;
         } catch (Exception e) {
